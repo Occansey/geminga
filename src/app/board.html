@@ -235,6 +235,22 @@ function logEntry(d, demoted) {
   $("log").prepend(row);
 }
 
+// The second opinion, drawn at the end of the run. It reads the commits that actually
+// reached the actuator, and its verdicts only ever take authority away — so a row here
+// is the ladder being pulled back, never pushed forward.
+function reviewEntry(findings) {
+  if ($("log").querySelector(".empty")) $("log").innerHTML = "";
+  for (const f of findings) {
+    const row = document.createElement("div");
+    row.className = "entry" + (f.verdict === "affirm" ? "" : " demote");
+    row.innerHTML = `<span class="n">rev</span>
+      <span class="auth a-${f.verdict === "affirm" ? "provisional" : "shadow"}">${f.verdict}</span>
+      <span class="act did">${f.target}</span>
+      <span class="why">${f.reason}</span>`;
+    $("log").prepend(row);
+  }
+}
+
 async function run(lieFrom) {
   if (running) return;
   running = true;
@@ -258,7 +274,11 @@ async function run(lieFrom) {
       if (!part.startsWith("data: ")) continue;
       const d = JSON.parse(part.slice(6));
       if (d.done) continue;
-      const demoted = d.reason.startsWith("demoted");
+      // The post-commit review arrives as its own event with none of a run's fields.
+      // Reading d.reason on it threw, which killed the loop before `done` and left the
+      // status pill stuck on "running" — the reviewer's own output broke the console.
+      if (d.review) { reviewEntry(d.review); continue; }
+      const demoted = (d.reason || "").startsWith("demoted");
       setRung(d.authority);
       setPips(d.streak, demoted);
       logEntry(d, demoted);
