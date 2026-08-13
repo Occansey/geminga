@@ -531,3 +531,35 @@ def test_cache_mode_says_when_it_degrades_to_ranking() -> None:
 
     big = CachedRecall([Note("x" * 500)], budget_chars=100)
     assert big.mode().startswith("bm25")
+
+
+def test_tag_grounds_the_arithmetic_so_a_note_cannot_move_it() -> None:
+    """What structured grounding does buy: the ranking and the totals come from the
+    API's numbers, so a note claiming something is "the largest source of waste"
+    cannot make it so."""
+    from ratchet.context import query_estate
+    from ratchet.domains import finops
+
+    facts = query_estate(finops.sample_estate(), finops.SPECS)
+    assert facts["candidates"][0]["target"] == "ml-train-01"
+    assert facts["candidates"][0]["monthly_cost_usd"] == 2632.00
+    assert facts["total_monthly_usd"] == 3583.20
+
+
+def test_gate_inputs_are_named_as_never_belonging_in_context() -> None:
+    """A gate that reads its policy from a prompt is a gate an attacker can edit.
+    Naming the exclusions makes adding one a deliberate act rather than an oversight."""
+    from ratchet.context import NEVER_IN_CONTEXT
+
+    for source in ("authority_ledger", "hold_register", "snapshot", "operation_table"):
+        assert source in NEVER_IN_CONTEXT
+
+
+def test_an_empty_retrieval_block_is_reported_as_a_problem() -> None:
+    from ratchet.context import Assembly, Block, sanity_check
+
+    empty = Assembly(blocks=[Block("Operational history", "cag", False, "", items=0)])
+    assert any("returned nothing" in p for p in sanity_check(empty))
+
+    ok = Assembly(blocks=[Block("Operational history", "cag", False, "a note", items=1)])
+    assert sanity_check(ok) == []
