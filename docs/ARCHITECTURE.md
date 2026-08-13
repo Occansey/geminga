@@ -24,7 +24,7 @@ flowchart TB
 
         INV -->|"raw labels, names,<br/>descriptions"| SAN
         SAN -->|"wrapped in a<br/>per-run nonce"| ARMOR
-        ARMOR -->|"screened<br/>(0/32 on LogJack)"| LLM
+        ARMOR -->|"screened<br/>(we measure 4/6)"| LLM
         LLM -->|"proposes"| PROP
     end
 
@@ -112,8 +112,17 @@ payloads as bare text. Operational formatting is the camouflage.
 So detection is the wrong layer. Admission assumes the model was hijacked and makes it
 useless: a proposal must name a target present in the **plan-time snapshot**, carry a
 verb allowlisted for that resource type, and avoid verbs absent from the vocabulary
-entirely (`iam.*`, `setMetadata`, `projects.delete`). The resulting claim is true rather
-than hopeful — *an injection cannot cause an unplanned deletion*.
+entirely (`iam.*`, `setMetadata`, `projects.delete`).
+
+The resulting claim is true rather than hopeful — but it needs its scope attached, and
+[CLAIMS.md](../CLAIMS.md) carries it: *no injected instruction can cause a tool call
+**outside the policy***. It says nothing about harm achievable *inside* it. AgentDojo
+measures that gap directly — in **17% of its security test cases the tools required to
+solve the user's task are also sufficient to carry out the attack** — and CaMeL's
+authors predict ROP-style chaining of individually-permitted calls against their own
+design. Stopping `ml-train-01` is inside our allowlist; if that VM is load-bearing, the
+allowlist did not save anyone. What limits it is the gates *after* admission, and that
+is mitigation rather than immunity.
 
 ### Gate 2 — blocking is also illegal
 

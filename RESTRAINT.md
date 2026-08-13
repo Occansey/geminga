@@ -217,12 +217,25 @@ arithmetic. The implementation is cross-checked against a published result rathe
 trusted: NetInjectBench reports 0/240 unsafe with a 95% upper bound of 1.58%, and this
 code reproduces 1.58% exactly. That check is a test.
 
-### Scope, stated rather than implied
+### Scope — see [CLAIMS.md](CLAIMS.md) for the full version
 
-Out of scope **by construction**: an injection whose goal is achievable *within* the
-allowlist. This measures whether the action space can be escaped — not whether every
-permitted action is wise. A hostile reviewer should attack there, and they would be
-right to.
+Out of scope **by construction**: harm achievable *within* the allowlist, text-to-text
+harm, side channels and implicit flows, and mislabelled provenance.
+
+Two honest qualifications on the number itself:
+
+**Our attacker is one-shot.** Both model families generated cases without ever seeing a
+refusal and trying again. Nasr et al.'s search attack found its first success in a
+median of 13–93 queries; human red-teamers broke every scenario they attempted. A
+thousand one-shot attackers is not one persistent one.
+
+**This defence family is unmeasured, not proven.** Nasr et al. deliberately excluded
+plan-then-execute designs from their study because "control flow is data-independent" —
+the strongest available evidence that a deterministic gate differs categorically from a
+classifier, and simultaneously the reason no one has established its robustness. The
+only paper to attempt an adaptive evaluation of the family concludes: *"Either outcome
+is worth knowing, and neither is known today."* These 1,000 cases are a contribution to
+an empty column, not a victory in a contested one.
 
 ## 5. Containment
 

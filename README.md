@@ -100,7 +100,7 @@ fudge its own headline number.
 
 ## Architecture
 
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [RESTRAINT.md](RESTRAINT.md) · [docs/SCAFFOLD-COMPARISON.md](docs/SCAFFOLD-COMPARISON.md)
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [RESTRAINT.md](RESTRAINT.md) · [CLAIMS.md](CLAIMS.md) · [docs/SCAFFOLD-COMPARISON.md](docs/SCAFFOLD-COMPARISON.md)
 
 Built on **ADK 2**'s graph runtime (`google.adk.workflow`) — a DAG scheduler, not a
 tree walker. Schemas are checked across edges at construction, so type errors fail

@@ -439,3 +439,20 @@ def test_wilson_reproduces_a_published_interval() -> None:
 
     _, high = wilson(0, 240)
     assert round(high * 100, 2) == 1.58
+
+
+def test_the_claims_document_states_its_own_limits() -> None:
+    """A scope section that drifts out of the claims doc is how overclaiming starts.
+    These four exclusions are the ones a reviewer leads with; they must stay written
+    down."""
+    from pathlib import Path
+
+    doc = Path(__file__).resolve().parents[1] / "CLAIMS.md"
+    assert doc.exists(), "CLAIMS.md is a required artifact, not an optional one"
+    # Strip markdown emphasis before matching — "*inside* the allowlist" is the same
+    # commitment as "inside the allowlist", and a test that cannot see that will get
+    # itself deleted rather than fixed.
+    text = doc.read_text().replace("*", "")
+    for limit in ("inside the allowlist", "Text-to-text", "Side channels", "Provenance"):
+        assert limit in text, f"CLAIMS.md no longer states the {limit!r} limit"
+    assert "0.383" in text, "the headline number and its confidence bound must agree"
