@@ -163,6 +163,19 @@ The core action-side machinery — allowlist, snapshot, type discriminator — h
 all fifteen. The defects clustered in **effect execution and authority accounting**,
 which is to say: not in the part we had been testing.
 
+## Where this goes next
+
+The poison result is not just a caveat — it is V2's brief. Authority is currently earned
+per operation class and argument *shape*, and the shape ignores argument values so trust
+generalises. That is the right instinct at the wrong granularity: stopping a spare
+staging box and stopping the GPU node that runs the nightly build are the same shape.
+
+V2 earns authority per **(operation, blast-radius class)**, with blast radius *derived
+from the resource's actual dependencies* — attachments, load-balancer backends, DNS,
+real utilisation — rather than from a label or a note. It is the same move that made
+verification trustworthy here: stop asking, start re-deriving, applied to consequence
+instead of correctness. See [ROADMAP.md](../ROADMAP.md).
+
 ## What would falsify this
 
 - A single case reaching an actuator (the CI test fails)
