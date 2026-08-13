@@ -87,3 +87,48 @@ def test_the_proposer_no_longer_ranks_the_gpu_node_first() -> None:
     # The most valuable resource that is both measurably idle and reversible. The disk at
     # $340 outranks it on cost and is irreversible, so it stays behind a human.
     assert (op_class, target) == ("storage.set_lifecycle_policy", "raw-events")
+
+
+def test_the_refusal_reason_reaches_the_report() -> None:
+    """A refusal whose reason does not reach the operator is most of the way to no
+    refusal at all: they learn the system says no sometimes, not what it knows.
+
+    Forcing the GPU node on the deployed service showed six refusals reading "created in
+    shadow" — correct, and useless. The gate's own sentence never left the graph.
+    """
+    import asyncio
+
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from google.adk.workflow import node
+    from google.genai import types
+
+    import app.nightshift as ns
+    from ratchet.graph import build_app
+
+    @node
+    async def propose(ctx, goal: str, run_id: str):
+        ctx.state["queue"] = [finops.propose_effect(
+            "compute.stop_idle_instance", {"target": "ml-train-01"}, run_id)]
+        ctx.state["cursor"] = 0
+        yield {"proposed": 1}
+
+    async def once() -> dict:
+        adk = build_app(ns.ESTATE.deps, propose, name="probe")
+        runner = Runner(app=adk, session_service=InMemorySessionService(),
+                        auto_create_session=True)
+        final: dict = {}
+        async for ev in runner.run_async(
+            user_id="u", session_id="s1",
+            new_message=types.Content(role="user", parts=[types.Part(text="go")]),
+            state_delta={"goal": "g", "run_id": "probe-1"},
+        ):
+            if getattr(ev, "output", None) and isinstance(ev.output, dict):
+                final = ev.output
+        return final
+
+    final = asyncio.run(once())
+    assert final["gate"] == "liveness"
+    assert final["route"] == "refuse"
+    assert "94%" in final["gate_reason"]
+    assert not final["committed"]

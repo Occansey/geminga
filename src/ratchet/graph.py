@@ -362,11 +362,20 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
         decisions = decisions or []
         committed = sum(1 for o in outcomes if o.get("committed"))
         passed = sum(1 for o in outcomes if o.get("passed"))
+        # The gate that decided, and what it said. Without this the console could show
+        # *that* a run refused but not *why*: a forced attempt on a training job read
+        # "created in shadow" instead of "GPU at 94%". A refusal whose reason does not
+        # reach the operator is most of the way to no refusal at all — they learn the
+        # system says no sometimes, not what it knows.
+        last = decisions[-1] if decisions else {}
         yield {
             "refusals": sum(1 for d in decisions if d.get("route") in ("refuse", "escalate")),
             "operations": len(outcomes),
             "committed": committed,
             "verified_pass": passed,
+            "gate": last.get("gate", ""),
+            "route": last.get("route", ""),
+            "gate_reason": last.get("reason", ""),
             "board": [r.to_dict() for r in deps.ledger.board()],
         }
 
