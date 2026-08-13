@@ -189,7 +189,9 @@ class AuthorityLedger:
         self._store.save(rec)
         return rec
 
-    def restrict(self, op_class: str, to: Authority, reason: str = "") -> OperationRecord:
+    def restrict(
+        self, op_class: str, to: Authority, reason: str = "", evict: str | None = None
+    ) -> OperationRecord:
         """Lower an operation's standing. It is not possible to raise it through here.
 
         Authority is only ever granted by `observe`, and only in exchange for verified
@@ -202,6 +204,11 @@ class AuthorityLedger:
         widening anything by construction, not merely unlikely to.
         """
         rec = self.record(op_class)
+        # `evict` drops an argument shape out of the rehearsed envelope, so the shape has
+        # to be earned again from scratch rather than merely riding a lowered rung. A
+        # freeze that leaves the shape in the envelope is a freeze in name only.
+        if evict is not None and evict in rec.envelope:
+            rec.envelope.remove(evict)
         floor = Authority(min(int(to), int(rec.authority)))
         if floor != rec.authority:
             rec.authority = floor

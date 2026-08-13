@@ -306,15 +306,24 @@ class Reviewer:
         above stops being true, and `test_review.py` asserts the vocabulary exactly so
         that edit cannot land quietly.
         """
-        worst: dict[str, Verdict] = {}
+        # Keyed by op_class, because that is the key `AuthorityLedger.decide` reads.
+        # Keying by the *shape* string instead created a second, parallel record and
+        # froze that one, while the record the gates consult stayed where it was. Three
+        # freezes landed, the board reported them, and the agent remained free to repeat
+        # the operation — a safety control reporting success and changing nothing, which
+        # is the exact failure this system was built to catch, committed by the part of
+        # it that does the catching. Found by reading the board after a live run, not by
+        # any test.
+        worst: dict[tuple[str, str], Verdict] = {}
         for f in findings:
-            if SEVERITY[f.verdict] > SEVERITY.get(worst.get(f.shape, Verdict.AFFIRM), 0):
-                worst[f.shape] = f.verdict
+            key = (f.op_class, f.shape)
+            if SEVERITY[f.verdict] > SEVERITY.get(worst.get(key, Verdict.AFFIRM), 0):
+                worst[key] = f.verdict
 
-        for shape, verdict in worst.items():
+        for (op_class, shape), verdict in worst.items():
             if not verdict.restricts:
                 continue
-            current = self.ledger.record(shape).authority
+            current = self.ledger.record(op_class).authority
             if verdict is Verdict.FREEZE:
                 floor = Authority.SHADOW
             elif verdict is Verdict.DEMOTE:
@@ -324,7 +333,12 @@ class Reviewer:
                 # be re-earned rather than dropped, because the operation itself was
                 # sound and demoting sound work teaches the wrong lesson.
                 floor = current
-            self.ledger.restrict(shape, floor, reason=f"review: {verdict}")
+            # FREEZE also evicts the shape: dropping the rung alone would let the same
+            # argument shape ride back up on the next five clean runs against anything.
+            self.ledger.restrict(
+                op_class, floor, reason=f"review: {verdict}",
+                evict=shape if verdict is Verdict.FREEZE else None,
+            )
         return worst
 
 

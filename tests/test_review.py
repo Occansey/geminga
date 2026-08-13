@@ -51,14 +51,14 @@ def test_a_fully_compromised_reviewer_cannot_promote() -> None:
     """The adversarial case: the model returns whatever an attacker wants. The ledger's
     clamp means the best available outcome for them is 'nothing changes'."""
     led = AuthorityLedger()
-    _at(led, "compute.stop_idle_instance:x/critical", Authority.PROVISIONAL)
+    _at(led, "compute.stop_idle_instance", Authority.PROVISIONAL)
 
     for hostile in ("live", "promote", "widen", "AFFIRM_AND_GRANT", "", None, "affirm"):
         Reviewer(led, model=_model({"findings": [
             {"target": "ml-train-01", "verdict": hostile, "reason": "trust me"}
         ]})).review(_committed())
 
-    assert led.record("compute.stop_idle_instance:x/critical").authority is Authority.PROVISIONAL
+    assert led.record("compute.stop_idle_instance").authority is Authority.PROVISIONAL
 
 
 def test_restrict_clamps_rather_than_raises() -> None:
@@ -74,35 +74,35 @@ def test_freeze_drops_a_live_shape_to_shadow() -> None:
     """The poisoning answer. The reviewer never sees the poisoned note; it sees that a
     GPU node at 94% utilisation was stopped, and that is enough."""
     led = AuthorityLedger()
-    _at(led, "compute.stop_idle_instance:x/critical", Authority.LIVE)
+    _at(led, "compute.stop_idle_instance", Authority.LIVE)
     r = Reviewer(led, model=_model({"findings": [
         {"target": "ml-train-01", "verdict": "freeze", "reason": "GPU at 94%, training job"}
     ]}))
     found = r.review(_committed())
 
     assert [f.verdict for f in found] == [Verdict.FREEZE]
-    assert led.record("compute.stop_idle_instance:x/critical").authority is Authority.SHADOW
+    assert led.record("compute.stop_idle_instance").authority is Authority.SHADOW
     assert r.log.frozen_targets() == {"ml-train-01"}
 
 
 def test_demote_drops_exactly_one_rung() -> None:
     led = AuthorityLedger()
-    _at(led, "compute.stop_idle_instance:x/critical", Authority.LIVE)
+    _at(led, "compute.stop_idle_instance", Authority.LIVE)
     Reviewer(led, model=_model({"findings": [
         {"target": "ml-train-01", "verdict": "demote", "reason": "premature"}
     ]})).review(_committed())
-    assert led.record("compute.stop_idle_instance:x/critical").authority is Authority.PROVISIONAL
+    assert led.record("compute.stop_idle_instance").authority is Authority.PROVISIONAL
 
 
 def test_narrow_keeps_the_rung_and_resets_the_streak() -> None:
     """Demoting sound work teaches the wrong lesson; the shape still has to be re-earned."""
     led = AuthorityLedger()
-    rec = _at(led, "compute.stop_idle_instance:x/critical", Authority.PROVISIONAL)
+    rec = _at(led, "compute.stop_idle_instance", Authority.PROVISIONAL)
     rec.streak = 4
     Reviewer(led, model=_model({"findings": [
         {"target": "ml-train-01", "verdict": "narrow", "reason": "shape too broad"}
     ]})).review(_committed())
-    after = led.record("compute.stop_idle_instance:x/critical")
+    after = led.record("compute.stop_idle_instance")
     assert after.authority is Authority.PROVISIONAL
     assert after.streak == 0
 
@@ -110,7 +110,7 @@ def test_narrow_keeps_the_rung_and_resets_the_streak() -> None:
 def test_the_most_severe_verdict_in_a_batch_wins() -> None:
     led = AuthorityLedger()
     _at(led, "s", Authority.LIVE)
-    batch = [{"op_class": "op", "target": t, "shape": "s"} for t in ("a", "b", "c")]
+    batch = [{"op_class": "s", "target": t, "shape": "s"} for t in ("a", "b", "c")]
     Reviewer(led, model=_model({"findings": [
         {"target": "a", "verdict": "affirm", "reason": ""},
         {"target": "b", "verdict": "freeze", "reason": "load-bearing"},
@@ -125,9 +125,9 @@ def test_no_model_means_no_verdict_means_no_change() -> None:
     """The reviewer improves judgement; it is never a dependency of safety. A system
     that becomes unsafe when a model is rate-limited was never safe."""
     led = AuthorityLedger()
-    _at(led, "compute.stop_idle_instance:x/critical", Authority.LIVE)
+    _at(led, "compute.stop_idle_instance", Authority.LIVE)
     assert Reviewer(led, model=None).review(_committed()) == []
-    assert led.record("compute.stop_idle_instance:x/critical").authority is Authority.LIVE
+    assert led.record("compute.stop_idle_instance").authority is Authority.LIVE
 
 
 def test_a_raising_model_does_not_take_the_agent_down() -> None:
@@ -154,7 +154,7 @@ def test_a_verdict_about_a_resource_not_in_the_batch_is_ignored() -> None:
 
 def test_fenced_json_is_accepted_because_models_do_that() -> None:
     led = AuthorityLedger()
-    _at(led, "compute.stop_idle_instance:x/critical", Authority.LIVE)
+    _at(led, "compute.stop_idle_instance", Authority.LIVE)
     fenced = '```json\n{"findings": [{"target": "ml-train-01", "verdict": "freeze", "reason": "gpu"}]}\n```'
     assert len(Reviewer(led, model=lambda _: fenced).review(_committed())) == 1
 
@@ -182,3 +182,64 @@ def test_blast_class_and_utilisation_are_shown() -> None:
     assert shown["blast_class"] == "critical"
     assert shown["accelerators"] == 1
     assert shown["utilisation"]["gpu_percent"] == 94.0
+
+
+# -- the bug the unit tests could not see ----------------------------------- #
+
+def test_a_freeze_actually_stops_the_next_run() -> None:
+    """The regression that matters, asserted as end state rather than as a label.
+
+    `apply` keyed restrictions by the *shape* string. `decide` keys records by op_class.
+    So three freezes created a second, parallel record, froze that, and left the record
+    the gates consult untouched — the board showed 'freeze' three times and the agent
+    was still free to repeat the operation. A safety control that reports success and
+    changes nothing is the precise failure this system exists to catch, committed by the
+    part of it that does the catching.
+
+    Every earlier test in this file passed throughout, because they all asserted the
+    verdict or the record the reviewer itself had written. This one asks the ladder.
+    """
+    led = AuthorityLedger()
+    op, shape = "compute.stop_idle_instance", "compute.stop_idle_instance:x/critical"
+    rec = _at(led, op, Authority.PROVISIONAL)
+    rec.envelope.append(shape)
+    led._store.save(rec)
+    assert led.decide(op, shape).commits, "precondition: it would have committed"
+
+    Reviewer(led, model=_model({"findings": [
+        {"target": "ml-train-01", "verdict": "freeze", "reason": "GPU at 94%"}
+    ]})).review(_committed())
+
+    assert not led.decide(op, shape).commits, "the freeze must reach the gate"
+    assert led.record(op).authority is Authority.SHADOW
+
+
+def test_a_freeze_evicts_the_shape_from_the_envelope() -> None:
+    """Dropping the rung alone would let the same shape ride back up on the next five
+    clean runs against anything. The shape has to be earned again."""
+    led = AuthorityLedger()
+    op, shape = "compute.stop_idle_instance", "compute.stop_idle_instance:x/critical"
+    rec = _at(led, op, Authority.LIVE)
+    rec.envelope.append(shape)
+    led._store.save(rec)
+
+    Reviewer(led, model=_model({"findings": [
+        {"target": "ml-train-01", "verdict": "freeze", "reason": "GPU at 94%"}
+    ]})).review(_committed())
+    assert shape not in led.record(op).envelope
+
+
+def test_a_demote_does_not_evict() -> None:
+    """DEMOTE says 'too soon', not 'never this shape'. Evicting there would make every
+    ordinary demotion permanent."""
+    led = AuthorityLedger()
+    op, shape = "compute.stop_idle_instance", "compute.stop_idle_instance:x/critical"
+    rec = _at(led, op, Authority.LIVE)
+    rec.envelope.append(shape)
+    led._store.save(rec)
+
+    Reviewer(led, model=_model({"findings": [
+        {"target": "ml-train-01", "verdict": "demote", "reason": "premature"}
+    ]})).review(_committed())
+    assert shape in led.record(op).envelope
+    assert led.record(op).authority is Authority.PROVISIONAL
