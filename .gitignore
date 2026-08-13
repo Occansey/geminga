@@ -8,4 +8,6 @@ dist/
 build/
 *.egg-info/
 .DS_Store
-.claude/
+.claude/*
+# Skills are shared working knowledge, not local config — keep them versioned.
+!.claude/skills/
