@@ -326,6 +326,7 @@ def test_a_live_model_proposal_is_still_subject_to_the_ladder() -> None:
     from google.adk.sessions import InMemorySessionService
     from google.genai import types
 
+    from ratchet.admission import Snapshot
     from ratchet.domains import finops
     from ratchet.graph import Deps, Proposal, build_app
     from ratchet.world import DictReader
@@ -333,7 +334,15 @@ def test_a_live_model_proposal_is_still_subject_to_the_ladder() -> None:
     estate = finops.sample_estate()
     reader = DictReader(estate)
     deps = Deps(
-        AuthorityLedger(), Actuator(EffectLog(), {}), VirtualWorld(reader, finops.simulators()), reader
+        AuthorityLedger(),
+        Actuator(EffectLog(), {}),
+        VirtualWorld(reader, finops.simulators()),
+        reader,
+        # Without these the defaults fail closed — an empty snapshot admits nothing,
+        # which is correct for a gate and wrong for this test. The assertion below is
+        # about gate 4, so gates 1 and 2 have to be reachable.
+        snapshot=Snapshot.of(estate),
+        specs=finops.SPECS,
     )
     catalogue = "\n".join(f"- {n}: {s.summary}" for n, s in finops.SPECS.items())
     inventory = "\n".join(
@@ -364,9 +373,12 @@ def test_a_live_model_proposal_is_still_subject_to_the_ladder() -> None:
 
     outputs = asyncio.run(run())
     intake = next(o for o in outputs if isinstance(o, dict) and "accepted" in o)
-    gate = next(o for o in outputs if isinstance(o, dict) and o.get("route") in ("shadow", "commit", "consult"))
+    gate = next(o for o in outputs if isinstance(o, dict) and "gate" in o and "route" in o)
 
     assert intake["accepted"] is True
     assert intake["op_class"] in finops.SPECS
-    # Correctness is not authority: a brand-new class rehearses regardless.
+    # Correctness is not authority. The model picked the most expensive idle VM, which
+    # is the right answer, and the ladder still routes it to rehearsal because the
+    # class has earned nothing.
+    assert gate["gate"] == "authority", f"stopped at {gate['gate']} instead: {gate['reason']}"
     assert gate["route"] == "shadow"
