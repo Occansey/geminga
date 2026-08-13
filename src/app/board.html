@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nightshift — authority board</title>
+<style>
+  :root {
+    --ground:   #0F1214;
+    --panel:    #161A1D;
+    --panel-2:  #1D2226;
+    --line:     #252B30;
+    --line-soft:#1E2428;
+    --ink:      #E7EAE8;
+    --ink-mid:  #A3ADA8;
+    --ink-dim:  #6B7671;
+
+    --shadow:   #6C7A87;
+    --provisional: #D9A441;
+    --live:     #4FB08A;
+    --alarm:    #DB6049;
+    --money:    #E7EAE8;
+
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 14px; line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell { max-width: 1320px; margin: 0 auto; padding: 26px 24px 60px; display: flex; flex-direction: column; gap: 20px; }
+
+  /* masthead */
+  header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .brand { display: flex; flex-direction: column; gap: 4px; }
+  .eyebrow { font-family: var(--mono); font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-dim); }
+  h1 { margin: 0; font-size: 25px; font-weight: 600; letter-spacing: -.015em; }
+  h1 small { display: block; font-size: 13px; font-weight: 400; color: var(--ink-mid); letter-spacing: 0; margin-top: 3px; }
+  .figures { display: flex; gap: 30px; }
+  .figure { text-align: right; }
+  .figure .k { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-dim); }
+  .figure .v { font-family: var(--mono); font-size: 26px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .figure .v.reclaimed { color: var(--live); }
+
+  /* controls */
+  .controls { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; }
+  button {
+    font: inherit; font-size: 13px; cursor: pointer; color: var(--ink);
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 8px 15px;
+    transition: border-color .12s, background .12s;
+  }
+  button:hover:not(:disabled) { border-color: var(--ink-dim); background: #232a2f; }
+  button:disabled { opacity: .4; cursor: default; }
+  button.go { background: var(--live); border-color: var(--live); color: #08110D; font-weight: 600; }
+  button.go:hover:not(:disabled) { background: #5cc79b; border-color: #5cc79b; }
+  button.sabotage { border-color: #4a2a24; color: #E19484; }
+  button.sabotage:hover:not(:disabled) { border-color: var(--alarm); background: #2a1713; }
+  .hint { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
+
+  /* layout */
+  .grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .panel > h2 {
+    margin: 0; padding: 12px 16px; border-bottom: 1px solid var(--line-soft);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--ink-dim); font-weight: 400; display: flex; justify-content: space-between;
+  }
+
+  /* estate */
+  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12.5px; }
+  th { text-align: left; font-weight: 400; color: var(--ink-dim); font-size: 10px; letter-spacing: .12em;
+       text-transform: uppercase; padding: 9px 16px; border-bottom: 1px solid var(--line-soft); }
+  td { padding: 9px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+  tr:last-child td { border-bottom: 0; }
+  tr.focus td { background: rgba(79,176,138,.06); }
+  tr.gone td { color: var(--ink-dim); }
+  tr.gone .cost { color: var(--live); }
+  .cost { text-align: right; font-variant-numeric: tabular-nums; color: var(--money); white-space: nowrap; }
+  .name { color: var(--ink); }
+  .op { color: var(--ink-dim); font-size: 11px; }
+  .lock { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--provisional); }
+
+  /* rungs */
+  .rungs { display: flex; flex-direction: column-reverse; gap: 0; padding: 16px; }
+  .rung {
+    display: flex; align-items: center; gap: 14px; padding: 13px 14px;
+    border: 1px solid var(--line-soft); border-radius: 3px; margin-top: 8px;
+    background: var(--panel-2); position: relative; transition: border-color .25s, background .25s;
+  }
+  .rung .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); flex: none; transition: background .25s, box-shadow .25s; }
+  /* Inactive rungs must read as unambiguously off — this is the one visual the
+     whole demo hangs on, so colour is reserved for the rung actually in force. */
+  .rung .label {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--ink-dim); transition: color .25s;
+  }
+  .rung .desc { color: #55605B; font-size: 12px; margin-left: auto; text-align: right; transition: color .25s; }
+  .rung[data-on="true"] { background: #1F262A; }
+  .rung[data-on="true"] .desc { color: var(--ink-mid); }
+  .rung[data-key="shadow"][data-on="true"] .label { color: var(--shadow); }
+  .rung[data-key="provisional"][data-on="true"] .label { color: var(--provisional); }
+  .rung[data-key="live"][data-on="true"] .label { color: var(--live); }
+  .rung[data-key="shadow"][data-on="true"]      { border-color: var(--shadow); }
+  .rung[data-key="shadow"][data-on="true"] .dot { background: var(--shadow); box-shadow: 0 0 0 4px rgba(108,122,135,.16); }
+  .rung[data-key="provisional"][data-on="true"]      { border-color: var(--provisional); }
+  .rung[data-key="provisional"][data-on="true"] .dot { background: var(--provisional); box-shadow: 0 0 0 4px rgba(217,164,65,.16); }
+  .rung[data-key="live"][data-on="true"]      { border-color: var(--live); }
+  .rung[data-key="live"][data-on="true"] .dot { background: var(--live); box-shadow: 0 0 0 4px rgba(79,176,138,.16); }
+
+  .streak { padding: 0 16px 14px; }
+  .pips { display: flex; gap: 5px; margin-top: 7px; }
+  .pip { height: 5px; flex: 1; background: var(--line); border-radius: 2px; transition: background .2s; }
+  .pip.on { background: var(--live); }
+  .pip.lost { background: var(--alarm); }
+
+  /* log */
+  .log { max-height: 380px; overflow-y: auto; font-family: var(--mono); font-size: 12px; }
+  .entry { display: grid; grid-template-columns: 34px 96px 52px 1fr; gap: 10px; padding: 8px 16px;
+           border-bottom: 1px solid var(--line-soft); align-items: baseline; }
+  .entry:last-child { border-bottom: 0; }
+  .entry .n { color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  .entry .auth { letter-spacing: .06em; }
+  .entry .act { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); }
+  .entry .act.did { color: var(--live); }
+  .entry .why { color: var(--ink-mid); }
+  .entry.demote { background: rgba(219,96,73,.09); }
+  .entry.demote .why, .entry.demote .auth { color: var(--alarm); }
+  .a-shadow { color: var(--shadow); }
+  .a-provisional { color: var(--provisional); }
+  .a-live { color: var(--live); }
+  .empty { padding: 22px 16px; color: var(--ink-dim); font-family: var(--mono); font-size: 12px; }
+
+  footer { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); border-top: 1px solid var(--line-soft); padding-top: 14px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div class="brand">
+      <div class="eyebrow">Fortified Enterprise Fleet · Gemini 3.6 · ADK 2 graph runtime</div>
+      <h1>Nightshift
+        <small>Every operation starts in rehearsal. It commits when it has earned the right, and loses it the moment it stops being correct.</small>
+      </h1>
+    </div>
+    <div class="figures">
+      <div class="figure"><div class="k">Run rate</div><div class="v" id="spend">—</div></div>
+      <div class="figure"><div class="k">Reclaimed</div><div class="v reclaimed" id="saved">$0.00</div></div>
+    </div>
+  </header>
+
+  <div class="controls">
+    <button class="go" id="run">Run the ladder</button>
+    <button class="sabotage" id="sabotage">Make the tool lie from run 6</button>
+    <button id="reset">Reset</button>
+    <span class="hint" id="status">idle</span>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2><span>The estate</span><span id="estate-count"></span></h2>
+      <table>
+        <thead><tr><th>Resource</th><th>Operation</th><th style="text-align:right">$ / month</th></tr></thead>
+        <tbody id="estate"></tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="panel">
+        <h2><span>Authority · compute.stop_idle_instance</span><span id="rung-note"></span></h2>
+        <div class="rungs" id="rungs">
+          <div class="rung" data-key="live"><span class="dot"></span><span class="label a-live">Live</span><span class="desc">commits · sampled verification</span></div>
+          <div class="rung" data-key="provisional"><span class="dot"></span><span class="label a-provisional">Provisional</span><span class="desc">commits · every run verified</span></div>
+          <div class="rung" data-key="shadow" data-on="true"><span class="dot"></span><span class="label a-shadow">Shadow</span><span class="desc">rehearses only · never commits</span></div>
+        </div>
+        <div class="streak">
+          <div class="eyebrow">Consecutive verified runs — 5 to promote</div>
+          <div class="pips" id="pips"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Run log</h2>
+        <div class="log" id="log"><div class="empty">Nothing has run yet.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Verification re-derives resource state from the environment — it never asks the agent how it went. Irreversible operations stay behind a human at every rung.</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const money = n => "$" + n.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+let baseline = null, running = false;
+
+async function loadEstate() {
+  const data = await (await fetch("/api/estate")).json();
+  if (baseline === null) baseline = data.spend;
+  $("spend").textContent = money(data.spend);
+  $("saved").textContent = money(Math.max(0, baseline - data.spend));
+  $("estate-count").textContent = data.resources.length + " resources";
+  $("estate").innerHTML = data.resources.map(r => {
+    const gone = r.status === "TERMINATED" || r.exists === false || r.status === "RELEASED";
+    const focus = r.target === "staging-web-3";
+    return `<tr class="${gone ? "gone" : ""} ${focus ? "focus" : ""}">
+      <td class="name">${r.target}${gone ? " · stopped" : ""}</td>
+      <td class="op">${r.op_class.split(".")[1]}${r.reversible ? "" : ' <span class="lock">human</span>'}</td>
+      <td class="cost">${money(r.monthly_cost_usd)}</td></tr>`;
+  }).join("");
+}
+
+function setRung(name) {
+  document.querySelectorAll(".rung").forEach(el => el.dataset.on = String(el.dataset.key === name));
+}
+function setPips(streak, lost) {
+  $("pips").innerHTML = Array.from({length: 5}, (_, i) =>
+    `<div class="pip ${lost && i === 0 ? "lost" : i < streak ? "on" : ""}"></div>`).join("");
+}
+setPips(0, false);
+
+function logEntry(d, demoted) {
+  if ($("log").querySelector(".empty")) $("log").innerHTML = "";
+  const row = document.createElement("div");
+  row.className = "entry" + (demoted ? " demote" : "");
+  row.innerHTML = `<span class="n">${d.run}</span>
+    <span class="auth a-${d.authority}">${d.authority}</span>
+    <span class="act ${d.acted ? "did" : ""}">${d.acted ? "acted" : "—"}</span>
+    <span class="why">${d.reason}</span>`;
+  $("log").prepend(row);
+}
+
+async function run(lieFrom) {
+  if (running) return;
+  running = true;
+  $("run").disabled = $("sabotage").disabled = $("reset").disabled = true;
+  $("status").textContent = lieFrom ? "running — the tool will start lying at run " + lieFrom : "running";
+
+  let previous = "shadow";
+  const res = await fetch("/api/run", {
+    method: "POST", headers: {"content-type": "application/json"},
+    body: JSON.stringify({runs: 8, lie_from: lieFrom || null})
+  });
+  const reader = res.body.getReader(), decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const {value, done} = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, {stream: true});
+    const parts = buffer.split("\n\n"); buffer = parts.pop();
+    for (const part of parts) {
+      if (!part.startsWith("data: ")) continue;
+      const d = JSON.parse(part.slice(6));
+      if (d.done) continue;
+      const demoted = d.reason.startsWith("demoted");
+      setRung(d.authority);
+      setPips(d.streak, demoted);
+      logEntry(d, demoted);
+      $("rung-note").textContent = `${d.passes} verified · ${d.failures} failed · ${d.demotions} demotions`;
+      await loadEstate();
+      previous = d.authority;
+    }
+  }
+  $("status").textContent = "done";
+  running = false;
+  $("run").disabled = $("sabotage").disabled = $("reset").disabled = false;
+}
+
+$("run").onclick = () => run(null);
+$("sabotage").onclick = () => run(6);
+$("reset").onclick = async () => {
+  await fetch("/api/reset", {method: "POST"});
+  baseline = null; setRung("shadow"); setPips(0, false);
+  $("log").innerHTML = '<div class="empty">Nothing has run yet.</div>';
+  $("rung-note").textContent = ""; $("status").textContent = "idle";
+  await loadEstate();
+};
+loadEstate();
+</script>
+</body>
+</html>
