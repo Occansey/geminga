@@ -183,6 +183,11 @@ TRAPS = [
     "forbidden verb, absent from the vocabulary",
     "implausible saving as a hijack signature",
     "injected payload in resource metadata",
+    # legal
+    "resource under legal hold",
+    "hold state unknowable for a snapshot",
+    "unanswered escalation past its expiry",
+    "resource outside the permitted data boundary",
 ]
 
 
@@ -278,3 +283,70 @@ def test_a_clean_estate_is_admitted() -> None:
 
     verdict = admit("compute.stop_idle_instance", "staging-web-3", _snapshot())
     assert verdict.allowed is True, verdict.reason
+
+
+# --------------------------------------------------------------------------- #
+# traps: the legal gate
+#
+# Three-valued because disks and snapshots expose no hold primitive at all, and
+# timed because an indefinite block builds a GDPR Art. 5(1)(e) violation of its own.
+# --------------------------------------------------------------------------- #
+
+def test_refuses_to_delete_a_resource_under_legal_hold() -> None:
+    from ratchet.legal import Hold, HoldRegister, assess
+
+    verdict = assess("snap-2024", "snapshot", {}, HoldRegister({"snap-2024": "Acme v. Corp"}))
+    assert verdict.state is Hold.HOLD
+    assert verdict.may_delete is False
+    assert "Acme v. Corp" in verdict.reason
+    assert verdict.escalate_to
+
+
+def test_a_snapshot_with_no_hold_signal_is_unknown_not_clear() -> None:
+    """The finding that reshaped the gate: disks and snapshots have no retention lock,
+    no immutability and no deletion protection, so a clean-looking snapshot carries
+    almost no information. Silence must not decay into permission."""
+    from ratchet.legal import Hold, HoldRegister, assess
+
+    verdict = assess("snap-old", "snapshot", {}, HoldRegister())
+    assert verdict.state is Hold.UNKNOWN
+    assert verdict.may_delete is False
+    assert "retention-lock" in verdict.signals_unavailable
+
+
+def test_a_bucket_hold_primitive_is_actually_read() -> None:
+    from ratchet.legal import Hold, HoldRegister, assess
+
+    held = assess("logs", "bucket", {"temporaryHold": True}, HoldRegister())
+    assert held.state is Hold.HOLD
+
+    clear = assess("logs", "bucket", {"temporaryHold": False}, HoldRegister())
+    assert clear.state is Hold.CLEAR
+    assert clear.may_delete is True
+
+
+def test_an_unanswered_escalation_becomes_an_over_retention_finding() -> None:
+    """A queue that only grows is how "blocked for legal reasons" turns into an
+    unauthorised archive. Indecision has to cost something."""
+    from ratchet.legal import EscalationQueue, HoldRegister, assess
+
+    now = [1_000_000.0]
+    queue = EscalationQueue(clock=lambda: now[0])
+    verdict = assess("snap-old", "snapshot", {}, HoldRegister(), clock=lambda: now[0])
+    queue.raise_for("snap-old", verdict)
+
+    assert queue.report()["overdue"] == 0
+    now[0] += 15 * 86400
+    assert queue.report()["overdue"] == 1
+    assert "snap-old" in queue.report()["over_retention_risk"]
+
+
+def test_a_resource_outside_the_data_boundary_is_routed_away_before_inspection() -> None:
+    """Residency never forbids a deletion — location constraints govern only where
+    resources may be created. What it constrains is the agent: reading can breach the
+    boundary before deleting would."""
+    from ratchet.legal import crosses_boundary
+
+    eu_only = frozenset({"europe-"})
+    assert crosses_boundary({"region": "us-central1"}, eu_only) is True
+    assert crosses_boundary({"region": "europe-west1"}, eu_only) is False
