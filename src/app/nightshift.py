@@ -315,7 +315,7 @@ async def run(req: RunRequest) -> StreamingResponse:
         # The second opinion, on everything that actually reached the actuator. It can
         # only restrict, so a slow, absent or hostile reviewer costs caution, never
         # safety — which is why it is allowed to run at all.
-        findings = ESTATE.reviewer.review(committed, ESTATE.deps.topology)
+        findings = ESTATE.reviewer.review(committed, ESTATE.deps.topology, finops.SPECS)
         if findings:
             yield f"data: {json.dumps({'review': [f.to_dict() for f in findings]})}\n\n"
 

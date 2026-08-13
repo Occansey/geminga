@@ -95,6 +95,10 @@ def _set_lifecycle(before: dict, params: dict) -> dict:
     return {
         **before,
         "lifecycle_days": params.get("days", 30),
+        # Recorded explicitly. A bare `lifecycle_days` is ambiguous between a rule that
+        # moves objects to Coldline and one that deletes them, and everything downstream
+        # — the legal gate, the reviewer, a human reading the board — has to guess.
+        "lifecycle_action": "SetStorageClass:COLDLINE",
         "monthly_cost_usd": round(before.get("monthly_cost_usd", 0.0) * 0.4, 2),
     }
 
@@ -144,8 +148,18 @@ SPECS: dict[str, OpSpec] = {
         ),
         OpSpec(
             "storage.set_lifecycle_policy",
-            "Age objects in a bucket to colder storage after N days",
-            destroys_data=True,
+            "Transition objects to Coldline after N days. No object is deleted and none "
+            "becomes unreadable; only the storage class and its price change.",
+            # Was True, which contradicted this operation's own summary and damage note,
+            # both of which describe a transition. The flag drives the legal gate, so the
+            # error made every lifecycle change ask a hold question it has no business
+            # asking — and the post-commit reviewer, shown the flag, twice called this
+            # "a 30-day data destruction policy" and restricted it.
+            #
+            # Corrected because the operation transitions, not to quiet the reviewer. If
+            # this op ever gains a Delete action it needs a separate op_class with
+            # destroys_data=True and reversible=False, not a parameter.
+            destroys_data=False,
             reversible=True,
             simulate=_set_lifecycle,
             expect=lambda p: {"lifecycle_days": p.get("days", 30)},

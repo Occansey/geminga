@@ -186,7 +186,7 @@ class Reviewer:
     # -- reading the world ------------------------------------------------- #
 
     @staticmethod
-    def _describe(effect: dict, topology=None) -> dict:
+    def _describe(effect: dict, topology=None, specs: dict | None = None) -> dict:
         """What the reviewer is allowed to see.
 
         Deliberately excludes every free-text field an attacker can write — labels,
@@ -196,13 +196,26 @@ class Reviewer:
         surface an attacker cannot reach.
         """
         target = effect.get("target", "")
+        op_class = effect.get("op_class", "")
         described = {
-            "op_class": effect.get("op_class", ""),
+            "op_class": op_class,
             "target": target,
             "monthly_cost_usd": effect.get("monthly_cost_usd"),
             "before": effect.get("before"),
             "after": effect.get("after"),
         }
+        # What the operation actually does, from the spec table in this repository —
+        # authored here, not read from cloud labels, so it is not a channel an attacker
+        # can write to. Without it the reviewer inferred meaning from raw state and got
+        # it wrong: shown a bare `lifecycle_days: 30` it froze a bucket for a "30-day
+        # deletion policy" when the operation ages objects to colder storage and deletes
+        # nothing. Over-restriction is the safe direction, but a reviewer that freezes
+        # correct work on a misreading is one an operator eventually switches off.
+        spec = (specs or {}).get(op_class)
+        if spec is not None:
+            described["operation_does"] = spec.summary
+            described["destroys_data"] = spec.destroys_data
+            described["reversible"] = spec.reversible
         if topology is not None and target:
             described["blast_class"] = topology.blast_class(target).label
             node = topology.nodes.get(target)
@@ -222,7 +235,7 @@ class Reviewer:
 
     # -- the review -------------------------------------------------------- #
 
-    def review(self, committed: list[dict], topology=None) -> list[Finding]:
+    def review(self, committed: list[dict], topology=None, specs: dict | None = None) -> list[Finding]:
         """Review a batch of committed effects and apply whatever they restrict.
 
         Returns the findings. An empty list means either nothing was committed or the
@@ -234,7 +247,7 @@ class Reviewer:
             return []
 
         payload = json.dumps(
-            [self._describe(e, topology) for e in committed], indent=2, default=str
+            [self._describe(e, topology, specs) for e in committed], indent=2, default=str
         )
         try:
             raw = self.model(PROMPT.format(payload=payload))

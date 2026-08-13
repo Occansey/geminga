@@ -373,8 +373,15 @@ def test_every_data_destroying_operation_is_marked_as_such() -> None:
     assert destructive == {
         "compute.delete_unattached_disk",
         "compute.delete_stale_snapshot",
-        "storage.set_lifecycle_policy",
     }
+    # storage.set_lifecycle_policy was in this set and should not have been. It
+    # transitions objects to Coldline; its own summary and damage note both say so, and
+    # nothing it does removes an object or makes one unreadable. The flag drives the
+    # legal gate, so the error made every lifecycle change ask a hold question it has no
+    # business asking. If the operation ever gains a Delete action that is a separate
+    # op_class with destroys_data=True and reversible=False, not a parameter — at which
+    # point this assertion should fail and be updated deliberately.
+    assert not finops.SPECS["storage.set_lifecycle_policy"].destroys_data
 
 
 def test_an_operation_cannot_be_aimed_at_the_wrong_kind_of_resource() -> None:
