@@ -42,6 +42,13 @@ SNAPSHOT_MONTHLY_PER_GB = 0.026
 # the wrong direction for a tool whose job is to find money.
 IN_USE_IP_MONTHLY = 3.65
 UNUSED_IP_MONTHLY = 7.30
+# GCP's always-free allowances. Applied because a tool about money that reports
+# $6.11 against a $0 bill is wrong in the same way as one that under-reports — it
+# is just flattering instead of alarming. Approximate by nature: the allowance is
+# per *billing account*, and this module only sees one project.
+FREE_TIER_MICRO_REGIONS = ("us-west1", "us-central1", "us-east1")
+FREE_TIER_STANDARD_DISK_GB = 30
+
 IDLE_CPU_THRESHOLD = 5.0          # percent, 7-day mean
 STALE_SNAPSHOT_DAYS = 180
 
@@ -59,12 +66,24 @@ def read_estate(project: str, idle_days: int = 7) -> dict[str, dict[str, Any]]:
 
     estate: dict[str, dict[str, Any]] = {}
     cpu = _cpu_averages(project, idle_days)
+    free_micro_used = False       # one e2-micro is free; a second one is not
+    free_disk_gb_left = FREE_TIER_STANDARD_DISK_GB
 
     # --- instances ---------------------------------------------------------
     for zone, scoped in compute_v1.InstancesClient().aggregated_list(project=project):
         for vm in getattr(scoped, "instances", []) or []:
             machine = _last(vm.machine_type)
             cost = MACHINE_MONTHLY.get(machine, 0.0)
+            region = _last(zone).rsplit("-", 1)[0]
+            free = (
+                machine == "e2-micro"
+                and region in FREE_TIER_MICRO_REGIONS
+                and vm.status == "RUNNING"
+                and not free_micro_used
+            )
+            if free:
+                free_micro_used = True
+                cost = 0.0
             usage = cpu.get(vm.name)
             estate[f"compute.stop_idle_instance:{vm.name}"] = {
                 "status": vm.status,
@@ -72,6 +91,7 @@ def read_estate(project: str, idle_days: int = 7) -> dict[str, dict[str, Any]]:
                 "zone": _last(zone),
                 "cpu_7d_avg": usage,
                 "monthly_cost_usd": cost if vm.status == "RUNNING" else 0.0,
+                "free_tier": free,
                 "exists": True,
                 "cost_is_estimate": True,
                 # Only a running VM below the CPU threshold is a candidate. An
@@ -85,14 +105,20 @@ def read_estate(project: str, idle_days: int = 7) -> dict[str, dict[str, Any]]:
     for zone, scoped in compute_v1.DisksClient().aggregated_list(project=project):
         for disk in getattr(scoped, "disks", []) or []:
             attached = list(disk.users or [])
+            billable_gb = disk.size_gb
+            if _last(disk.type_) == "pd-standard" and free_disk_gb_left > 0:
+                covered = min(disk.size_gb, free_disk_gb_left)
+                free_disk_gb_left -= covered
+                billable_gb = disk.size_gb - covered
             estate[f"compute.delete_unattached_disk:{disk.name}"] = {
                 "attached_to": _last(attached[0]) if attached else None,
                 "size_gb": disk.size_gb,
                 "disk_type": _last(disk.type_),
                 "zone": _last(zone),
                 "monthly_cost_usd": round(
-                    disk.size_gb * DISK_MONTHLY_PER_GB.get(_last(disk.type_), 0.114), 2
+                    billable_gb * DISK_MONTHLY_PER_GB.get(_last(disk.type_), 0.114), 2
                 ),
+                "free_tier": billable_gb == 0,
                 "exists": True,
                 "cost_is_estimate": True,
                 "idle_candidate": not attached,
