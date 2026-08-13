@@ -51,17 +51,27 @@ look at what was done.
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import StrEnum
 
 from ratchet.authority import Authority, AuthorityLedger
 
+log = logging.getLogger("ratchet.review")
+
 # The reviewer is a *stronger* model than the proposer on purpose. The proposer is
 # optimised for throughput over a long tool loop; this runs once per commit, off the
 # critical path, and the whole point is to spend more thought per decision than the
 # thing being reviewed did.
-REVIEW_MODEL = "gemini-3.6-pro"
+#
+# Not a 3.x Pro: `gemini-3.6-pro` and `gemini-3-pro` both return 404 on this project,
+# so the honest available answer is a Pro tier from the previous generation reviewing a
+# current-generation Flash. That is still the asymmetry the design wants — more thought
+# per decision than the proposer spent — and pretending otherwise by naming a model we
+# cannot reach would make the reviewer silently inert, which is precisely the failure
+# this module was found in.
+REVIEW_MODEL = "gemini-2.5-pro"
 
 # A batch is one hour of committed work. Reviewing in batch rather than per-effect is
 # deliberate: a single deletion can look reasonable while six of them in an hour is a
@@ -228,9 +238,15 @@ class Reviewer:
         )
         try:
             raw = self.model(PROMPT.format(payload=payload))
-        except Exception:  # noqa: BLE001
-            # A reviewer that raises must not take the agent down with it. No verdict
-            # is a safe outcome precisely because no verdict can only fail to restrict.
+        except Exception as exc:  # noqa: BLE001
+            # A reviewer that raises must not take the agent down with it. No verdict is
+            # a safe outcome precisely because no verdict can only fail to restrict.
+            #
+            # But it is logged. Swallowing this silently is how the reviewer ran in
+            # production against two real commits and produced nothing, reporting
+            # `reviewed: 0` — indistinguishable from a module that was never wired. A
+            # fail-safe you cannot see is a fail-safe you cannot trust.
+            log.warning("review unavailable, ladder unchanged: %s", exc)
             return []
 
         findings = self._parse(raw, committed)
@@ -250,6 +266,7 @@ class Reviewer:
         try:
             parsed = json.loads(text)
         except (json.JSONDecodeError, ValueError):
+            log.warning("review output was not JSON, no verdicts applied")
             return []
 
         by_target = {e.get("target"): e for e in committed}
