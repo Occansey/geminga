@@ -174,6 +174,35 @@ frontend. See [DECISIONS.md](../DECISIONS.md) D-007.
 
 ---
 
+## This is Google's own doctrine, rediscovered
+
+Worth stating plainly, because it is stronger than novelty: almost every mechanism
+here has a name at Google already, and we should use theirs.
+
+| Ours | Google's | Source |
+|---|---|---|
+| Deterministic gates around a model | **Policy engines** — "dependable, deterministic security mechanisms… that operate outside the AI model's reasoning process… acting as security chokepoints" | *An Introduction to Google's Approach to AI Agent Security* (Díaz, Kern, Olive, 2025) |
+| allow / escalate / human-approve | **allow / block / require user confirmation** — keyed on "the action's inherent risk (**Is it irreversible?**)" | ibid. |
+| Verifier never actuates | **Canary Analysis Service** — "a purely passive observer: it never changes any part of the production system" | Davidovič & Beyer, *ACM Queue* 2018 |
+| Binary agree/disagree, no score | CAS "intentionally does not provide a confidence score, p-value, or the like: that would imply that the rollout tool has logic to determine when to take a real-world action" | ibid. |
+| Damage budget halts work | **Error budget** — "as long as there is error budget remaining, new releases can be pushed"; exhaustion triggers a production freeze | SRE Book |
+| Human gate on irreversible deletion | "For actions deemed critical or irreversible — such as **deleting large amounts of data** — the system should require explicit human confirmation" | Google agent security paper; echoed in SAIF 2.0 |
+
+Google's own paper states our central thesis outright: *"neither purely rule-based
+systems nor purely AI-based judgment are sufficient on their own"*, and reasoning-based
+defences "**must** work in concert with deterministic controls."
+
+And the SRE Book's chapter on automation contains Google's postmortem of a system that
+deleted disks fleet-wide because "the empty set was used as a special value,
+interpreted to mean 'everything'." **The shadow rung is the remediation Google wrote
+down in 2016**, applied to an agent instead of a script.
+
+What is genuinely ours, and flagged as such: the *k*-consecutive promotion rule (Google
+canaries in stages but publishes no k-of-k criterion), restore-minutes as a unit
+(anchor to MTTR), and evidence-accumulating authority held **per operation class** —
+an error budget and a canary applied to the agent's own permission rather than to a
+release.
+
 ## Platform components
 
 | Component | Use | State |
