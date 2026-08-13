@@ -115,6 +115,32 @@ class Estate:
             attempts=self.attempts,
         )
 
+    def restore_world(self) -> None:
+        """Put the estate back to its starting state, keeping the ladder.
+
+        The boundary is one *request*, not one run. Inside a run sequence the world has
+        to persist or the precondition gate is meaningless — that was the bug where the
+        agent reapplied the same policy three times and the reviewer called it a
+        malfunctioning loop. Across requests it has to reset, or the first click does the
+        work and every click after it correctly reports there is nothing left to do,
+        which reads as a dead button.
+
+        The ledger is deliberately untouched: authority is earned over time and should
+        survive a fresh estate. Only `/api/reset` clears it.
+
+        Mutated in place because the reader holds this dict by reference.
+        """
+        if LIVE_PROJECT:
+            from ratchet.domains import gcp_inventory
+
+            fresh = gcp_inventory.read_estate(LIVE_PROJECT)
+        else:
+            fresh = finops.sample_estate()
+        self.rows.clear()
+        self.rows.update(fresh)
+        self.lying = False
+        self.refresh_snapshot()
+
     def refresh_snapshot(self) -> None:
         """Re-derive admission's view of the world immediately before a run.
 
@@ -248,7 +274,7 @@ async def run(req: RunRequest) -> StreamingResponse:
 
         op_class, target = (req.op_class, req.target) if req.op_class and req.target else best_candidate()
         adk_app = build_app(ESTATE.deps, propose, name="nightshift")
-        ESTATE.refresh_snapshot()
+        ESTATE.restore_world()
         scope = scope_of(op_class, {"target": target})
         pristine = dict(ESTATE.rows[scope])
         committed: list[dict] = []

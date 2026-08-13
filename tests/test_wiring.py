@@ -107,3 +107,46 @@ def test_a_refusal_renders_instead_of_killing_the_stream() -> None:
                   OperationRecord(op_class="compute.delete_unattached_disk"))
     assert record.authority is Authority.SHADOW
     assert record.passes == 0
+
+
+def test_a_second_run_has_work_to_do_again() -> None:
+    """One click is one demonstration; the world resets at the request boundary.
+
+    Not resetting it at all made the first click do the work and every click after it
+    report, correctly, that there was nothing left — which from the outside is a dead
+    button. Resetting per *run* was the opposite error: it undid real work mid-sequence
+    and handed the agent the same job repeatedly.
+    """
+    from ratchet.domains import finops
+
+    key = "storage.set_lifecycle_policy:raw-events"
+    ns.ESTATE.restore_world()
+    assert ns.ESTATE.rows[key]["lifecycle_days"] is None
+
+    ns.ESTATE.rows[key] = finops.SPECS["storage.set_lifecycle_policy"].simulate(
+        ns.ESTATE.rows[key], {}
+    )
+    assert ns.ESTATE.rows[key]["lifecycle_days"] == 30, "the work is done"
+
+    ns.ESTATE.restore_world()
+    assert ns.ESTATE.rows[key]["lifecycle_days"] is None, "and the next click has work again"
+
+
+def test_restoring_the_world_does_not_reset_the_ladder() -> None:
+    """Authority is earned over time and should survive a fresh estate."""
+    from ratchet.authority import Authority
+
+    rec = ns.ESTATE.ledger.record("compute.stop_idle_instance")
+    rec.authority = Authority.PROVISIONAL
+    ns.ESTATE.ledger._store.save(rec)
+
+    ns.ESTATE.restore_world()
+    assert ns.ESTATE.ledger.record("compute.stop_idle_instance").authority is Authority.PROVISIONAL
+    ns.ESTATE.reset()
+
+
+def test_the_reader_still_sees_the_restored_rows() -> None:
+    """The reader holds the dict by reference, so restore mutates in place. Rebinding it
+    would leave every gate reading a world nobody updates any more."""
+    ns.ESTATE.restore_world()
+    assert ns.ESTATE.deps.reader.state is ns.ESTATE.rows
