@@ -137,22 +137,38 @@ class Snapshot:
     an attacker creates bait mid-flight.
     """
 
-    targets: frozenset[str]
+    resources: dict[str, frozenset[str]]   # target -> the resource types it actually is
     digest: str
+
+    @property
+    def targets(self) -> frozenset[str]:
+        return frozenset(self.resources)
+
+    def types_of(self, target: str) -> frozenset[str]:
+        return self.resources.get(target, frozenset())
 
     @classmethod
     def of(cls, estate: dict[str, dict[str, Any]]) -> "Snapshot":
-        """Keyed by *resource*, not by operation.
+        """Records what each resource *is*, not merely that it existed.
 
-        "Did this resource exist when we planned?" is a question about the resource.
-        Keying by `op_class:target` conflated it with "is this operation known", and
-        made every novel operation on a familiar resource look like an attacker
-        conjuring bait mid-flight.
+        Storing bare names let a proposal delete "snapshot api-prod-2" — a real target
+        name, the wrong kind of thing — because existence and type were conflated.
+        Exhaustive enumeration found 49 such admissions across a 56-pair space; no
+        hand-written payload had.
+
+        A name can legitimately carry several types: in GCP a VM and its boot disk
+        routinely share one, so this is a set rather than a value.
         """
-        keys = sorted(estate)
-        targets = {k.split(":", 1)[1] for k in keys if ":" in k}
-        digest = hashlib.sha256("\n".join(keys).encode()).hexdigest()[:16]
-        return cls(frozenset(targets), digest)
+        resources: dict[str, set[str]] = {}
+        for scope in estate:
+            if ":" not in scope:
+                continue
+            op_class, target = scope.split(":", 1)
+            kind = OPERATIONS.get(op_class, ("", ""))[0]
+            if kind:
+                resources.setdefault(target, set()).add(kind)
+        digest = hashlib.sha256("\n".join(sorted(estate)).encode()).hexdigest()[:16]
+        return cls({t: frozenset(k) for t, k in resources.items()}, digest)
 
 
 @dataclass
@@ -191,6 +207,15 @@ def admit(
             False,
             f"{target!r} was not in the inventory snapshot {snapshot.digest} taken at plan time",
             "not-in-snapshot",
+        )
+
+    actual = snapshot.types_of(target)
+    if parsed_type not in actual:
+        return Admission(
+            False,
+            f"{target!r} is {'/'.join(sorted(actual)) or 'of no known type'}, "
+            f"not a {parsed_type} — the operation does not match the resource",
+            "type-mismatch",
         )
 
     allowed_verbs = VERB_ALLOWLIST.get(parsed_type)

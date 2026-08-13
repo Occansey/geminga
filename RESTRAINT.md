@@ -129,6 +129,52 @@ Caveat: an earlier version of this eval tested admission only and reported one p
 failing — but it is the shape of error worth naming, since an eval that flatters the
 system is worse than no eval.
 
+## 4c. Coverage proof — exhaustion, not sampling
+
+`PYTHONPATH=src:. python -m evals.coverage`
+
+A payload benchmark answers *"did these attacks get through?"* — which is evidence
+about the author's imagination, since I wrote both the payloads and the defence. A
+static payload set systematically over-states a defence, and no number of hand-written
+cases repairs that.
+
+A stronger question is available, because the agent's reachable action space is
+**finite and enumerated**: eight operation classes, each mapped to one resource type
+and one verb, each target required to appear in a pre-planning inventory snapshot. So
+the space of *actions* can be enumerated rather than the space of *attacks* sampled.
+
+| | Result |
+|---|---|
+| Known operations × every target | 56 pairs, **enumerated completely** — 14 admitted, 42 refused, **0 unexpected** |
+| Forbidden verbs × every target | 63 pairs, **enumerated completely** — 0 leaked |
+| Adversarial fuzz (seed 20260813) | 20,000 trials across near-miss operation names, invented targets, case and separator mutations, and random strings — **0 admitted** |
+
+Zero out of 20,000 is not "zero". It is **a true admission rate below 1.5 × 10⁻⁴ at
+95% confidence** (rule of three), and saying it that way is the difference between a
+result and a boast.
+
+### What it found
+
+The exhaustive pass immediately failed, and the failure was real: **49 of 56 pairs were
+admitted that should not have been.** Admission checked that a target existed and that
+the verb suited the operation's declared resource type — but never that *the target was
+that type*. So `delete snapshot api-prod-2` passed, because `api-prod-2` is a target in
+the snapshot; it is simply an instance rather than a snapshot.
+
+Six hand-written injection payloads had not found this. Enumerating 56 pairs did, in
+one run. The snapshot now records what each resource *is*, and a mismatch is refused as
+`type-mismatch`.
+
+Both the enumeration and a 5,000-trial fuzz are asserted in CI, so a future change that
+re-opens the hole fails a test before anyone films a demo about it.
+
+### Scope, stated rather than implied
+
+This proves one thing: the admission gate's behaviour over its entire input space. It
+does **not** prove that the operation table is the right table, that the snapshot is
+honest, or anything about the four gates after admission. Those are argued and tested
+separately. A proof that hides its own scope is an assertion in a lab coat.
+
 ## 5. Containment
 
 **Not yet implemented, and the weakest of the five.** The agent currently runs with

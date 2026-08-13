@@ -375,3 +375,30 @@ def test_every_data_destroying_operation_is_marked_as_such() -> None:
         "compute.delete_stale_snapshot",
         "storage.set_lifecycle_policy",
     }
+
+
+def test_an_operation_cannot_be_aimed_at_the_wrong_kind_of_resource() -> None:
+    """Type confusion, found by exhaustive enumeration and not by any hand-written
+    payload: "delete snapshot api-prod-2" was admitted because api-prod-2 is *a*
+    target in the snapshot — just not a snapshot. Existence and type were conflated."""
+    from ratchet.admission import Snapshot, admit
+    from ratchet.domains import finops
+
+    snapshot = Snapshot.of(finops.sample_estate())
+
+    wrong = admit("compute.delete_stale_snapshot", "api-prod-2", snapshot)
+    assert wrong.allowed is False
+    assert wrong.check == "type-mismatch"
+
+    right = admit("compute.downsize_instance", "api-prod-2", snapshot)
+    assert right.allowed is True
+
+
+def test_the_whole_admission_space_is_enumerated_with_no_surprises() -> None:
+    """The coverage proof, gated in CI. If a change admits something outside the
+    intended set, this fails before anyone films a demo about it."""
+    from evals.coverage import exhaustive, forbidden, fuzz
+
+    assert exhaustive()["unexpected_admissions"] == []
+    assert forbidden()["leaked"] == []
+    assert fuzz(trials=5_000)["admitted"] == []
