@@ -29,6 +29,7 @@ from ratchet.effects import Actuator, Effect, EffectLog
 from ratchet.admission import Snapshot
 from ratchet.attempts import AttemptLedger
 from ratchet.graph import Deps, build_app
+from ratchet.liveness import assess as assess_liveness
 from ratchet.review import Reviewer, vertex_model
 from ratchet.world import DictReader, VirtualWorld, scope_of
 
@@ -153,11 +154,32 @@ class RunRequest(BaseModel):
 
 
 def best_candidate() -> tuple[str, str]:
-    """Highest-cost row the domain has an operation for. Falls back to any row."""
+    """Most valuable row the agent has an operation for *and* can honestly call idle.
+
+    The old version ranked by cost and consulted `cpu_7d_avg`, which put the $2,632 GPU
+    node at the top of the list every time — it sits near zero CPU while training. The
+    post-commit reviewer named this exactly: "CPU is not the primary indicator of
+    activity for a GPU-accelerated machine; the agent's logic is fundamentally flawed
+    for this workload type."
+
+    It is fixed here *and* in a gate. Fixing only the proposer would leave a system whose
+    safety depends on the component most exposed to a hijacked model getting its ranking
+    right, which is the assumption this whole project argues against.
+    """
     ranked = sorted(ESTATE.rows.items(), key=lambda kv: -kv[1].get("monthly_cost_usd", 0))
     for scope, row in ranked:
         op_class, target = scope.split(":", 1)
-        if op_class in finops.SPECS and row.get("idle_candidate", True):
+        spec = finops.SPECS.get(op_class)
+        if spec is None or not row.get("idle_candidate", True):
+            continue
+        # Irreversible operations are not skipped because they are forbidden — they are
+        # skipped because they sit behind a human at every rung, so they are never the
+        # autonomous path's best *next* action. They stay in the estate view, tagged.
+        if not spec.reversible:
+            continue
+        live = assess_liveness(op_class, target, ESTATE.deps.topology,
+                               asserts_idle=spec.asserts_idle)
+        if live.may_proceed:
             return op_class, target
     scope = ranked[0][0]
     return scope.split(":", 1)[0], scope.split(":", 1)[1]

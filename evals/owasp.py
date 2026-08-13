@@ -58,12 +58,15 @@ ROWS: tuple[Row, ...] = (
         "there is no score for an attacker to climb. Blast-radius classes derived from "
         "control-plane facts keep a poisoned target from inheriting a safe target's "
         "earned authority.",
-        ("tests/test_topology.py", "tests/test_wiring.py::test_the_two_instances_are_not_the_same_shape_on_the_server"),
+        ("tests/test_topology.py", "tests/test_liveness.py",
+         "tests/test_wiring.py::test_the_two_instances_are_not_the_same_shape_on_the_server"),
         "PARTIAL is the honest status and this is the sharpest result in the project. "
         "Three plausible notes moved the agent off a correct target and onto a GPU node, "
         "and the operation was *permitted* — it cleared admission, legal and "
-        "reversibility. Only unearned authority stopped it. V2's topology separates the "
-        "two shapes; it does not stop a poisoned note from being believed.",
+        "reversibility. Only unearned authority stopped it. The liveness gate closes the "
+        "specific route the note used: it asked the agent to trust a CPU average, and CPU "
+        "is now structurally not consulted. The topology separates the two shapes. Neither "
+        "stops a poisoned note from being believed about a target that really is idle.",
     ),
     Row(
         "T2", "Tool Misuse", Status.COVERED,

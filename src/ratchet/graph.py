@@ -41,6 +41,8 @@ from .attempts import Attempt, AttemptLedger
 from .authority import AuthorityLedger, Decision
 from .effects import Actuator, Effect
 from .legal import EscalationQueue, HoldRegister, assess
+from .liveness import State as LivenessState
+from .liveness import assess as assess_liveness
 from .restraint import DamageBudget, UndoLedger
 from .topology import Topology, blast_shape
 from .world import VirtualWorld, verify
@@ -194,12 +196,26 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
             yield settle("escalate", "legal", legal.reason, state=legal.state.value)
             return
 
-        # 3 — reversibility. A property of the operation, never of confidence.
+        # 3 — liveness. Does the operation's own name hold? An operation asserting the
+        # resource is idle has that asserted against metered work, every run, with no
+        # rung that exempts it. Rehearsal cannot substitute: stopping a busy instance
+        # works, the verifier confirms it stopped, and five clean runs later the shape
+        # is earned and the mistake proceeds on schedule.
+        live = assess_liveness(
+            effect.op_class, target, deps.topology,
+            asserts_idle=bool(spec and spec.asserts_idle),
+        )
+        if not live.may_proceed:
+            route = "refuse" if live.state is LivenessState.WORKING else "escalate"
+            yield settle(route, "liveness", live.reason, check=live.state.value, **live.detail)
+            return
+
+        # 4 — reversibility. A property of the operation, never of confidence.
         if not effect.reversible:
             yield settle("consult", "reversibility", "irreversible — a human decides, at every rung")
             return
 
-        # 4 — authority. The only earned gate.
+        # 5 — authority. The only earned gate.
         decision: Decision = deps.ledger.decide(effect.op_class, deps.shape_of(effect))
 
         # Sustained refusals against this target are evidence about the estate. The only

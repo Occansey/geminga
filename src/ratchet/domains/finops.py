@@ -56,6 +56,10 @@ class OpSpec:
     # every byte; deleting its disk does not. Without this distinction the legal gate
     # escalates every operation and becomes noise nobody reads.
     destroys_data: bool = False
+    # Does the operation's name assert that the resource is not working? `stop_idle_instance`
+    # does; `delete_stale_snapshot` makes a claim about age instead. A claim nobody checks
+    # is decoration, and this one went unchecked while the agent stopped a training job.
+    asserts_idle: bool = False
 
 
 def _stop_instance(before: dict, params: dict) -> dict:
@@ -106,6 +110,7 @@ SPECS: dict[str, OpSpec] = {
             expect=lambda p: {"status": "TERMINATED", "monthly_cost_usd": 0.0},
             damage=Damage(3.0, "restart the instance; boot disk and IP are untouched"),
             inverse_op="compute.start_instance",
+            asserts_idle=True,
         ),
         OpSpec(
             "compute.downsize_instance",
@@ -115,6 +120,9 @@ SPECS: dict[str, OpSpec] = {
             expect=lambda p: {"machine_type": p.get("machine_type", "e2-standard-2")},
             damage=Damage(6.0, "stop, restore the previous machine type, start"),
             inverse_op="compute.resize_instance",
+            # Downsizing restarts the machine, so it asserts idleness just as much as
+            # stopping does — the interruption is identical from the workload's side.
+            asserts_idle=True,
         ),
         OpSpec(
             "compute.release_static_ip",
