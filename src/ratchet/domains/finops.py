@@ -50,6 +50,11 @@ class OpSpec:
     damage: Damage = Damage(None, "undeclared")
     # The operation that puts it back, for the undo ledger.
     inverse_op: str = ""
+    # Does this destroy data? Legal hold is a question about *preserving data*, so an
+    # operation that destroys none has no hold question to ask. Stopping a VM keeps
+    # every byte; deleting its disk does not. Without this distinction the legal gate
+    # escalates every operation and becomes noise nobody reads.
+    destroys_data: bool = False
 
 
 def _stop_instance(before: dict, params: dict) -> dict:
@@ -131,6 +136,7 @@ SPECS: dict[str, OpSpec] = {
         OpSpec(
             "storage.set_lifecycle_policy",
             "Age objects in a bucket to colder storage after N days",
+            destroys_data=True,
             reversible=True,
             simulate=_set_lifecycle,
             expect=lambda p: {"lifecycle_days": p.get("days", 30)},
@@ -140,6 +146,7 @@ SPECS: dict[str, OpSpec] = {
         OpSpec(
             "compute.delete_unattached_disk",
             "Delete a persistent disk attached to no instance",
+            destroys_data=True,
             # Irreversible, and it stays behind a human however much authority the
             # class earns. The ladder governs *confidence*, not consequence.
             reversible=False,
@@ -150,6 +157,7 @@ SPECS: dict[str, OpSpec] = {
         OpSpec(
             "compute.delete_stale_snapshot",
             "Delete a snapshot older than the retention window",
+            destroys_data=True,
             reversible=False,
             simulate=_delete_snapshot,
             expect=lambda p: {"exists": False, "monthly_cost_usd": 0.0},

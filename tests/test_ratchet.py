@@ -280,7 +280,23 @@ def test_an_llm_agent_slots_into_the_graph_and_validates() -> None:
     app = App(name="t", root_agent=workflow, resumability_config=ResumabilityConfig(is_resumable=True))
 
     assert app.root_agent is workflow
-    assert len(workflow.edges) == 7
+
+    # Assert the shape, not a magic number: every gate must have somewhere to send a
+    # proposal it declines. A gate with no exit is a gate that cannot refuse.
+    def names_in(obj, found: set) -> set:
+        if hasattr(obj, "name"):
+            found.add(obj.name)
+        elif isinstance(obj, dict):
+            for value in obj.values():
+                names_in(value, found)
+        elif isinstance(obj, (tuple, list)):
+            for item in obj:
+                names_in(item, found)
+        return found
+
+    names = names_in(workflow.edges, set())
+    for exit_node in ("rehearse", "actuate", "approve", "refuse", "escalate", "report"):
+        assert exit_node in names, f"gate has no {exit_node} exit"
 
 
 def _has_vertex() -> bool:

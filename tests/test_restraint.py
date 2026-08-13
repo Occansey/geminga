@@ -350,3 +350,28 @@ def test_a_resource_outside_the_data_boundary_is_routed_away_before_inspection()
     eu_only = frozenset({"europe-"})
     assert crosses_boundary({"region": "us-central1"}, eu_only) is True
     assert crosses_boundary({"region": "europe-west1"}, eu_only) is False
+
+
+def test_the_legal_gate_does_not_fire_on_operations_that_destroy_no_data() -> None:
+    """Caught by running the graph, not by reading it: the gate was escalating every
+    operation including stopping a VM. Legal hold is an obligation to *preserve data*,
+    and a gate that fires on everything is a gate that gets switched off."""
+    from ratchet.legal import Hold, HoldRegister, assess
+
+    stop = assess("web-1", "instance", {}, HoldRegister(), destroys_data=False)
+    assert stop.state is Hold.CLEAR
+    assert stop.may_delete is True
+
+    delete = assess("pd-1", "disk", {}, HoldRegister(), destroys_data=True)
+    assert delete.state is Hold.UNKNOWN
+
+
+def test_every_data_destroying_operation_is_marked_as_such() -> None:
+    from ratchet.domains import finops
+
+    destructive = {n for n, s in finops.SPECS.items() if s.destroys_data}
+    assert destructive == {
+        "compute.delete_unattached_disk",
+        "compute.delete_stale_snapshot",
+        "storage.set_lifecycle_policy",
+    }

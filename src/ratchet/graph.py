@@ -39,9 +39,23 @@ from google.adk.apps import App, ResumabilityConfig
 from google.adk.events.request_input import RequestInput
 from google.adk.workflow import START, Workflow, node
 
+from .admission import Snapshot, admit
 from .authority import AuthorityLedger, Decision
 from .effects import Actuator, Effect, EffectLog
+from .legal import EscalationQueue, Hold, HoldRegister, assess
+from .restraint import DamageBudget, UndoLedger
 from .world import VirtualWorld, verify
+
+# Operation class -> resource type, for the legal gate. Explicit, for the same reason
+# admission keeps an explicit table: guessing fails open.
+_RESOURCE_TYPE = {
+    "compute.stop_idle_instance": "instance",
+    "compute.downsize_instance": "instance",
+    "compute.delete_unattached_disk": "disk",
+    "compute.release_static_ip": "address",
+    "compute.delete_stale_snapshot": "snapshot",
+    "storage.set_lifecycle_policy": "bucket",
+}
 
 
 class RunState(BaseModel):
@@ -69,11 +83,30 @@ class Deps:
         actuator: Actuator,
         virtual: VirtualWorld,
         reader,
+        *,
+        snapshot: Snapshot | None = None,
+        holds: HoldRegister | None = None,
+        budget: DamageBudget | None = None,
+        escalations: EscalationQueue | None = None,
+        undo: UndoLedger | None = None,
+        specs: dict | None = None,
     ) -> None:
         self.ledger = ledger
         self.actuator = actuator
         self.virtual = virtual
         self.reader = reader
+        # The five gates need five sources of truth. Defaulting them keeps the
+        # constructor usable in tests, but an empty snapshot admits nothing — which
+        # is the right failure direction for a gate.
+        self.snapshot = snapshot or Snapshot(frozenset(), "empty")
+        self.holds = holds or HoldRegister()
+        self.budget = budget or DamageBudget()
+        self.escalations = escalations or EscalationQueue()
+        self.undo = undo or UndoLedger()
+        self.specs = specs or {}
+
+    def spec(self, op_class: str):
+        return self.specs.get(op_class)
 
 
 class Proposal(BaseModel):
@@ -104,32 +137,72 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
 
     @node
     async def gate(ctx, queue: list, cursor: int):
-        """Route this operation by the authority its class has earned."""
+        """Five gates, in order of how absolute they are.
+
+        Cheapest and most categorical first, so a refusal costs nothing and the reason
+        returned is the most fundamental one true of this proposal. An operation that
+        fails admission is never assessed for legal hold — there is no point asking
+        whether we may delete something that was never a real proposal.
+        """
         if cursor >= len(queue):
             ctx.route = "done"
             yield {"route": "done", "operations": len(queue)}
             return
 
         effect = Effect(**queue[cursor])
+        spec = deps.spec(effect.op_class)
+        target = str(effect.params.get("target", ""))
+        record: dict = {"op_class": effect.op_class, "target": target}
+
+        def settle(route: str, gate_name: str, reason: str, **extra):
+            record.update({"route": route, "gate": gate_name, "reason": reason, **extra})
+            ctx.state["decisions"] = list(ctx.state.get("decisions", [])) + [record]
+            ctx.route = route
+            return {"route": route, "gate": gate_name, **record}
+
+        # 1 — admission. Assumes the proposer was hijacked.
+        verdict = admit(
+            effect.op_class, target, deps.snapshot,
+            claimed_saving_usd=float(effect.params.get("claimed_saving_usd", 0.0)),
+        )
+        if not verdict.allowed:
+            yield settle("refuse", "admission", verdict.reason, check=verdict.check)
+            return
+
+        # 2 — legal. Three-valued; hold and unknown both escalate, with a clock.
+        row = deps.reader.observe(effect.op_class, effect.params) or {}
+        resource_type = _RESOURCE_TYPE.get(effect.op_class, "")
+        legal = assess(target, resource_type, row, deps.holds,
+                       destroys_data=bool(spec and spec.destroys_data))
+        if not legal.may_delete:
+            deps.escalations.raise_for(target, legal)
+            yield settle("escalate", "legal", legal.reason, state=legal.state.value)
+            return
+
+        # 3 — reversibility. A property of the operation, never of confidence.
+        if not effect.reversible:
+            yield settle("consult", "reversibility", "irreversible — a human decides, at every rung")
+            return
+
+        # 4 — authority. The only earned gate.
         decision: Decision = deps.ledger.decide(effect.op_class, effect.shape)
+        if not decision.commits:
+            yield settle(
+                "shadow", "authority", decision.reason,
+                authority=decision.authority.label, in_envelope=decision.in_envelope,
+            )
+            return
 
-        route = "shadow"
-        if decision.commits:
-            route = "consult" if not effect.reversible else "commit"
+        # 5 — blast radius. Consumable, and it refuses when the window is spent.
+        if spec is not None:
+            allowed, why = deps.budget.admits(spec.damage)
+            if not allowed:
+                yield settle("refuse", "blast-radius", why)
+                return
 
-        ctx.state["decisions"] = list(ctx.state.get("decisions", [])) + [
-            {
-                "op_class": effect.op_class,
-                "authority": decision.authority.label,
-                "route": route,
-                "reason": decision.reason,
-                "in_envelope": decision.in_envelope,
-            }
-        ]
-        # The routed edge is taken from ctx.route; the yielded value is just the
-        # record of why, which is what the board renders.
-        ctx.route = route
-        yield {"route": route, "op_class": effect.op_class, "reason": decision.reason}
+        yield settle(
+            "commit", "admitted", decision.reason, authority=decision.authority.label
+        )
 
     @node
     async def rehearse(ctx, queue: list, cursor: int):
@@ -177,6 +250,17 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
         result = deps.actuator.commit(effect)
         after = deps.reader.observe(effect.op_class, effect.params)
 
+        spec = deps.spec(effect.op_class)
+        if result.committed and spec is not None:
+            # Charge the budget and record how to undo it, in that order: a commit
+            # that is not charged is a commit the ceiling cannot see.
+            deps.budget.charge(effect.op_class, str(effect.params.get("target", "")), spec.damage)
+            if spec.inverse_op:
+                deps.undo.record(
+                    effect.op_class, str(effect.params.get("target", "")),
+                    spec.inverse_op, effect.params,
+                )
+
         verdict = (
             verify(effect, before, after)
             if result.committed
@@ -191,7 +275,7 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
         }
 
     @node
-    async def assess(ctx, queue: list, cursor: int):
+    async def settle_ratchet(ctx, queue: list, cursor: int):
         """Move the ratchet, then advance the cursor."""
         outcomes = list(ctx.state.get("outcomes", []))
         last = outcomes[-1] if outcomes else {}
@@ -208,7 +292,22 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
         }
 
     @node
-    async def report(ctx, decisions: list, outcomes: list, run_id: str = ""):
+    async def refuse(ctx, decisions: list | None = None):
+        """A refusal is an outcome, not an error. It is recorded and counted."""
+        last = (decisions or [])[-1] if decisions else {}
+        yield {"refused": last.get("op_class"), "gate": last.get("gate"), "reason": last.get("reason")}
+
+    @node
+    async def escalate(ctx, decisions: list | None = None):
+        last = (decisions or [])[-1] if decisions else {}
+        yield {
+            "escalated": last.get("target"),
+            "reason": last.get("reason"),
+            "open": deps.escalations.report()["open"],
+        }
+
+    @node
+    async def report(ctx, decisions: list | None = None, outcomes: list | None = None, run_id: str = ""):
         # Release this run's rehearsal slice. It lives in the graph rather than in the
         # caller because forgetting it is silent and poisonous: the next run with the
         # same id rehearses against leftovers, every effect scores as a no-op, and the
@@ -216,9 +315,12 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
         # two different layers, which is argument enough for it to live here.
         deps.virtual.discard(run_id)
 
+        outcomes = outcomes or []
+        decisions = decisions or []
         committed = sum(1 for o in outcomes if o.get("committed"))
         passed = sum(1 for o in outcomes if o.get("passed"))
         yield {
+            "refusals": sum(1 for d in decisions if d.get("route") in ("refuse", "escalate")),
             "operations": len(outcomes),
             "committed": committed,
             "verified_pass": passed,
@@ -260,17 +362,34 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
         (START, propose), (propose, gate)
     ]
 
+    @node
+    async def advance(ctx, cursor: int):
+        """Refusals and escalations still move the cursor — otherwise the graph
+        re-proposes the operation it just declined, forever."""
+        ctx.state["cursor"] = cursor + 1
+        yield {"cursor": cursor + 1}
+
     return Workflow(
         name="ratchet",
         state_schema=RunState,
         edges=[
             *head,
             # The routed edge. It is also what legalises the cycle below.
-            (gate, {"shadow": rehearse, "commit": actuate, "consult": approve, "done": report}),
-            (rehearse, assess),
+            (gate, {
+                "shadow": rehearse,
+                "commit": actuate,
+                "consult": approve,
+                "refuse": refuse,
+                "escalate": escalate,
+                "done": report,
+            }),
+            (rehearse, settle_ratchet),
             (approve, actuate),
-            (actuate, assess),
-            (assess, gate),  # cycle: next operation
+            (actuate, settle_ratchet),
+            (refuse, advance),
+            (escalate, advance),
+            (settle_ratchet, gate),   # cycle: next operation
+            (advance, gate),
         ],
     )
 

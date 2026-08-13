@@ -109,12 +109,25 @@ def assess(
     row: dict[str, Any],
     register: HoldRegister,
     *,
+    destroys_data: bool = True,
     owner: str = "data-protection@example.com",
     clock=time.time,
 ) -> LegalVerdict:
-    """Decide whether deletion is legally answerable, from readable signals only."""
+    """Decide whether deletion is legally answerable, from readable signals only.
+
+    `destroys_data=False` short-circuits to CLEAR. Legal hold is an obligation to
+    *preserve data*; stopping an instance keeps every byte, and asking a hold question
+    about it produces an escalation nobody can action. A gate that fires on everything
+    is a gate that gets switched off.
+    """
     read: list[str] = []
     unavailable: list[str] = []
+
+    if not destroys_data:
+        return LegalVerdict(
+            Hold.CLEAR, "operation destroys no data — no preservation obligation applies",
+            ["destroys-data=false"], [],
+        )
 
     # 1. The external register outranks everything — it is the only signal that exists
     #    for the resource types we most want to delete.
