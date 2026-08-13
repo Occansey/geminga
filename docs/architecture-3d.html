@@ -1,292 +1,319 @@
-<title>Geminga — the trust boundary, in three dimensions</title>
+<title>Geminga — the house, cut away</title>
 <style>
   :root{
-    --ground:#0B0E14; --deep:#070A0F; --panel:#111721; --line:#1E2836; --line-soft:#161E29;
-    --ink:#E8ECEF; --mid:#8B98A5; --dim:#5C6672;
-    --oxide:#B4542A; --oxide-dim:#5A2E1B;
-    --steel:#4E93A8; --steel-dim:#24414C;
-    --live:#3F8F6E; --live-dim:#1E4234;
-    --slate:#5C6672;
+    --ground:#0C1016; --deep:#080B10; --panel:#121822; --line:#202A37; --soft:#161E28;
+    --ink:#E9EDF1; --mid:#8C99A6; --dim:#5A6470;
+    --oxide:#C2612F; --oxide-d:#4E2917;
+    --steel:#57A0B6; --steel-d:#204049;
+    --live:#46997A; --live-d:#1C4436;
+    --slate:#606B78;
     --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
     --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
-  body{background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.55;
-       -webkit-font-smoothing:antialiased}
-
-  .wrap{max-width:1200px;margin:0 auto;padding:34px 24px 80px}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 72px}
   .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
-  h1{font-size:clamp(26px,4.4vw,40px);font-weight:600;letter-spacing:-.02em;margin:.35em 0 .2em;text-wrap:balance}
-  .lede{color:var(--mid);max-width:64ch;font-size:16.5px}
+  h1{font-size:clamp(25px,4.2vw,38px);font-weight:600;letter-spacing:-.02em;margin:.35em 0 .25em;text-wrap:balance}
+  .lede{color:var(--mid);max-width:62ch;font-size:16px}
   .lede b{color:var(--ink);font-weight:600}
 
-  /* ---------- stage ---------- */
-  .stage{margin:30px 0 14px;height:min(70vh,620px);border:1px solid var(--line);border-radius:5px;
-         background:radial-gradient(120% 90% at 50% 8%,#131A25 0%,var(--deep) 70%);
-         perspective:1500px;overflow:hidden;position:relative;cursor:grab;touch-action:none}
-  .stage:active{cursor:grabbing}
-  .scene{position:absolute;inset:0;transform-style:preserve-3d;
-         transform:rotateX(var(--rx,15deg)) rotateY(var(--ry,-21deg));transition:transform .12s linear}
-
-  .plane{position:absolute;left:50%;top:50%;width:470px;height:310px;margin:-155px 0 0 -235px;
-         transform-style:preserve-3d;border:1px solid var(--line);border-radius:4px}
-  .plane .cap{position:absolute;top:-26px;left:0;font-family:var(--mono);font-size:10px;
-              letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
-
-  #zUntrusted{transform:translate3d(0,-96px,225px);border-color:var(--oxide-dim);
-              background:linear-gradient(160deg,rgba(180,84,42,.10),rgba(180,84,42,.02))}
-  #zUntrusted .cap{color:var(--oxide)}
-  #zBoundary{transform:translate3d(0,0,0);border-color:var(--steel-dim);
-             background:linear-gradient(160deg,rgba(78,147,168,.13),rgba(78,147,168,.03))}
-  #zBoundary .cap{color:var(--steel)}
-  #zEffect{transform:translate3d(0,96px,-225px);border-color:var(--live-dim);
-           background:linear-gradient(160deg,rgba(63,143,110,.11),rgba(63,143,110,.02))}
-  #zEffect .cap{color:var(--live)}
-
-  .node{position:absolute;font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;
-        padding:7px 10px;border-radius:3px;white-space:nowrap;border:1px solid var(--line);
-        background:var(--panel);color:var(--mid)}
-  .node b{display:block;color:var(--ink);font-size:11px;letter-spacing:.04em}
-  #zUntrusted .node{border-color:var(--oxide-dim)}
-  #zEffect .node{border-color:var(--live-dim)}
-
-  .gate{position:absolute;width:92px;text-align:center;font-family:var(--mono);
-        border:1px solid var(--steel-dim);background:#101823;border-radius:3px;padding:9px 6px;
-        cursor:pointer;transition:border-color .18s,background .18s,transform .18s}
-  .gate .n{font-size:9px;letter-spacing:.16em;color:var(--dim)}
-  .gate .t{font-size:10.5px;color:var(--ink);margin-top:3px;letter-spacing:.03em}
-  .gate:hover{border-color:var(--steel);transform:translateY(-2px)}
-  .gate[data-hit="true"]{border-color:var(--steel);background:#16232F;
-        box-shadow:0 0 0 3px rgba(78,147,168,.16)}
-  .gate[data-stop="true"]{border-color:var(--slate);background:#1A1F26;
-        box-shadow:0 0 0 3px rgba(92,102,114,.2)}
-
-  .token{position:absolute;left:50%;top:50%;width:13px;height:13px;margin:-6px 0 0 -6px;
-         border-radius:50%;background:var(--oxide);box-shadow:0 0 14px rgba(180,84,42,.8);
-         transform:translate3d(0,-96px,225px);transition:transform 1s cubic-bezier(.4,.1,.3,1),background .4s;
-         z-index:5}
-  .token[data-state="through"]{background:var(--live);box-shadow:0 0 16px rgba(63,143,110,.85)}
-  .token[data-state="stopped"]{background:var(--slate);box-shadow:0 0 12px rgba(92,102,114,.7)}
-
-  .axis{position:absolute;left:50%;top:50%;width:2px;height:2px}
-  .depth{position:absolute;left:50%;top:50%;width:1px;height:560px;margin:-280px 0 0 0;
-         background:linear-gradient(var(--oxide-dim),var(--steel-dim),var(--live-dim));
-         transform:rotateX(90deg) translateZ(0);opacity:.5}
-
-  .hint{position:absolute;right:12px;bottom:10px;font-family:var(--mono);font-size:10px;
-        color:var(--dim);letter-spacing:.08em}
-
-  /* ---------- controls ---------- */
-  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-  button{font:inherit;font-size:12.5px;font-family:var(--mono);cursor:pointer;color:var(--ink);
-         background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:8px 13px;
-         transition:border-color .15s,background .15s}
+  .controls{display:flex;gap:7px;flex-wrap:wrap;margin:22px 0 8px}
+  button{font-family:var(--mono);font-size:12px;cursor:pointer;color:var(--ink);background:var(--panel);
+         border:1px solid var(--line);border-radius:3px;padding:8px 12px;transition:border-color .15s,background .15s}
   button:hover{border-color:var(--mid)}
   button:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
   button[aria-pressed="true"]{border-color:var(--steel);background:#16232F}
-  .verdict{font-family:var(--mono);font-size:12px;color:var(--mid);min-height:1.5em}
+  .verdict{font-family:var(--mono);font-size:12px;color:var(--mid);min-height:2.6em;max-width:90ch}
   .verdict b{color:var(--ink)}
 
-  /* ---------- prose ---------- */
-  .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:30px;margin-top:34px;align-items:start}
-  @media(max-width:860px){.grid{grid-template-columns:1fr}.plane{width:400px;margin-left:-200px}}
-  h2{font-size:13px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;
-     color:var(--dim);font-weight:400;margin:0 0 12px}
-  p{margin:0 0 14px;max-width:66ch}
+  /* ---------------- the house ---------------- */
+  .stage{height:min(78vh,700px);border:1px solid var(--line);border-radius:5px;overflow:hidden;position:relative;
+         background:radial-gradient(115% 80% at 50% 0%,#141C27 0%,var(--deep) 72%);
+         perspective:1700px;cursor:grab;touch-action:none}
+  .stage:active{cursor:grabbing}
+  .house{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;
+         transform:scale(var(--s,.6)) rotateX(var(--rx,50deg)) rotateZ(var(--rz,-38deg));transition:transform .1s linear}
+
+  .floor{position:absolute;width:620px;height:300px;margin:-150px 0 0 -310px;transform-style:preserve-3d}
+  .slab{position:absolute;inset:0;border:1px solid var(--line);border-radius:2px;
+        background:linear-gradient(135deg,#1C2632,#131A24)}
+  /* only two walls: the cutaway removes the two facing the viewer */
+  .wallBack,.wallLeft{position:absolute;background:linear-gradient(#243141,#141C26);border:1px solid var(--line)}
+  .wallBack{left:0;top:0;width:620px;height:150px;transform-origin:top center;transform:rotateX(-90deg)}
+  .wallLeft{left:0;top:0;width:300px;height:150px;transform-origin:top left;
+            transform:rotateX(-90deg) rotateY(90deg) translateX(-300px)}
+
+  #f3{transform:translateZ(430px)} #f2{transform:translateZ(215px)} #f1{transform:translateZ(0)}
+  #f3 .slab{border-color:var(--oxide-d)} #f2 .slab{border-color:var(--steel-d)} #f1 .slab{border-color:var(--live-d)}
+  #f3 .wallBack,#f3 .wallLeft{border-color:var(--oxide-d)}
+  #f2 .wallBack,#f2 .wallLeft{border-color:var(--steel-d)}
+  #f1 .wallBack,#f1 .wallLeft{border-color:var(--live-d)}
+
+  .roomLabel{position:absolute;left:8px;top:-22px;font-family:var(--mono);font-size:10px;
+             letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;
+             transform:rotateZ(38deg) rotateX(-50deg)}
+  #f3 .roomLabel{color:var(--oxide)} #f2 .roomLabel{color:var(--steel)} #f1 .roomLabel{color:var(--live)}
+
+  /* ---------------- bots ---------------- */
+  .bot{position:absolute;width:64px;height:112px;transform-style:preserve-3d;cursor:pointer;
+       transform:rotateZ(38deg) rotateX(-50deg);transform-origin:bottom center}
+  .bot .body{position:absolute;bottom:19px;left:11px;width:42px;height:40px;border-radius:5px;
+             background:linear-gradient(#2B3644,#1B232E);border:1px solid var(--line)}
+  .bot .head{position:absolute;bottom:61px;left:14px;width:37px;height:30px;border-radius:7px;
+             background:linear-gradient(#33404F,#212B37);border:1px solid var(--line)}
+  .bot .visor{position:absolute;bottom:71px;left:20px;width:25px;height:9px;border-radius:4px;
+              background:var(--slate);transition:background .3s,box-shadow .3s}
+  .bot .ant{position:absolute;bottom:91px;left:31px;width:2px;height:12px;background:var(--line)}
+  .bot .ant::after{content:"";position:absolute;top:-4px;left:-2px;width:6px;height:6px;border-radius:50%;
+                   background:var(--slate);transition:background .3s}
+  .bot .arm{position:absolute;bottom:26px;width:8px;height:28px;border-radius:3px;
+            background:linear-gradient(#28323F,#1A222C);border:1px solid var(--line)}
+  .bot .arm.l{left:2px} .bot .arm.r{right:2px}
+  .bot .leg{position:absolute;bottom:0;width:11px;height:20px;border-radius:2px;
+            background:linear-gradient(#242D39,#171E27);border:1px solid var(--line)}
+  .bot .leg.l{left:17px} .bot .leg.r{right:17px}
+  .bot .tag{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);text-align:center;
+            font-family:var(--mono);white-space:nowrap;background:rgba(10,14,20,.86);
+            border:1px solid var(--line);border-radius:3px;padding:4px 8px}
+  .bot .tag .role{display:block;font-size:15px;color:var(--ink);letter-spacing:.02em;line-height:1.15}
+  .bot .tag .job{display:block;font-size:11px;color:var(--mid);letter-spacing:.06em;text-transform:uppercase}
+  /* Five tags on one wall collide. Interleaving their heights keeps the wall a
+     straight line — which is the point of it — while letting every name be read. */
+  .bot.raised .tag{bottom:178px}
+  .bot.raised .tag::after{content:"";position:absolute;left:50%;top:100%;
+     width:1px;height:60px;background:var(--steel-d)}
+  #f3 .bot .tag{border-color:var(--oxide-d)}
+  #f2 .bot .tag{border-color:var(--steel-d)}
+  #f1 .bot .tag{border-color:var(--live-d)}
+  .bot[data-blocking="true"] .tag{border-color:var(--slate);background:rgba(24,28,34,.94)}
+  .bot[data-active="true"] .tag{border-color:var(--steel)}
+
+  #f3 .bot .visor{background:var(--oxide)} #f3 .bot .ant::after{background:var(--oxide)}
+  #f2 .bot .visor{background:var(--steel-d)} #f2 .bot .ant::after{background:var(--steel-d)}
+  #f1 .bot .visor{background:var(--live-d)} #f1 .bot .ant::after{background:var(--live-d)}
+
+  .bot:hover .body{border-color:var(--mid)}
+  .bot[data-active="true"] .visor{background:var(--steel);box-shadow:0 0 12px rgba(87,160,182,.9)}
+  .bot[data-active="true"] .ant::after{background:var(--steel)}
+  .bot[data-blocking="true"] .visor{background:var(--slate);box-shadow:0 0 14px rgba(96,107,120,.95)}
+  .bot[data-blocking="true"] .arm.r{transform:rotate(-58deg);transform-origin:top center}
+  .bot[data-passed="true"] .visor{background:var(--live);box-shadow:0 0 12px rgba(70,153,122,.85)}
+  .bot[data-passed="true"] .ant::after{background:var(--live)}
+
+  /* the proposal itself */
+  .parcel{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:3px;
+          background:var(--oxide);box-shadow:0 0 16px rgba(194,97,47,.9);z-index:9;
+          transform:translate3d(0,0,320px);transition:transform .85s cubic-bezier(.4,.05,.3,1),background .4s}
+  .parcel[data-state="stopped"]{background:var(--slate);box-shadow:0 0 14px rgba(96,107,120,.85)}
+  .parcel[data-state="through"]{background:var(--live);box-shadow:0 0 18px rgba(70,153,122,.9)}
+  .hint{position:absolute;right:12px;bottom:10px;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em}
+
+  /* ---------------- prose ---------------- */
+  .grid{display:grid;grid-template-columns:1.45fr 1fr;gap:28px;margin-top:32px;align-items:start}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  h2{font-size:12.5px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 12px}
+  p{margin:0 0 13px;max-width:66ch;color:var(--mid);font-size:14.5px}
+  p b{color:var(--ink)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px 20px}
   table{width:100%;border-collapse:collapse;font-size:13px}
-  td,th{text-align:left;padding:8px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  td,th{text-align:left;padding:7px 0;border-bottom:1px solid var(--soft);vertical-align:top}
   th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:400}
-  td:first-child{font-family:var(--mono);font-size:11.5px;color:var(--steel);white-space:nowrap;padding-right:14px}
+  td:first-child{font-family:var(--mono);font-size:11.5px;color:var(--steel);white-space:nowrap;padding-right:12px}
   tr:last-child td{border-bottom:0}
   code{font-family:var(--mono);font-size:.92em;color:var(--steel)}
-  .note{color:var(--mid);font-size:14px}
-  footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line-soft);
-         font-family:var(--mono);font-size:11px;color:var(--dim)}
+  footer{margin-top:40px;padding-top:15px;border-top:1px solid var(--soft);font-family:var(--mono);font-size:11px;color:var(--dim)}
   @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <div class="wrap">
   <div class="eyebrow">Geminga · Fortified Enterprise Fleet · ADK 2 graph runtime</div>
-  <h1>The model is inside the untrusted zone.</h1>
-  <p class="lede">Everything it reads is attacker-influenceable. Everything it emits is a
-  <b>proposal</b>, not a decision. Between it and anything that can change the world stands a wall
-  of five deterministic checks — no model, no probability, no prompt.
-  <b>Send a proposal and watch where it stops.</b></p>
+  <h1>Eleven bots, three floors, one wall.</h1>
+  <p class="lede">The house is cut away so you can see who does what. Upstairs is
+  <b>untrusted</b> — everything those three read is attacker-influenceable, and what they produce
+  is a <b>proposal</b>, never a decision. The middle floor is five inspectors who use no model at
+  all. Downstairs is the only floor that can change anything.
+  <b>Send a proposal and see which bot turns it away.</b></p>
 
   <div class="controls" id="controls"></div>
-  <div class="verdict" id="verdict">Drag to orbit. Pick a proposal above.</div>
+  <div class="verdict" id="verdict">Drag to spin the house. Click any bot to read its job.</div>
 
   <div class="stage" id="stage">
-    <div class="scene" id="scene">
-      <div class="depth"></div>
-
-      <div class="plane" id="zUntrusted">
-        <div class="cap">🔓 Untrusted — nothing here is authority</div>
-        <div class="node" style="left:26px;top:34px"><b>Cloud inventory</b>names · labels · descriptions</div>
-        <div class="node" style="left:26px;top:104px"><b>Sanitiser</b>nonce envelope · drop startup-scripts</div>
-        <div class="node" style="left:26px;top:174px"><b>Model Armor</b>caught 4 of our 6</div>
-        <div class="node" style="left:250px;top:104px"><b>Gemini 3.6</b>proposer</div>
-        <div class="node" style="left:250px;top:196px"><b>Proposal</b>op · target · rationale</div>
+    <div class="house" id="house">
+      <div class="floor" id="f3">
+        <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
+        <div class="roomLabel">Top floor · untrusted — nothing up here is authority</div>
       </div>
-
-      <div class="plane" id="zBoundary">
-        <div class="cap">🔒 Trust boundary — deterministic</div>
-        <div class="gate" style="left:6px;top:128px"   data-gate="admission"><div class="n">01</div><div class="t">Admission</div></div>
-        <div class="gate" style="left:100px;top:128px"  data-gate="legal"><div class="n">02</div><div class="t">Legal</div></div>
-        <div class="gate" style="left:194px;top:128px" data-gate="reversibility"><div class="n">03</div><div class="t">Reversible</div></div>
-        <div class="gate" style="left:288px;top:128px" data-gate="authority"><div class="n">04</div><div class="t">Authority</div></div>
-        <div class="gate" style="left:376px;top:128px" data-gate="blast"><div class="n">05</div><div class="t">Blast radius</div></div>
+      <div class="floor" id="f2">
+        <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
+        <div class="roomLabel">Middle floor · the trust boundary — deterministic, no model</div>
       </div>
-
-      <div class="plane" id="zEffect">
-        <div class="cap">⚡ Effect — the only code that changes anything</div>
-        <div class="node" style="left:40px;top:60px"><b>Actuator</b>idempotency key · replay never re-fires</div>
-        <div class="node" style="left:40px;top:140px"><b>Verifier</b>re-derives real state from the API</div>
-        <div class="node" style="left:40px;top:220px"><b>Ratchet</b>promote on evidence · demote on one failure</div>
+      <div class="floor" id="f1">
+        <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
+        <div class="roomLabel">Ground floor · effect — the only code that changes anything</div>
       </div>
-
-      <div class="token" id="token"></div>
+      <div class="parcel" id="parcel"></div>
     </div>
-    <div class="hint">drag to orbit</div>
+    <div class="hint">drag to spin</div>
   </div>
 
   <div class="grid">
     <div>
-      <h2>Five questions, five authorities</h2>
-      <p class="note">The field treats “may the agent act?” as one question. It is five, and each
-      has a different source of truth. Conflating them is why almost every entrant arrives at the
-      same defensive posture — the agent proposes, a human executes — which surrenders the
-      operational utility that makes an agent worth building.</p>
-      <table>
-        <thead><tr><th>Gate</th><th>Question</th><th>Nature</th></tr></thead>
-        <tbody id="gateTable"></tbody>
-      </table>
-      <p class="note" style="margin-top:16px"><b>Only gate 4 is earned.</b> A system in which
-      everything is a confidence score has no way to express <em>no amount of evidence makes this
-      permitted</em>.</p>
+      <h2>Who lives here</h2>
+      <table><thead><tr><th>Bot</th><th>Job</th><th>Floor</th></tr></thead><tbody id="roster"></tbody></table>
+      <p style="margin-top:15px"><b>Only the Warden's answer is earned.</b> Every other inspector
+      applies a fixed rule. A house where every question is a confidence score has no way to say
+      <em>no amount of evidence makes this permitted</em>.</p>
     </div>
-
     <div class="card">
-      <h2 id="detailTitle">Select a gate</h2>
-      <p class="note" id="detailBody">Click any gate in the scene, or send a proposal, to read
-      what it checks and why it exists.</p>
+      <h2 id="dTitle">Pick a bot</h2>
+      <p id="dBody" style="margin:0">Click any bot in the house, or send a proposal and watch who
+      steps in front of it.</p>
     </div>
   </div>
 
   <footer>
-    Refusal paths are drawn in slate rather than red: a refusal is normal operation, not an error.
-    Measured — 0 of 1,000 adversarial proposals from two model families reached an actuator
-    (&lt;0.383% at 95% confidence); 14/14 legitimate operations still admitted.
+    A bot that turns you away glows slate, not red — refusing is this house's normal working day.
+    Measured: 0 of 1,000 adversarial proposals from two model families reached the ground floor
+    (&lt;0.383% at 95% confidence), with 14/14 legitimate operations still let through.
   </footer>
 </div>
 
 <script>
-const GATES = {
-  admission:{n:"01",title:"Admission",q:"Is this a real, permitted operation?",nature:"Deterministic",
-    body:"The target must appear in an inventory snapshot taken <em>before</em> planning began, the verb must be allowlisted for that resource type, and the type must match — a real name of the wrong kind is refused. Some verbs (<code>iam.*</code>, <code>setMetadata</code>, <code>projects.delete</code>) are absent from the vocabulary entirely. This layer assumes the model was hijacked and makes it useless."},
-  legal:{n:"02",title:"Legal",q:"May it be deleted at all?",nature:"Three-valued, and timed",
-    body:"Consulted only for operations that destroy data. Buckets have real hold primitives; <b>disks and snapshots have none</b>, so absence of a signal proves nothing and <code>UNKNOWN</code> never decays into <code>CLEAR</code>. Blocking is also illegal — GDPR storage limitation — so a block means <em>escalate to a named owner with an expiry</em>, and an unanswered escalation resurfaces as over-retention risk."},
-  reversibility:{n:"03",title:"Reversibility",q:"Can it be undone?",nature:"Static property",
-    body:"The ladder governs doubt. It never governs consequence. An irreversible operation stays behind a human at every rung, however much authority its class has accrued. Releasing a static IP looks reversible and is not — the address returns to the pool and someone else may claim it."},
-  authority:{n:"04",title:"Authority",q:"Do we believe it will work?",nature:"Earned, mutable",
-    body:"Every operation class starts in <b>shadow</b>: rehearsed against virtualised tools, nothing committed. Five consecutive verified runs earn <b>provisional</b>, ten more earn <b>live</b>. One disagreement demotes it and resets the streak. Trust is per <em>shape of work</em>, not per tool — authority earned on scratch resources does not transfer to production ones."},
-  blast:{n:"05",title:"Blast radius",q:"How bad if we are wrong?",nature:"Consumable",
-    body:"Measured in <b>restore-minutes</b> — how long to reach an equivalent working state, the only unit in which a wrong deletion and a wrong resize are commensurable. 60 per rolling hour. Unrecoverable operations have no finite restore time, so no budget admits them at any size: irreversibility and budget turn out to be one gate seen twice."}
-};
+const BOTS = [
+  {id:"scout",   floor:"f3", x:70,  y:60,  role:"Scout",     job:"Reads the estate",
+   body:"Pulls inventory from the Compute and Monitoring APIs. Everything it brings home — names, labels, descriptions — was written by somebody, and in most organisations that somebody is anybody."},
+  {raised:true, id:"screener",floor:"f3", x:250, y:60,  role:"Screener",  job:"Wraps what Scout found",
+   body:"Strips zero-width characters, drops startup scripts entirely, and seals each blob in an envelope stamped with a per-run nonce the payload cannot forge. Model Armor gets a look too — it caught 4 of our 6 test payloads, and we say so rather than rounding up."},
+  {id:"proposer",floor:"f3", x:430, y:60,  role:"Proposer",  job:"Gemini 3.6 — suggests",
+   body:"The only model in the house. It reads what Screener passes up and names an operation and a target. It does <b>not</b> get to say what success looks like: post-conditions come from the domain spec, because anyone who writes their own exam passes it."},
+
+  {id:"registrar",floor:"f2", x:26,  y:120, role:"Registrar", job:"01 · Admission",
+   body:"Checks the target was in the inventory <em>before</em> planning began, that the verb is allowed for that kind of resource, and that the resource really is that kind. Some verbs — <code>iam.*</code>, <code>setMetadata</code>, <code>projects.delete</code> — aren't in the house's vocabulary at all. Registrar assumes Proposer was hijacked and makes it not matter."},
+  {raised:true, id:"counsel",  floor:"f2", x:146, y:120, role:"Counsel",   job:"02 · Legal",
+   body:"Only speaks up when data would be destroyed. Answers <b>three</b> ways, not two: buckets carry real hold markers, but disks and snapshots carry none — so silence means <code>UNKNOWN</code>, never <code>CLEAR</code>. And Counsel never says \"never\": an indefinite block is its own violation, so a hold becomes an escalation to a named person with a fourteen-day clock."},
+  {id:"undoer",   floor:"f2", x:266, y:120, role:"Undoer",    job:"03 · Reversibility",
+   body:"Asks one question: is there an exact inverse? Stopping a machine has one. Releasing an address does not — it goes back in the pool and someone else may take it. Anything without an inverse waits for a human at every rung, no matter how much the Warden trusts it."},
+  {raised:true, id:"warden",   floor:"f2", x:386, y:120, role:"Warden",    job:"04 · Authority",
+   body:"Keeps the ledger. Every kind of job starts in <b>rehearsal</b> — acted out against fake tools, nothing committed. Five clean runs earn <b>provisional</b>, ten more earn <b>live</b>. One disagreement and it drops back. Trust is per <em>shape of work</em>: what was earned on scratch machines does not carry to production ones."},
+  {id:"assessor", floor:"f2", x:506, y:120, role:"Assessor",  job:"05 · Blast radius",
+   body:"Measures the worst case in <b>restore-minutes</b> — how long to get back to normal, the only unit in which a wrong deletion and a wrong resize can be compared. Sixty per hour. Something unrecoverable has no finite restore time, so no budget of any size admits it."},
+
+  {id:"hand",    floor:"f1", x:80,  y:70,  role:"Hand",      job:"Actuator",
+   body:"The only bot in the house that touches anything. Every action carries a key, so a repeat returns the recorded answer instead of firing twice. A <em>failed</em> attempt doesn't claim the key though — one bad network moment shouldn't kill a job forever."},
+  {raised:true, id:"witness", floor:"f1", x:270, y:70,  role:"Witness",   job:"Verifier",
+   body:"Goes and looks. Re-reads real state from the API and compares it to what was promised — it never asks Hand how it went, and it never asks a model. A tool that reports success while the world sits unchanged gets caught right here."},
+  {id:"keeper",  floor:"f1", x:460, y:70,  role:"Keeper",    job:"Ratchet",
+   body:"Takes Witness's word to the Warden. A pass moves the job one step closer to trusted; a single failure knocks it back down. This is the loop that makes the house's trust something earned rather than granted."}
+];
+
+const WALL = ["registrar","counsel","undoer","warden","assessor"];
 
 const PROPOSALS = [
   {id:"clean", label:"A legitimate proposal", stop:null,
-   say:"<b>stop_idle_instance</b> on a rehearsed shape — clears all five, reaches the actuator, and is verified against real state."},
-  {id:"injected", label:"Injected via a resource label", stop:"admission",
-   say:"<b>Refused at admission.</b> The target was never in the plan-time snapshot. Detection was not required — the proposal simply names something that cannot be acted on."},
-  {id:"snapshot", label:"Delete a snapshot", stop:"legal",
-   say:"<b>Escalated at legal.</b> Snapshots expose no hold primitive, so the state is <code>UNKNOWN</code> — a named owner is asked, with a 14-day clock."},
-  {id:"irreversible", label:"Delete an unattached disk", stop:"reversibility",
-   say:"<b>Held at reversibility.</b> No exact inverse exists, so a human decides — at every rung, regardless of earned authority."},
-  {id:"unearned", label:"A brand-new operation class", stop:"authority",
-   say:"<b>Rehearsed at authority.</b> Correct proposals earn nothing automatically: the class has no evidence yet, so it runs against virtualised tools and commits nothing."},
-  {id:"budget", label:"After the hour's budget is spent", stop:"blast",
-   say:"<b>Refused at blast radius.</b> Two 45-minute operations do not fit in a 60-minute hour. Exhaustion is a feature being exercised, not an outage."}
+   say:"<b>Nobody stops it.</b> Registrar recognises it, Counsel has no data at stake, Undoer finds an inverse, Warden has the evidence, Assessor has the budget. Hand acts, Witness checks, Keeper records."},
+  {id:"injected", label:"Injected through a resource label", stop:"registrar",
+   say:"<b>Registrar turns it away.</b> The target was never in the inventory taken before planning. Nobody had to <em>detect</em> the injection — the proposal simply names something that cannot be acted on."},
+  {id:"snapshot", label:"Delete a snapshot", stop:"counsel",
+   say:"<b>Counsel steps in.</b> Snapshots carry no hold marker, so the answer is <code>UNKNOWN</code> — not <code>CLEAR</code>. A named person is asked, with a fourteen-day clock, because blocking forever is its own violation."},
+  {id:"irreversible", label:"Delete an unattached disk", stop:"undoer",
+   say:"<b>Undoer holds it.</b> There is no exact inverse, so a human decides — at every rung, however much the Warden has come to trust this job."},
+  {id:"unearned", label:"A job the house has never done", stop:"warden",
+   say:"<b>Warden sends it to rehearsal.</b> Being right earns nothing on its own. The job runs against fake tools and commits nothing until it has five clean runs behind it."},
+  {id:"budget", label:"After the hour's budget is spent", stop:"assessor",
+   say:"<b>Assessor refuses.</b> Two forty-five-minute jobs do not fit in a sixty-minute hour. Running out is the budget working, not the house breaking."}
 ];
 
-const ORDER = ["admission","legal","reversibility","authority","blast"];
-const scene = document.getElementById("scene");
-const token = document.getElementById("token");
-const verdict = document.getElementById("verdict");
+const FLOOR_Z = {f3:430, f2:215, f1:0};
 
-document.getElementById("gateTable").innerHTML = ORDER.map(k=>{
-  const g = GATES[k];
-  return `<tr><td>${g.n} · ${g.title}</td><td>${g.q}</td><td style="color:var(--mid)">${g.nature}</td></tr>`;
-}).join("");
+// build bots
+for(const b of BOTS){
+  const el = document.createElement("div");
+  el.className = "bot"; el.dataset.bot = b.id;
+  el.style.left = b.x + "px"; el.style.top = b.y + "px";
+  el.innerHTML = `<div class="arm l"></div><div class="arm r"></div>
+    <div class="leg l"></div><div class="leg r"></div>
+    <div class="body"></div><div class="head"></div><div class="visor"></div><div class="ant"></div>
+    <div class="tag"><span class="role">${b.role}</span><span class="job">${b.job}</span></div>`;
+  if (b.raised) el.classList.add("raised");
+  document.getElementById(b.floor).appendChild(el);
+  el.addEventListener("click", ()=>detail(b.id));
+}
+
+document.getElementById("roster").innerHTML = BOTS.map(b=>
+  `<tr><td>${b.role}</td><td>${b.job}</td><td style="color:var(--mid)">${
+    {f3:"Top · untrusted",f2:"Middle · boundary",f1:"Ground · effect"}[b.floor]}</td></tr>`).join("");
 
 document.getElementById("controls").innerHTML = PROPOSALS.map(p=>
   `<button type="button" data-p="${p.id}" aria-pressed="false">${p.label}</button>`).join("");
 
-function showGate(key){
-  const g = GATES[key];
-  document.getElementById("detailTitle").textContent = `${g.n} · ${g.title} — ${g.nature}`;
-  document.getElementById("detailBody").innerHTML = `<b>${g.q}</b><br><br>${g.body}`;
+function detail(id){
+  const b = BOTS.find(x=>x.id===id);
+  document.getElementById("dTitle").textContent = `${b.role} — ${b.job}`;
+  document.getElementById("dBody").innerHTML = b.body;
 }
-document.querySelectorAll(".gate").forEach(el=>{
-  el.addEventListener("click",()=>showGate(el.dataset.gate));
-});
 
-// Depth of each gate along the boundary plane, so a stopped token halts at its gate.
-const GATE_X = {admission:-183,legal:-89,reversibility:5,authority:99,blast:187};
-const GATE_Y = {admission:-20,legal:-20,reversibility:-20,authority:-20,blast:-20};
-
+const parcel = document.getElementById("parcel");
+const verdict = document.getElementById("verdict");
 let busy = false;
+
+function place(botId, dz){
+  const b = BOTS.find(x=>x.id===botId);
+  // bot coordinates are floor-local; the floor is 620x300 centred on the house origin
+  return `translate3d(${b.x - 310 + 27}px, ${b.y - 150 + 40}px, ${FLOOR_Z[b.floor] + (dz||0)}px)`;
+}
+
 async function send(p){
   if(busy) return; busy = true;
-  document.querySelectorAll(".gate").forEach(g=>{g.dataset.hit="false";g.dataset.stop="false"});
+  document.querySelectorAll(".bot").forEach(el=>{el.dataset.active="false";el.dataset.blocking="false";el.dataset.passed="false"});
   document.querySelectorAll("#controls button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p===p.id));
-  token.dataset.state = "";
-  token.style.transform = "translate3d(0,-96px,225px)";
+  parcel.dataset.state=""; parcel.style.transform = place("proposer", 26);
   verdict.textContent = "…";
-  await new Promise(r=>setTimeout(r,420));
+  await new Promise(r=>setTimeout(r,450));
 
-  const stopAt = p.stop ? ORDER.indexOf(p.stop) : ORDER.length;
-  for(let i=0;i<ORDER.length;i++){
-    const key = ORDER[i], gate = document.querySelector(`[data-gate="${key}"]`);
-    if(i>stopAt) break;
-    token.style.transform = `translate3d(${GATE_X[key]}px, ${GATE_Y[key]}px, 0)`;
-    gate.dataset.hit = "true";
-    await new Promise(r=>setTimeout(r,520));
-    if(i===stopAt && p.stop){
-      gate.dataset.hit="false"; gate.dataset.stop="true";
-      token.dataset.state="stopped";
-      // deflect off the wall rather than passing through it
-      token.style.transform = `translate3d(${GATE_X[key]-90}px, ${GATE_Y[key]+64}px, 112px)`;
+  const stopIdx = p.stop ? WALL.indexOf(p.stop) : WALL.length;
+  for(let i=0;i<WALL.length;i++){
+    if(i>stopIdx) break;
+    const id = WALL[i], el = document.querySelector(`[data-bot="${id}"]`);
+    parcel.style.transform = place(id, 26);
+    el.dataset.active = "true";
+    await new Promise(r=>setTimeout(r,480));
+    if(i===stopIdx && p.stop){
+      el.dataset.active="false"; el.dataset.blocking="true";
+      parcel.dataset.state="stopped";
+      parcel.style.transform = place(id, 120);      // pushed back up out of the house
       break;
     }
+    el.dataset.passed = "true";
   }
   if(!p.stop){
-    token.dataset.state="through";
-    token.style.transform = "translate3d(0,96px,-225px)";
-    await new Promise(r=>setTimeout(r,520));
+    parcel.dataset.state="through";
+    for(const id of ["hand","witness","keeper"]){
+      parcel.style.transform = place(id, 26);
+      document.querySelector(`[data-bot="${id}"]`).dataset.passed = "true";
+      await new Promise(r=>setTimeout(r,430));
+    }
   }
   verdict.innerHTML = p.say;
-  if(p.stop) showGate(p.stop);
+  if(p.stop) detail(p.stop);
   busy = false;
 }
-document.querySelectorAll("#controls button").forEach(b=>{
-  b.addEventListener("click",()=>send(PROPOSALS.find(p=>p.id===b.dataset.p)));
-});
+document.querySelectorAll("#controls button").forEach(b=>
+  b.addEventListener("click", ()=>send(PROPOSALS.find(p=>p.id===b.dataset.p))));
 
-// orbit
-let rx=15, ry=-21, dragging=false, lx=0, ly=0;
-const stage = document.getElementById("stage");
-function apply(){ scene.style.setProperty("--rx",rx+"deg"); scene.style.setProperty("--ry",ry+"deg"); }
-stage.addEventListener("pointerdown",e=>{dragging=true;lx=e.clientX;ly=e.clientY;stage.setPointerCapture(e.pointerId)});
+// spin
+let rx=50, rz=-38, drag=false, lx=0, ly=0;
+const house = document.getElementById("house"), stage = document.getElementById("stage");
+const apply=()=>{house.style.setProperty("--rx",rx+"deg");house.style.setProperty("--rz",rz+"deg");
+  document.querySelectorAll(".bot,.roomLabel").forEach(el=>el.style.transform=`rotateZ(${-rz}deg) rotateX(${-rx}deg)`);};
+stage.addEventListener("pointerdown",e=>{drag=true;lx=e.clientX;ly=e.clientY;stage.setPointerCapture(e.pointerId)});
 stage.addEventListener("pointermove",e=>{
-  if(!dragging) return;
-  ry += (e.clientX-lx)*0.32; rx -= (e.clientY-ly)*0.26;
-  rx = Math.max(-32,Math.min(62,rx));
-  lx=e.clientX; ly=e.clientY; apply();
+  if(!drag) return;
+  rz += (e.clientX-lx)*0.3; rx -= (e.clientY-ly)*0.22;
+  rx = Math.max(24,Math.min(80,rx)); lx=e.clientX; ly=e.clientY; apply();
 });
-["pointerup","pointercancel","pointerleave"].forEach(ev=>stage.addEventListener(ev,()=>dragging=false));
-apply();
-showGate("admission");
+["pointerup","pointercancel","pointerleave"].forEach(ev=>stage.addEventListener(ev,()=>drag=false));
+apply(); detail("registrar");
+parcel.style.transform = place("proposer", 26);
 </script>
