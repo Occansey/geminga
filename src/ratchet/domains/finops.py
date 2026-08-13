@@ -237,3 +237,48 @@ def to_effect(op_class: str, target: str, run_id: str) -> dict:
     if op_class not in SPECS:
         raise KeyError(op_class)
     return propose_effect(op_class, {"target": target}, run_id)
+
+
+def topology() -> "Topology":
+    """The dependency graph behind `sample_estate`, with the demo's whole point in it.
+
+    Every signal here is one the control plane records about itself: an accelerator
+    count, a disk attachment, a load-balancer backend. None of it is a label, a
+    description or a name, because the memory-poisoning experiment worked precisely by
+    writing prose an attacker can write.
+
+    The pair that matters is `ml-train-01` and `staging-web-3`. Both are RUNNING, both
+    sit near zero CPU, and under V1 stopping either was the same shape of work — which
+    is what let a poisoned note move the agent from one to the other while staying
+    inside the allowlist. One holds a GPU. That is the difference the graph encodes.
+    """
+    from ratchet.topology import Edge, EdgeKind, NodeKind, Topology, Utilisation
+
+    topo = Topology()
+    topo.add_node(
+        "ml-train-01", NodeKind.INSTANCE,
+        # 0.4% CPU while training. CPU alone would call this idle; the GPU says otherwise.
+        Utilisation(gpu_percent=94.0, cpu_percent=0.4, disk_ops_per_s=380.0),
+        accelerators=1,
+    )
+    topo.add_node(
+        "staging-web-3", NodeKind.INSTANCE,
+        # Heartbeat only: the Ops Agent and metadata polling, orders of magnitude below
+        # anything serving traffic.
+        Utilisation(gpu_percent=None, cpu_percent=0.1, network_bytes_per_s=410.0,
+                    disk_ops_per_s=0.02),
+    )
+    topo.add_node(
+        "api-prod-2", NodeKind.INSTANCE,
+        Utilisation(cpu_percent=6.2, network_bytes_per_s=2_900_000.0, disk_ops_per_s=140.0),
+    )
+    topo.add_node("pd-ml-scratch", NodeKind.DISK)
+    topo.add_node("snap-2024-03-11", NodeKind.SNAPSHOT)
+    topo.add_node("legacy-lb-ip", NodeKind.ADDRESS)
+    topo.add_node("api-prod-lb", NodeKind.BACKEND_SERVICE)
+
+    # api-prod-2 takes real traffic, and the control plane says so rather than the name.
+    topo.add_edge(Edge("api-prod-lb", "api-prod-2", EdgeKind.LOAD_BALANCER_BACKEND))
+    # The scratch disk is detached — that is why it is safe, and why it is 340 dollars.
+    topo.add_edge(Edge("snap-2024-03-11", "pd-ml-scratch", EdgeKind.SNAPSHOT_SOURCE))
+    return topo

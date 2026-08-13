@@ -189,6 +189,29 @@ class AuthorityLedger:
         self._store.save(rec)
         return rec
 
+    def restrict(self, op_class: str, to: Authority, reason: str = "") -> OperationRecord:
+        """Lower an operation's standing. It is not possible to raise it through here.
+
+        Authority is only ever granted by `observe`, and only in exchange for verified
+        clean runs. This is the other door, and it opens one way. The clamp is the
+        invariant: a caller asking for a *higher* rung gets the rung it already had,
+        silently and safely, rather than an exception it might be tempted to catch.
+
+        That matters because the caller is `ratchet.review`, which is driven by a
+        language model. Everything a model can influence has to be incapable of
+        widening anything by construction, not merely unlikely to.
+        """
+        rec = self.record(op_class)
+        floor = Authority(min(int(to), int(rec.authority)))
+        if floor != rec.authority:
+            rec.authority = floor
+            rec.demotions += 1
+            rec.last_change = self._clock()
+        rec.streak = 0
+        rec.last_reason = reason or f"restricted to {rec.authority.label}"
+        self._store.save(rec)
+        return rec
+
     def board(self) -> list[OperationRecord]:
         """Every operation class and its standing — the thing the UI draws."""
         return sorted(self._store.all(), key=lambda r: (-int(r.authority), r.op_class))

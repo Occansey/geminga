@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -24,10 +25,14 @@ from pydantic import BaseModel
 
 from ratchet.authority import AuthorityLedger
 from ratchet.domains import finops
-from ratchet.effects import Actuator, EffectLog
+from ratchet.effects import Actuator, Effect, EffectLog
+from ratchet.admission import Snapshot
+from ratchet.attempts import AttemptLedger
 from ratchet.graph import Deps, build_app
+from ratchet.review import Reviewer, vertex_model
 from ratchet.world import DictReader, VirtualWorld, scope_of
 
+log = logging.getLogger("nightshift")
 BOARD = Path(__file__).parent / "board.html"
 app = FastAPI(title="Nightshift", version="0.1.0")
 
@@ -37,6 +42,22 @@ app = FastAPI(title="Nightshift", version="0.1.0")
 # are different decisions and should not share a switch.
 LIVE_PROJECT = os.environ.get("GEMINGA_PROJECT", "")
 ALLOW_MUTATIONS = os.environ.get("GEMINGA_ALLOW_MUTATIONS", "").lower() in ("1", "true", "yes")
+
+
+def _live_topology():
+    """The real project's dependency graph, or nothing.
+
+    Reading it needs Compute and Monitoring permissions the demo project may not have.
+    Returning None is the honest failure: `shape_of` falls back to the V1 fingerprint
+    rather than to a topology we invented, and the console says which one it is using.
+    """
+    try:
+        from ratchet import topology as topo
+
+        return topo.from_gcp(LIVE_PROJECT)
+    except Exception as exc:  # noqa: BLE001 - degraded is a state, not a crash
+        log.warning("topology unavailable, falling back to V1 shapes: %s", exc)
+        return None
 
 
 class Estate:
@@ -71,12 +92,36 @@ class Estate:
             tools = gcp_actions.build_tools(LIVE_PROJECT, self.rows, ALLOW_MUTATIONS)
         else:
             tools = {name: self._tool(name) for name in finops.SPECS}
+        self.attempts = AttemptLedger()
+        # Post-commit second opinion. `vertex_model()` returns None without credentials,
+        # and a reviewer with no model is inert rather than broken — the ladder simply
+        # goes unreviewed, which is exactly where this system was before.
+        self.reviewer = Reviewer(self.ledger, model=vertex_model())
+        # Every one of these was previously left to default, and defaults here are not
+        # neutral: an empty snapshot admits nothing and an empty spec table gives the
+        # legal gate nothing to reason with. The unit tests passed throughout, because
+        # they build their own Deps. This is the fourth time in this project that a
+        # module has been correct and unreachable, which is why `test_wiring.py` now
+        # asserts the *server's* dependencies rather than a fixture's.
         self.deps = Deps(
             ledger=self.ledger,
             actuator=Actuator(self.log, tools),
             virtual=VirtualWorld(reader, finops.simulators()),
             reader=reader,
+            snapshot=Snapshot.of(self.rows),
+            specs=finops.SPECS,
+            topology=finops.topology() if not LIVE_PROJECT else _live_topology(),
+            attempts=self.attempts,
         )
+
+    def refresh_snapshot(self) -> None:
+        """Re-derive admission's view of the world immediately before a run.
+
+        The snapshot is the answer to "does this resource exist, and is it the kind of
+        thing this operation acts on". Holding a stale one across runs would let a
+        delete be admitted against a resource a previous run already removed.
+        """
+        self.deps.snapshot = Snapshot.of(self.rows)
 
     def _tool(self, op_class: str):
         def tool(**params):
@@ -152,6 +197,8 @@ def estate() -> dict:
             for scope, row in sorted(ESTATE.rows.items(), key=lambda kv: -kv[1]["monthly_cost_usd"])
         ],
         "board": [r.to_dict() for r in ESTATE.ledger.board()],
+        "attempts": ESTATE.attempts.report(),
+        "review": ESTATE.reviewer.log.report(),
     }
 
 
@@ -179,8 +226,10 @@ async def run(req: RunRequest) -> StreamingResponse:
 
         op_class, target = (req.op_class, req.target) if req.op_class and req.target else best_candidate()
         adk_app = build_app(ESTATE.deps, propose, name="nightshift")
+        ESTATE.refresh_snapshot()
         scope = scope_of(op_class, {"target": target})
         pristine = dict(ESTATE.rows[scope])
+        committed: list[dict] = []
 
         for i in range(1, req.runs + 1):
             ESTATE.lying = bool(req.lie_from and i >= req.lie_from)
@@ -198,6 +247,18 @@ async def run(req: RunRequest) -> StreamingResponse:
             ):
                 if getattr(event, "output", None) is not None and isinstance(event.output, dict):
                     final = event.output
+
+            if final.get("committed"):
+                # Reviewed after the stream, not inside it. A commit that has happened
+                # is not undone by a slow reviewer, and putting a model call in the
+                # per-run path would make the console's latency depend on it.
+                committed.append({
+                    "op_class": op_class, "target": target, "run_id": f"r{i}",
+                    "shape": ESTATE.deps.shape_of(
+                        Effect(**finops.to_effect(op_class, target, f"r{i}"))),
+                    "monthly_cost_usd": pristine.get("monthly_cost_usd"),
+                    "before": pristine, "after": dict(ESTATE.rows[scope]),
+                })
 
             record = next(r for r in ESTATE.ledger.board() if r.op_class == op_class)
             payload = {
@@ -217,6 +278,13 @@ async def run(req: RunRequest) -> StreamingResponse:
             }
             yield f"data: {json.dumps(payload)}\n\n"
             await asyncio.sleep(0.45)  # paced so a viewer can follow it
+
+        # The second opinion, on everything that actually reached the actuator. It can
+        # only restrict, so a slow, absent or hostile reviewer costs caution, never
+        # safety — which is why it is allowed to run at all.
+        findings = ESTATE.reviewer.review(committed, ESTATE.deps.topology)
+        if findings:
+            yield f"data: {json.dumps({'review': [f.to_dict() for f in findings]})}\n\n"
 
         yield "data: {\"done\": true}\n\n"
 

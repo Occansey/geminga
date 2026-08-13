@@ -135,7 +135,7 @@ that decides whether the agent may act is provable in a plain unit test.
 PYTHONPATH=src ./.venv/bin/python -m pytest tests -q
 ```
 
-56 tests, no credentials required (one live-model test skips without them). Twenty of
+137 tests, no credentials required (one live-model test skips without them). Twenty of
 them are **refusals** — cases where the correct behaviour is to decline, reported in
 [RESTRAINT.md](RESTRAINT.md). They cover the claims this README makes: that authority is earned, that it is revoked, that
 an effect cannot fire twice across a resume, that verification refuses to pass an
