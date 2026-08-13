@@ -12,6 +12,12 @@ checks between it and anything that can change the world.
 
 ## The system
 
+> **An orbitable 3D version of this diagram** lives at
+> [`architecture-3d.html`](architecture-3d.html) — three layered planes you can drag,
+> with the five gates as a wall a proposal has to cross. Send a proposal type and watch
+> which gate stops it. The 2D mermaid below is the reference; the 3D one is the argument.
+
+
 ```mermaid
 flowchart TB
     subgraph UNTRUSTED["🔓 Untrusted zone — nothing here is authority"]

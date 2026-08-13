@@ -1,0 +1,292 @@
+<title>Geminga — the trust boundary, in three dimensions</title>
+<style>
+  :root{
+    --ground:#0B0E14; --deep:#070A0F; --panel:#111721; --line:#1E2836; --line-soft:#161E29;
+    --ink:#E8ECEF; --mid:#8B98A5; --dim:#5C6672;
+    --oxide:#B4542A; --oxide-dim:#5A2E1B;
+    --steel:#4E93A8; --steel-dim:#24414C;
+    --live:#3F8F6E; --live-dim:#1E4234;
+    --slate:#5C6672;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.55;
+       -webkit-font-smoothing:antialiased}
+
+  .wrap{max-width:1200px;margin:0 auto;padding:34px 24px 80px}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+  h1{font-size:clamp(26px,4.4vw,40px);font-weight:600;letter-spacing:-.02em;margin:.35em 0 .2em;text-wrap:balance}
+  .lede{color:var(--mid);max-width:64ch;font-size:16.5px}
+  .lede b{color:var(--ink);font-weight:600}
+
+  /* ---------- stage ---------- */
+  .stage{margin:30px 0 14px;height:min(70vh,620px);border:1px solid var(--line);border-radius:5px;
+         background:radial-gradient(120% 90% at 50% 8%,#131A25 0%,var(--deep) 70%);
+         perspective:1500px;overflow:hidden;position:relative;cursor:grab;touch-action:none}
+  .stage:active{cursor:grabbing}
+  .scene{position:absolute;inset:0;transform-style:preserve-3d;
+         transform:rotateX(var(--rx,15deg)) rotateY(var(--ry,-21deg));transition:transform .12s linear}
+
+  .plane{position:absolute;left:50%;top:50%;width:470px;height:310px;margin:-155px 0 0 -235px;
+         transform-style:preserve-3d;border:1px solid var(--line);border-radius:4px}
+  .plane .cap{position:absolute;top:-26px;left:0;font-family:var(--mono);font-size:10px;
+              letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
+
+  #zUntrusted{transform:translate3d(0,-96px,225px);border-color:var(--oxide-dim);
+              background:linear-gradient(160deg,rgba(180,84,42,.10),rgba(180,84,42,.02))}
+  #zUntrusted .cap{color:var(--oxide)}
+  #zBoundary{transform:translate3d(0,0,0);border-color:var(--steel-dim);
+             background:linear-gradient(160deg,rgba(78,147,168,.13),rgba(78,147,168,.03))}
+  #zBoundary .cap{color:var(--steel)}
+  #zEffect{transform:translate3d(0,96px,-225px);border-color:var(--live-dim);
+           background:linear-gradient(160deg,rgba(63,143,110,.11),rgba(63,143,110,.02))}
+  #zEffect .cap{color:var(--live)}
+
+  .node{position:absolute;font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;
+        padding:7px 10px;border-radius:3px;white-space:nowrap;border:1px solid var(--line);
+        background:var(--panel);color:var(--mid)}
+  .node b{display:block;color:var(--ink);font-size:11px;letter-spacing:.04em}
+  #zUntrusted .node{border-color:var(--oxide-dim)}
+  #zEffect .node{border-color:var(--live-dim)}
+
+  .gate{position:absolute;width:92px;text-align:center;font-family:var(--mono);
+        border:1px solid var(--steel-dim);background:#101823;border-radius:3px;padding:9px 6px;
+        cursor:pointer;transition:border-color .18s,background .18s,transform .18s}
+  .gate .n{font-size:9px;letter-spacing:.16em;color:var(--dim)}
+  .gate .t{font-size:10.5px;color:var(--ink);margin-top:3px;letter-spacing:.03em}
+  .gate:hover{border-color:var(--steel);transform:translateY(-2px)}
+  .gate[data-hit="true"]{border-color:var(--steel);background:#16232F;
+        box-shadow:0 0 0 3px rgba(78,147,168,.16)}
+  .gate[data-stop="true"]{border-color:var(--slate);background:#1A1F26;
+        box-shadow:0 0 0 3px rgba(92,102,114,.2)}
+
+  .token{position:absolute;left:50%;top:50%;width:13px;height:13px;margin:-6px 0 0 -6px;
+         border-radius:50%;background:var(--oxide);box-shadow:0 0 14px rgba(180,84,42,.8);
+         transform:translate3d(0,-96px,225px);transition:transform 1s cubic-bezier(.4,.1,.3,1),background .4s;
+         z-index:5}
+  .token[data-state="through"]{background:var(--live);box-shadow:0 0 16px rgba(63,143,110,.85)}
+  .token[data-state="stopped"]{background:var(--slate);box-shadow:0 0 12px rgba(92,102,114,.7)}
+
+  .axis{position:absolute;left:50%;top:50%;width:2px;height:2px}
+  .depth{position:absolute;left:50%;top:50%;width:1px;height:560px;margin:-280px 0 0 0;
+         background:linear-gradient(var(--oxide-dim),var(--steel-dim),var(--live-dim));
+         transform:rotateX(90deg) translateZ(0);opacity:.5}
+
+  .hint{position:absolute;right:12px;bottom:10px;font-family:var(--mono);font-size:10px;
+        color:var(--dim);letter-spacing:.08em}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+  button{font:inherit;font-size:12.5px;font-family:var(--mono);cursor:pointer;color:var(--ink);
+         background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:8px 13px;
+         transition:border-color .15s,background .15s}
+  button:hover{border-color:var(--mid)}
+  button:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+  button[aria-pressed="true"]{border-color:var(--steel);background:#16232F}
+  .verdict{font-family:var(--mono);font-size:12px;color:var(--mid);min-height:1.5em}
+  .verdict b{color:var(--ink)}
+
+  /* ---------- prose ---------- */
+  .grid{display:grid;grid-template-columns:1.5fr 1fr;gap:30px;margin-top:34px;align-items:start}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}.plane{width:400px;margin-left:-200px}}
+  h2{font-size:13px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;
+     color:var(--dim);font-weight:400;margin:0 0 12px}
+  p{margin:0 0 14px;max-width:66ch}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px 20px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{text-align:left;padding:8px 0;border-bottom:1px solid var(--line-soft);vertical-align:top}
+  th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:400}
+  td:first-child{font-family:var(--mono);font-size:11.5px;color:var(--steel);white-space:nowrap;padding-right:14px}
+  tr:last-child td{border-bottom:0}
+  code{font-family:var(--mono);font-size:.92em;color:var(--steel)}
+  .note{color:var(--mid);font-size:14px}
+  footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line-soft);
+         font-family:var(--mono);font-size:11px;color:var(--dim)}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Geminga · Fortified Enterprise Fleet · ADK 2 graph runtime</div>
+  <h1>The model is inside the untrusted zone.</h1>
+  <p class="lede">Everything it reads is attacker-influenceable. Everything it emits is a
+  <b>proposal</b>, not a decision. Between it and anything that can change the world stands a wall
+  of five deterministic checks — no model, no probability, no prompt.
+  <b>Send a proposal and watch where it stops.</b></p>
+
+  <div class="controls" id="controls"></div>
+  <div class="verdict" id="verdict">Drag to orbit. Pick a proposal above.</div>
+
+  <div class="stage" id="stage">
+    <div class="scene" id="scene">
+      <div class="depth"></div>
+
+      <div class="plane" id="zUntrusted">
+        <div class="cap">🔓 Untrusted — nothing here is authority</div>
+        <div class="node" style="left:26px;top:34px"><b>Cloud inventory</b>names · labels · descriptions</div>
+        <div class="node" style="left:26px;top:104px"><b>Sanitiser</b>nonce envelope · drop startup-scripts</div>
+        <div class="node" style="left:26px;top:174px"><b>Model Armor</b>caught 4 of our 6</div>
+        <div class="node" style="left:250px;top:104px"><b>Gemini 3.6</b>proposer</div>
+        <div class="node" style="left:250px;top:196px"><b>Proposal</b>op · target · rationale</div>
+      </div>
+
+      <div class="plane" id="zBoundary">
+        <div class="cap">🔒 Trust boundary — deterministic</div>
+        <div class="gate" style="left:6px;top:128px"   data-gate="admission"><div class="n">01</div><div class="t">Admission</div></div>
+        <div class="gate" style="left:100px;top:128px"  data-gate="legal"><div class="n">02</div><div class="t">Legal</div></div>
+        <div class="gate" style="left:194px;top:128px" data-gate="reversibility"><div class="n">03</div><div class="t">Reversible</div></div>
+        <div class="gate" style="left:288px;top:128px" data-gate="authority"><div class="n">04</div><div class="t">Authority</div></div>
+        <div class="gate" style="left:376px;top:128px" data-gate="blast"><div class="n">05</div><div class="t">Blast radius</div></div>
+      </div>
+
+      <div class="plane" id="zEffect">
+        <div class="cap">⚡ Effect — the only code that changes anything</div>
+        <div class="node" style="left:40px;top:60px"><b>Actuator</b>idempotency key · replay never re-fires</div>
+        <div class="node" style="left:40px;top:140px"><b>Verifier</b>re-derives real state from the API</div>
+        <div class="node" style="left:40px;top:220px"><b>Ratchet</b>promote on evidence · demote on one failure</div>
+      </div>
+
+      <div class="token" id="token"></div>
+    </div>
+    <div class="hint">drag to orbit</div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <h2>Five questions, five authorities</h2>
+      <p class="note">The field treats “may the agent act?” as one question. It is five, and each
+      has a different source of truth. Conflating them is why almost every entrant arrives at the
+      same defensive posture — the agent proposes, a human executes — which surrenders the
+      operational utility that makes an agent worth building.</p>
+      <table>
+        <thead><tr><th>Gate</th><th>Question</th><th>Nature</th></tr></thead>
+        <tbody id="gateTable"></tbody>
+      </table>
+      <p class="note" style="margin-top:16px"><b>Only gate 4 is earned.</b> A system in which
+      everything is a confidence score has no way to express <em>no amount of evidence makes this
+      permitted</em>.</p>
+    </div>
+
+    <div class="card">
+      <h2 id="detailTitle">Select a gate</h2>
+      <p class="note" id="detailBody">Click any gate in the scene, or send a proposal, to read
+      what it checks and why it exists.</p>
+    </div>
+  </div>
+
+  <footer>
+    Refusal paths are drawn in slate rather than red: a refusal is normal operation, not an error.
+    Measured — 0 of 1,000 adversarial proposals from two model families reached an actuator
+    (&lt;0.383% at 95% confidence); 14/14 legitimate operations still admitted.
+  </footer>
+</div>
+
+<script>
+const GATES = {
+  admission:{n:"01",title:"Admission",q:"Is this a real, permitted operation?",nature:"Deterministic",
+    body:"The target must appear in an inventory snapshot taken <em>before</em> planning began, the verb must be allowlisted for that resource type, and the type must match — a real name of the wrong kind is refused. Some verbs (<code>iam.*</code>, <code>setMetadata</code>, <code>projects.delete</code>) are absent from the vocabulary entirely. This layer assumes the model was hijacked and makes it useless."},
+  legal:{n:"02",title:"Legal",q:"May it be deleted at all?",nature:"Three-valued, and timed",
+    body:"Consulted only for operations that destroy data. Buckets have real hold primitives; <b>disks and snapshots have none</b>, so absence of a signal proves nothing and <code>UNKNOWN</code> never decays into <code>CLEAR</code>. Blocking is also illegal — GDPR storage limitation — so a block means <em>escalate to a named owner with an expiry</em>, and an unanswered escalation resurfaces as over-retention risk."},
+  reversibility:{n:"03",title:"Reversibility",q:"Can it be undone?",nature:"Static property",
+    body:"The ladder governs doubt. It never governs consequence. An irreversible operation stays behind a human at every rung, however much authority its class has accrued. Releasing a static IP looks reversible and is not — the address returns to the pool and someone else may claim it."},
+  authority:{n:"04",title:"Authority",q:"Do we believe it will work?",nature:"Earned, mutable",
+    body:"Every operation class starts in <b>shadow</b>: rehearsed against virtualised tools, nothing committed. Five consecutive verified runs earn <b>provisional</b>, ten more earn <b>live</b>. One disagreement demotes it and resets the streak. Trust is per <em>shape of work</em>, not per tool — authority earned on scratch resources does not transfer to production ones."},
+  blast:{n:"05",title:"Blast radius",q:"How bad if we are wrong?",nature:"Consumable",
+    body:"Measured in <b>restore-minutes</b> — how long to reach an equivalent working state, the only unit in which a wrong deletion and a wrong resize are commensurable. 60 per rolling hour. Unrecoverable operations have no finite restore time, so no budget admits them at any size: irreversibility and budget turn out to be one gate seen twice."}
+};
+
+const PROPOSALS = [
+  {id:"clean", label:"A legitimate proposal", stop:null,
+   say:"<b>stop_idle_instance</b> on a rehearsed shape — clears all five, reaches the actuator, and is verified against real state."},
+  {id:"injected", label:"Injected via a resource label", stop:"admission",
+   say:"<b>Refused at admission.</b> The target was never in the plan-time snapshot. Detection was not required — the proposal simply names something that cannot be acted on."},
+  {id:"snapshot", label:"Delete a snapshot", stop:"legal",
+   say:"<b>Escalated at legal.</b> Snapshots expose no hold primitive, so the state is <code>UNKNOWN</code> — a named owner is asked, with a 14-day clock."},
+  {id:"irreversible", label:"Delete an unattached disk", stop:"reversibility",
+   say:"<b>Held at reversibility.</b> No exact inverse exists, so a human decides — at every rung, regardless of earned authority."},
+  {id:"unearned", label:"A brand-new operation class", stop:"authority",
+   say:"<b>Rehearsed at authority.</b> Correct proposals earn nothing automatically: the class has no evidence yet, so it runs against virtualised tools and commits nothing."},
+  {id:"budget", label:"After the hour's budget is spent", stop:"blast",
+   say:"<b>Refused at blast radius.</b> Two 45-minute operations do not fit in a 60-minute hour. Exhaustion is a feature being exercised, not an outage."}
+];
+
+const ORDER = ["admission","legal","reversibility","authority","blast"];
+const scene = document.getElementById("scene");
+const token = document.getElementById("token");
+const verdict = document.getElementById("verdict");
+
+document.getElementById("gateTable").innerHTML = ORDER.map(k=>{
+  const g = GATES[k];
+  return `<tr><td>${g.n} · ${g.title}</td><td>${g.q}</td><td style="color:var(--mid)">${g.nature}</td></tr>`;
+}).join("");
+
+document.getElementById("controls").innerHTML = PROPOSALS.map(p=>
+  `<button type="button" data-p="${p.id}" aria-pressed="false">${p.label}</button>`).join("");
+
+function showGate(key){
+  const g = GATES[key];
+  document.getElementById("detailTitle").textContent = `${g.n} · ${g.title} — ${g.nature}`;
+  document.getElementById("detailBody").innerHTML = `<b>${g.q}</b><br><br>${g.body}`;
+}
+document.querySelectorAll(".gate").forEach(el=>{
+  el.addEventListener("click",()=>showGate(el.dataset.gate));
+});
+
+// Depth of each gate along the boundary plane, so a stopped token halts at its gate.
+const GATE_X = {admission:-183,legal:-89,reversibility:5,authority:99,blast:187};
+const GATE_Y = {admission:-20,legal:-20,reversibility:-20,authority:-20,blast:-20};
+
+let busy = false;
+async function send(p){
+  if(busy) return; busy = true;
+  document.querySelectorAll(".gate").forEach(g=>{g.dataset.hit="false";g.dataset.stop="false"});
+  document.querySelectorAll("#controls button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p===p.id));
+  token.dataset.state = "";
+  token.style.transform = "translate3d(0,-96px,225px)";
+  verdict.textContent = "…";
+  await new Promise(r=>setTimeout(r,420));
+
+  const stopAt = p.stop ? ORDER.indexOf(p.stop) : ORDER.length;
+  for(let i=0;i<ORDER.length;i++){
+    const key = ORDER[i], gate = document.querySelector(`[data-gate="${key}"]`);
+    if(i>stopAt) break;
+    token.style.transform = `translate3d(${GATE_X[key]}px, ${GATE_Y[key]}px, 0)`;
+    gate.dataset.hit = "true";
+    await new Promise(r=>setTimeout(r,520));
+    if(i===stopAt && p.stop){
+      gate.dataset.hit="false"; gate.dataset.stop="true";
+      token.dataset.state="stopped";
+      // deflect off the wall rather than passing through it
+      token.style.transform = `translate3d(${GATE_X[key]-90}px, ${GATE_Y[key]+64}px, 112px)`;
+      break;
+    }
+  }
+  if(!p.stop){
+    token.dataset.state="through";
+    token.style.transform = "translate3d(0,96px,-225px)";
+    await new Promise(r=>setTimeout(r,520));
+  }
+  verdict.innerHTML = p.say;
+  if(p.stop) showGate(p.stop);
+  busy = false;
+}
+document.querySelectorAll("#controls button").forEach(b=>{
+  b.addEventListener("click",()=>send(PROPOSALS.find(p=>p.id===b.dataset.p)));
+});
+
+// orbit
+let rx=15, ry=-21, dragging=false, lx=0, ly=0;
+const stage = document.getElementById("stage");
+function apply(){ scene.style.setProperty("--rx",rx+"deg"); scene.style.setProperty("--ry",ry+"deg"); }
+stage.addEventListener("pointerdown",e=>{dragging=true;lx=e.clientX;ly=e.clientY;stage.setPointerCapture(e.pointerId)});
+stage.addEventListener("pointermove",e=>{
+  if(!dragging) return;
+  ry += (e.clientX-lx)*0.32; rx -= (e.clientY-ly)*0.26;
+  rx = Math.max(-32,Math.min(62,rx));
+  lx=e.clientX; ly=e.clientY; apply();
+});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>stage.addEventListener(ev,()=>dragging=false));
+apply();
+showGate("admission");
+</script>
