@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img"
+     aria-label="Geminga mark: an open outer ring around a closed inner ring and an off-centre point">
+  <title>Geminga</title>
+  <desc>
+    Geminga is a gamma-ray source with no counterpart at any other wavelength. The name is
+    Milanese for "it is not there". The mark says that with an absence: the outer ring is
+    open, and the opening is the subject. The inner ring is closed, so the gap reads as a
+    decision rather than a broken circle.
+
+    Three elements, not four. An earlier draft had four bands at descending opacity, which
+    at 16px collapsed into a smudge and at any size read as texture instead of intent. A
+    mark that needs its own faint detail to look considered is not yet finished.
+
+    The point sits off axis, on the same diagonal as the opening. A mark that resolves to a
+    perfect bullseye reads as a target; this one reads as something observed and not fully
+    accounted for, which is the posture the system takes toward anything it is told.
+  </desc>
+
+  <g fill="none" stroke="currentColor" stroke-linecap="butt">
+    <!-- Outer ring, open across the upper right. The opening spans roughly 76 degrees:
+         wide enough to survive a 16px favicon, tight enough to still read as a ring. -->
+    <path d="M 148.5 51.5 A 68 68 0 1 0 165 88" stroke-width="7"/>
+    <!-- Closed, and half the weight. The contrast between the two is what makes the
+         opening above look chosen. -->
+    <circle cx="100" cy="100" r="40" stroke-width="3.5"/>
+  </g>
+
+  <!-- The source, off centre along the diagonal the opening sits on. -->
+  <circle cx="106" cy="94" r="8.5" fill="currentColor"/>
+</svg>
