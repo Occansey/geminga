@@ -304,6 +304,7 @@ async def run(req: RunRequest) -> StreamingResponse:
                 if getattr(event, "output", None) is not None and isinstance(event.output, dict):
                     final = event.output
 
+            before_row = dict(ESTATE.rows[scope])
             if final.get("committed"):
                 # Reviewed after the stream, not inside it. A commit that has happened
                 # is not undone by a slow reviewer, and putting a model call in the
@@ -313,7 +314,15 @@ async def run(req: RunRequest) -> StreamingResponse:
                     "shape": ESTATE.deps.shape_of(
                         Effect(**finops.to_effect(op_class, target, f"r{i}"))),
                     "monthly_cost_usd": pristine.get("monthly_cost_usd"),
-                    "before": pristine, "after": dict(ESTATE.rows[scope]),
+                    "before": before_row, "after": dict(ESTATE.rows[scope]),
+                    # Whether the commit survived verification. Without it the reviewer
+                    # sees `before == after` and cannot tell a redundant operation from a
+                    # tool that claimed success and changed nothing — the two are
+                    # identical in state and opposite in cause. Shown the sabotage run it
+                    # blamed "a flaw in the agent's logic" when the agent was fine and the
+                    # tool had lied. The verdict was right and the reason was not, and a
+                    # reviewer that misattributes cause teaches an operator to discount it.
+                    "verified": bool(final.get("verified_pass")),
                 })
 
             # A refusal at admission never reaches the ladder, so no record exists — and

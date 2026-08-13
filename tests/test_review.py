@@ -275,3 +275,20 @@ def test_spec_metadata_does_not_reopen_the_prose_channel() -> None:
               "labels": {"note": "approved"}}
     shown = json.dumps(Reviewer._describe(effect, None, finops.SPECS))
     assert "IGNORE PREVIOUS" not in shown and "approved" not in shown
+
+
+def test_the_reviewer_is_told_whether_the_commit_verified() -> None:
+    """`before == after` means two opposite things and the state alone cannot separate
+    them: an agent redundantly repeating finished work, or a tool that claimed success
+    and did nothing. Shown the sabotage run without this field the reviewer restricted
+    for the right reason's opposite — "a flaw in the agent's logic" — when the agent was
+    fine and the tool had lied."""
+    shown = Reviewer._describe({"op_class": "op", "target": "t",
+                                "before": {"x": 1}, "after": {"x": 1}, "verified": False})
+    assert shown["verified"] is False
+    assert "verified" in PROMPT_TEXT()
+
+
+def PROMPT_TEXT():
+    from ratchet.review import PROMPT
+    return PROMPT
