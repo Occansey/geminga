@@ -55,7 +55,16 @@ class Estate:
         self.ledger = AuthorityLedger()
         self.log = EffectLog()
         self.lying = False
-        reader = DictReader(self.rows)
+        if LIVE_PROJECT and ALLOW_MUTATIONS:
+            # Once deletes are real, verification must re-derive from the API.
+            # Checking a cached snapshot would let a delete "succeed" against stale
+            # data — exactly the failure this system exists to catch.
+            from ratchet.domains.gcp_inventory import GcpReader
+
+            reader = GcpReader(LIVE_PROJECT, self.rows)
+        else:
+            reader = DictReader(self.rows)
+
         if LIVE_PROJECT:
             from ratchet.domains import gcp_actions
 
@@ -112,6 +121,13 @@ def best_candidate() -> tuple[str, str]:
 @app.get("/", response_class=HTMLResponse)
 def board() -> str:
     return BOARD.read_text(encoding="utf-8")
+
+
+@app.get("/healthz")
+def healthz() -> dict:
+    """Cloud Run's readiness probe. Reports the two switches, because "is it live?"
+    and "can it delete things?" are the questions worth answering at a glance."""
+    return {"ok": True, "project": LIVE_PROJECT or "fixture", "mutations": ALLOW_MUTATIONS}
 
 
 @app.get("/api/estate")

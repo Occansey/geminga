@@ -14,4 +14,7 @@ RUN pip install --no-cache-dir .
 # Cloud Run injects PORT; uvicorn must bind it or the revision never goes healthy.
 ENV PORT=8080
 EXPOSE 8080
-CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT}
+# The console, not the v1 baseline. Mutations stay off unless the deployment
+# explicitly sets GEMINGA_ALLOW_MUTATIONS — an image that can delete things by
+# default is an image someone runs by accident.
+CMD exec uvicorn app.nightshift:app --host 0.0.0.0 --port ${PORT}

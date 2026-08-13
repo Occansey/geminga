@@ -66,7 +66,7 @@ def build_tools(
             compute_v1.AddressesClient().delete(
                 project=project, region=region, address=target
             ).result()
-        return settle("compute.release_static_ip", target, {"status": "RELEASED", "monthly_cost_usd": 0.0})
+        return settle("compute.release_static_ip", target, {"status": "RELEASED", "exists": False, "monthly_cost_usd": 0.0})
 
     def delete_snapshot(**params):
         target = params["target"]

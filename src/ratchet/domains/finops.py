@@ -57,7 +57,10 @@ def _delete_snapshot(before: dict, params: dict) -> dict:
 
 
 def _release_ip(before: dict, params: dict) -> dict:
-    return {**before, "status": "RELEASED", "monthly_cost_usd": 0.0}
+    # Releasing a reserved address deletes it. The API then reports absence, not a
+    # "RELEASED" status — post-conditions must describe what can actually be
+    # observed afterwards, or verification fails on a success.
+    return {**before, "status": "RELEASED", "exists": False, "monthly_cost_usd": 0.0}
 
 
 def _downsize(before: dict, params: dict) -> dict:
@@ -100,7 +103,7 @@ SPECS: dict[str, OpSpec] = {
             "Release a reserved external IP that is attached to nothing",
             reversible=True,
             simulate=_release_ip,
-            expect=lambda p: {"status": "RELEASED", "monthly_cost_usd": 0.0},
+            expect=lambda p: {"exists": False, "monthly_cost_usd": 0.0},
         ),
         OpSpec(
             "storage.set_lifecycle_policy",

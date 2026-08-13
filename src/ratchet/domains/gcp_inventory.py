@@ -185,3 +185,85 @@ def reclaimable(estate: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
 
 def monthly_spend(estate: dict[str, dict[str, Any]]) -> float:
     return round(sum(row.get("monthly_cost_usd", 0.0) for row in estate.values()), 2)
+
+
+class GcpReader:
+    """Observes one resource, live, at the moment it is asked.
+
+    This is what makes verification mean anything once mutations are real. Reading
+    from a cached snapshot would let a delete "succeed" against stale data — the
+    precise failure the whole design exists to catch, reintroduced at the last step.
+    Every call hits the API. It is slower, and that is the correct trade.
+
+    A deleted resource comes back as `{"exists": False, "monthly_cost_usd": 0.0}`
+    rather than raising, because absence *is* the post-condition a delete is
+    verified against.
+    """
+
+    GONE = {"exists": False, "monthly_cost_usd": 0.0}
+
+    def __init__(self, project: str, estate: dict[str, dict[str, Any]]) -> None:
+        self.project = project
+        # Consulted only for a resource's zone/region, never for its state.
+        self._placement = {
+            k: {"zone": v.get("zone"), "region": v.get("region")} for k, v in estate.items()
+        }
+
+    def _where(self, op_class: str, target: str, key: str) -> str:
+        return (self._placement.get(f"{op_class}:{target}") or {}).get(key) or ""
+
+    def observe(self, op_class: str, params: dict[str, Any]) -> dict[str, Any]:
+        from google.api_core import exceptions
+        from google.cloud import compute_v1
+
+        target = params.get("target", "")
+        try:
+            if op_class in ("compute.stop_idle_instance", "compute.downsize_instance"):
+                vm = compute_v1.InstancesClient().get(
+                    project=self.project, zone=self._where(op_class, target, "zone"), instance=target
+                )
+                machine = _last(vm.machine_type)
+                return {
+                    "status": vm.status,
+                    "machine_type": machine,
+                    "exists": True,
+                    "monthly_cost_usd": MACHINE_MONTHLY.get(machine, 0.0)
+                    if vm.status == "RUNNING"
+                    else 0.0,
+                }
+
+            if op_class == "compute.delete_unattached_disk":
+                disk = compute_v1.DisksClient().get(
+                    project=self.project, zone=self._where(op_class, target, "zone"), disk=target
+                )
+                return {
+                    "exists": True,
+                    "attached_to": _last(disk.users[0]) if disk.users else None,
+                    "size_gb": disk.size_gb,
+                    "monthly_cost_usd": round(
+                        disk.size_gb * DISK_MONTHLY_PER_GB.get(_last(disk.type_), 0.114), 2
+                    ),
+                }
+
+            if op_class == "compute.release_static_ip":
+                addr = compute_v1.AddressesClient().get(
+                    project=self.project,
+                    region=self._where(op_class, target, "region"),
+                    address=target,
+                )
+                in_use = str(addr.status) == "IN_USE"
+                return {
+                    "status": addr.status,
+                    "exists": True,
+                    "monthly_cost_usd": IN_USE_IP_MONTHLY if in_use else UNUSED_IP_MONTHLY,
+                }
+
+            if op_class == "compute.delete_stale_snapshot":
+                snap = compute_v1.SnapshotsClient().get(project=self.project, snapshot=target)
+                size = snap.storage_bytes / 1e9 if snap.storage_bytes else 0.0
+                return {"exists": True, "monthly_cost_usd": round(size * SNAPSHOT_MONTHLY_PER_GB, 2)}
+
+        except exceptions.NotFound:
+            return dict(self.GONE)
+
+        return {}
