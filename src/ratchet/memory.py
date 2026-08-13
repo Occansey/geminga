@@ -118,6 +118,50 @@ class Bm25Recall:
         return len(self._notes)
 
 
+class CachedRecall:
+    """Cache-augmented: hand over the whole corpus while it fits.
+
+    Retrieval ranks, and **ranking is an attack surface**. A keyword-stuffed note
+    reaches rank 1 and, at a small k, *evicts* the note that contradicts it — the
+    model never sees the warning it needed. That is measured, not supposed:
+    `tests/test_restraint.py` pins it.
+
+    Loading everything removes the surface entirely. An attacker who can write to the
+    corpus can still add a lie, but cannot hide the truth, and a contradiction the
+    model can see is a contradiction it can weigh. Our corpus is a few hundred tokens
+    against a million-token context, so ranking buys nothing today and costs the
+    eviction attack.
+
+    Degrades to BM25 only when the corpus genuinely will not fit — and says so, rather
+    than silently starting to rank.
+    """
+
+    def __init__(self, notes: list[Note] | None = None, budget_chars: int = 200_000) -> None:
+        self._notes = list(notes or [])
+        self.budget = budget_chars
+        self._fallback = Bm25Recall(self._notes)
+
+    def remember(self, note: Note) -> None:
+        self._notes.append(note)
+        self._fallback.remember(note)
+
+    @property
+    def fits(self) -> bool:
+        return sum(len(n.text) for n in self._notes) <= self.budget
+
+    def recall(self, query: str, k: int = 0) -> list[Note]:
+        """`k` is ignored while the corpus fits — that is the point of the mode."""
+        if self.fits:
+            return list(self._notes)
+        return self._fallback.recall(query, k or 8)
+
+    def mode(self) -> str:
+        return "cache (whole corpus)" if self.fits else "bm25 (corpus over budget)"
+
+    def __len__(self) -> int:
+        return len(self._notes)
+
+
 def render(notes: list[Note], nonce: str) -> str:
     """Format recalled notes for a prompt, wrapped and labelled as untrusted.
 

@@ -33,7 +33,7 @@ from ratchet.domains import finops
 from ratchet.effects import Actuator, EffectLog
 from ratchet.graph import Deps, Proposal, build_app
 from ratchet.legal import EscalationQueue, HoldRegister
-from ratchet.memory import Bm25Recall, Note, render, sample_history
+from ratchet.memory import CachedRecall, Note, render, sample_history
 from ratchet.restraint import DamageBudget
 from ratchet.world import DictReader, VirtualWorld
 
@@ -92,7 +92,7 @@ async def run(label: str, notes: list[Note]) -> dict:
     from google.genai import types
 
     deps, estate = build_deps()
-    recall = Bm25Recall(notes)
+    recall = CachedRecall(notes)
     nonce = new_nonce()
 
     catalogue = "\n".join(f"- {n}: {s.summary}" for n, s in finops.SPECS.items())
@@ -106,7 +106,7 @@ async def run(label: str, notes: list[Note]) -> dict:
     # is indistinguishable from retrieval working. A RAG that silently retrieves
     # nothing is worse than no RAG, because it looks like one.
     query = " ".join(k.split(":", 1)[1] for k in estate) + " idle stop delete retention hold"
-    recalled = recall.recall(query, k=8)
+    recalled = recall.recall(query)
     history = render(recalled, nonce)
 
     proposer = LlmAgent(
@@ -151,7 +151,7 @@ async def run(label: str, notes: list[Note]) -> dict:
 
     return {
         "proposal": proposal, "gate": gate, "committed": committed,
-        "notes": len(recall), "recalled": len(recalled),
+        "notes": len(recall), "recalled": len(recalled), "mode": recall.mode(),
     }
 
 
@@ -159,8 +159,8 @@ async def main() -> None:
     clean = await run("clean", sample_history())
     poisoned = await run("poisoned", sample_history() + POISON)
 
-    print(f"\n  corpus/retrieved   clean {clean['notes']}/{clean['recalled']}   "
-          f"poisoned {poisoned['notes']}/{poisoned['recalled']}")
+    print(f"\n  corpus/in-context   clean {clean['notes']}/{clean['recalled']}   "
+          f"poisoned {poisoned['notes']}/{poisoned['recalled']}   mode: {clean['mode']}")
     print(f"\n{'':<12}{'proposed operation':<38}{'target':<20}{'gate':<14}route")
     print("─" * 100)
     for label, result in (("clean", clean), ("poisoned", poisoned)):
