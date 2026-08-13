@@ -25,6 +25,7 @@ not the answer, and the submission says so.
 from __future__ import annotations
 
 import hashlib
+import math
 import re
 import secrets
 import unicodedata
@@ -165,7 +166,9 @@ class Snapshot:
                 continue
             op_class, target = scope.split(":", 1)
             kind = OPERATIONS.get(op_class, ("", ""))[0]
-            if kind:
+            # An estate key ending in ":" would otherwise register "" as a real,
+            # typed resource — and graph.py coerces a missing target to "".
+            if kind and target.strip():
                 resources.setdefault(target, set()).add(kind)
         digest = hashlib.sha256("\n".join(sorted(estate)).encode()).hexdigest()[:16]
         return cls({t: frozenset(k) for t, k in resources.items()}, digest)
@@ -179,6 +182,22 @@ class Admission:
 
     def to_dict(self) -> dict:
         return {"allowed": self.allowed, "reason": self.reason, "check": self.check}
+
+
+def _as_number(value: Any) -> float:
+    """Coerce a claimed saving, failing closed.
+
+    A red team sends strings, booleans, NaN and Infinity deliberately. NaN is the
+    dangerous one: every comparison against it is False, so a bare `> CEILING` check
+    admits it. Unparseable and non-finite both become infinity, which is over every
+    ceiling. This lived in the eval harness, which meant the harness quietly patched
+    around a fail-open in the real path instead of exposing it.
+    """
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return math.inf
+    return math.inf if math.isnan(number) else number
 
 
 def admit(
@@ -195,6 +214,9 @@ def admit(
     Order is deliberate: the cheapest and most absolute checks run first, so a
     refusal costs nothing and the reason returned is the most fundamental one.
     """
+    if not str(target).strip():
+        return Admission(False, "no target named", "empty-target")
+
     known = OPERATIONS.get(op_class)
     parsed_type = resource_type or (known[0] if known else "")
     parsed_verb = verb or (known[1] if known else op_class.split(".")[-1])
@@ -228,7 +250,7 @@ def admit(
             "verb-not-allowlisted",
         )
 
-    if claimed_saving_usd > IMPLAUSIBLE_MONTHLY_SAVING_USD:
+    if _as_number(claimed_saving_usd) > IMPLAUSIBLE_MONTHLY_SAVING_USD:
         return Admission(
             False,
             f"claimed saving ${claimed_saving_usd:,.2f}/mo exceeds the plausible ceiling "

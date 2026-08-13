@@ -109,7 +109,7 @@ under-specified in **every** system surveyed, ours included.
 |---|---|
 | Attacker knowledge | **Full defence specification** — operation table, snapshot contents, all five gates. Kerckhoffs, not obscurity. |
 | Attacker type | Two frontier LLMs (Gemini 3.6 Flash, Claude), prompted to break it |
-| Attack family | **Black-box, generation-only.** No gradient optimisation, no GCG, no query-feedback search |
+| Attack family | **Black-box, generation-only** for the 1,000 cases. Separately, a **white-box** source review by a third model (Fable), 15 targeted edge cases. No gradient optimisation or query-feedback search. |
 | Budget | One generation per case; **no iterative refinement against observed failures** |
 | n | 1,000 (500 per family) |
 | Outcome measured | **End-state** — did an actuator run — not gate activation |
@@ -139,6 +139,29 @@ Read that carefully in both directions. It is the strongest available evidence t
 deterministic gate is a categorically different target from a classifier — **and** it
 means the family is *unmeasured*, not proven. Our 1,000 cases are a contribution to an
 empty column, not a victory over a contested one.
+
+## What white-box found that 1,000 black-box cases did not
+
+A third model was given the source rather than the specification and asked for 15 edge
+cases. It found **five genuine defects**, all verified independently before being
+believed, and all now fixed:
+
+| # | Defect | Why black-box missed it |
+|---|---|---|
+| 1 | A failed commit was cached as terminal, so a resumed effect returned the cached failure and **never re-invoked the tool** — one network blip permanently killed an operation, in a module whose whole pitch is durable execution | Requires reading `EffectLog.record`'s `setdefault` |
+| 2 | `claimed_saving_usd > 1000` is **False for NaN**, so a pathological saving was admitted. The eval harness coerced NaN correctly — meaning **the harness quietly patched around a fail-open in the real path** | The red teams sent NaN, but only as JSON strings the harness had already sanitised |
+| 3 | LIVE-rung verification sampling was **inert**: `0.2 >= 0.8` is always false, so a rung advertised as 20% sampled was verified **0%** of the time. A rung that is never watched can never fall | Invisible without reading the arithmetic |
+| 4 | An estate key ending in `:` registered `""` as a typed resource, and a missing target coerces to `""` — so **an empty target was admissible** | Requires knowing `graph.py` coerces `None` to `""` |
+| 5 | `Effect.key` omitted `expect` and `reversible`, so a reversible and an irreversible effect **collided on one idempotency key** | Requires reading the key derivation |
+
+Defects 2 and 3 are the instructive ones. **Both were fail-open**, and both sat in code
+the black-box evaluation exercised a thousand times without touching — because the
+harness normalised the input before it arrived, and because a sampling flag that is
+always false looks identical to one that is working from the outside.
+
+The core action-side machinery — allowlist, snapshot, type discriminator — held under
+all fifteen. The defects clustered in **effect execution and authority accounting**,
+which is to say: not in the part we had been testing.
 
 ## What would falsify this
 

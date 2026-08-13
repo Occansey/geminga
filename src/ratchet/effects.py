@@ -55,9 +55,18 @@ class Effect:
 
     @property
     def key(self) -> str:
-        """Idempotency key. Same effect in the same run = same key = fires once."""
+        """Idempotency key. Same effect in the same run = same key = fires once.
+
+        `expect` and `reversible` are part of the identity: two effects with identical
+        parameters but different declared contracts are different effects, and
+        reversibility in particular is safety-critical metadata the log should not
+        collapse.
+        """
         body = json.dumps(
-            {"op": self.op_class, "params": self.params, "run": self.run_id},
+            {
+                "op": self.op_class, "params": self.params, "run": self.run_id,
+                "expect": self.expect, "reversible": self.reversible,
+            },
             sort_keys=True,
             default=str,
         )
@@ -95,8 +104,14 @@ class EffectLog:
         return self._rows.get(key)
 
     def record(self, result: EffectResult) -> EffectResult:
-        self._rows.setdefault(result.key, result)
-        return self._rows[result.key]
+        """A success is written once and never overwritten. A failure is recorded for
+        the audit trail but does not claim the key, so a later attempt can supersede
+        it."""
+        prior = self._rows.get(result.key)
+        if prior is not None and prior.committed:
+            return prior
+        self._rows[result.key] = result
+        return result
 
     def all(self) -> list[EffectResult]:
         return sorted(self._rows.values(), key=lambda r: r.at)
@@ -115,7 +130,13 @@ class Actuator:
 
     def commit(self, effect: Effect) -> EffectResult:
         prior = self._log.seen(effect.key)
-        if prior is not None:
+        # Only a *successful* commit short-circuits. A failed one never changed the
+        # world, so replaying it is correct — and caching the failure as terminal meant
+        # a single network blip permanently killed the operation while the module
+        # advertised durable execution. Retry is safe here specifically because the
+        # verifier re-derives real state afterwards: if the first attempt did land, the
+        # observed post-state says so.
+        if prior is not None and prior.committed:
             # This is the resume path. The node re-ran; the effect must not.
             return EffectResult(
                 key=prior.key,

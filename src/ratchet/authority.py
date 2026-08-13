@@ -18,6 +18,7 @@ in a unit test.
 
 from __future__ import annotations
 
+import random
 import time
 from dataclasses import dataclass, field, asdict
 from enum import IntEnum
@@ -126,8 +127,12 @@ class AuthorityLedger:
             )
 
         if rec.authority is Authority.LIVE:
-            sample = sampler() if sampler else LIVE_VERIFY_SAMPLE
-            verify = sample >= (1 - LIVE_VERIFY_SAMPLE)
+            # The default used to be the constant LIVE_VERIFY_SAMPLE compared against
+            # (1 - LIVE_VERIFY_SAMPLE) — 0.2 >= 0.8, false every time. A rung advertised
+            # as 20% sampled was verified 0% of the time, and a rung that is never
+            # watched can never fall.
+            draw = sampler() if sampler else random.random()
+            verify = draw < LIVE_VERIFY_SAMPLE
             return Decision(
                 op_class, rec.authority, True, verify,
                 f"live after {rec.passes} verified runs; "
