@@ -234,26 +234,34 @@ const BOTS = [
   {id:"proposer", badge:"✦",floor:"f3", x:430, y:60,  role:"Proposer",  job:"Gemini 3.6 — suggests",
    body:"The only model in the house. It reads what Screener passes up and names an operation and a target. It does <b>not</b> get to say what success looks like: post-conditions come from the domain spec, because anyone who writes their own exam passes it."},
 
-  {id:"registrar", badge:"▤",floor:"f2", x:26,  y:120, role:"Registrar", job:"01 · Admission",
+  {id:"registrar", badge:"▤",floor:"f2", x:14,  y:120, role:"Registrar", job:"01 · Admission",
    body:"Checks the target was in the inventory <em>before</em> planning began, that the verb is allowed for that kind of resource, and that the resource really is that kind. Some verbs — <code>iam.*</code>, <code>setMetadata</code>, <code>projects.delete</code> — aren't in the house's vocabulary at all. Registrar assumes Proposer was hijacked and makes it not matter."},
-  {raised:true, id:"counsel", badge:"§",  floor:"f2", x:146, y:120, role:"Counsel",   job:"02 · Legal",
+  {raised:true, id:"counsel", badge:"§",  floor:"f2", x:104, y:120, role:"Counsel",   job:"02 · Legal",
    body:"Only speaks up when data would be destroyed. Answers <b>three</b> ways, not two: buckets carry real hold markers, but disks and snapshots carry none — so silence means <code>UNKNOWN</code>, never <code>CLEAR</code>. And Counsel never says \"never\": an indefinite block is its own violation, so a hold becomes an escalation to a named person with a fourteen-day clock."},
-  {id:"undoer", badge:"↺",   floor:"f2", x:266, y:120, role:"Undoer",    job:"03 · Reversibility",
+  {id:"steward", badge:"≡", floor:"f2", x:194, y:120, role:"Steward",   job:"03 · Precondition",
+   body:"Asks the least glamorous question in the house: is there anything to do? An operation whose intended end state already holds is not a harmless no-op — it spends a commit, a rung and an audit entry to change nothing, and repeated it is indistinguishable from a stuck agent. Steward compares the spec's expected end state against freshly read state, never against what an earlier run claimed, so a tool that lied about succeeding cannot make the next attempt look unnecessary."},
+  {raised:true, id:"metrologist", badge:"◈", floor:"f2", x:284, y:120, role:"Metrologist", job:"04 · Liveness",
+   body:"Checks that the operation's own name is true. <code>stop_idle_instance</code> asserts the machine is idle, and for a long time nobody checked. Metrologist never consults CPU — that is the exact signal the poisoned note asked us to trust, and a GPU node training a model sits near zero CPU while doing the most expensive work in the estate. GPU busy or disk and network above heartbeat refuses; unmetered escalates rather than refuses, because an estate that cannot be cleaned is the problem we exist to solve."},
+  {id:"undoer", badge:"↺",   floor:"f2", x:374, y:120, role:"Undoer",    job:"05 · Reversibility",
    body:"Asks one question: is there an exact inverse? Stopping a machine has one. Releasing an address does not — it goes back in the pool and someone else may take it. Anything without an inverse waits for a human at every rung, no matter how much the Warden trusts it."},
-  {raised:true, id:"warden", badge:"★",   floor:"f2", x:386, y:120, role:"Warden",    job:"04 · Authority",
+  {raised:true, id:"warden", badge:"★",   floor:"f2", x:464, y:120, role:"Warden",    job:"06 · Authority",
    body:"Keeps the ledger. Every kind of job starts in <b>rehearsal</b> — acted out against fake tools, nothing committed. Five clean runs earn <b>provisional</b>, ten more earn <b>live</b>. One disagreement and it drops back. Trust is per <em>shape of work</em>: what was earned on scratch machines does not carry to production ones."},
-  {id:"assessor", badge:"◷", floor:"f2", x:506, y:120, role:"Assessor",  job:"05 · Blast radius",
+  {id:"assessor", badge:"◷", floor:"f2", x:554, y:120, role:"Assessor",  job:"07 · Blast radius",
    body:"Measures the worst case in <b>restore-minutes</b> — how long to get back to normal, the only unit in which a wrong deletion and a wrong resize can be compared. Sixty per hour. Something unrecoverable has no finite restore time, so no budget of any size admits it."},
 
-  {id:"hand", badge:"✋",    floor:"f1", x:80,  y:70,  role:"Hand",      job:"Actuator",
+  {id:"hand", badge:"✋",    floor:"f1", x:14,  y:70,  role:"Hand",      job:"Actuator",
    body:"The only bot in the house that touches anything. Every action carries a key, so a repeat returns the recorded answer instead of firing twice. A <em>failed</em> attempt doesn't claim the key though — one bad network moment shouldn't kill a job forever."},
-  {raised:true, id:"witness", badge:"◎", floor:"f1", x:270, y:70,  role:"Witness",   job:"Verifier",
+  {raised:true, id:"witness", badge:"◎", floor:"f1", x:140, y:70,  role:"Witness",   job:"Verifier",
    body:"Goes and looks. Re-reads real state from the API and compares it to what was promised — it never asks Hand how it went, and it never asks a model. A tool that reports success while the world sits unchanged gets caught right here."},
-  {id:"keeper", badge:"⟳",  floor:"f1", x:460, y:70,  role:"Keeper",    job:"Ratchet",
-   body:"Takes Witness's word to the Warden. A pass moves the job one step closer to trusted; a single failure knocks it back down. This is the loop that makes the house's trust something earned rather than granted."}
+  {id:"keeper", badge:"⟳",  floor:"f1", x:266, y:70,  role:"Keeper",    job:"Ratchet",
+   body:"Takes Witness's word to the Warden. A pass moves the job one step closer to trusted; a single failure knocks it back down. This is the loop that makes the house's trust something earned rather than granted."},
+  {raised:true, id:"critic", badge:"⚖", floor:"f1", x:392, y:70, role:"Critic", job:"Post-commit review",
+   body:"A stronger model, reading only what actually got through. Witness asks whether a commit did what it said; Critic asks whether it should have happened at all — and that gap is where the memory-poisoning result lived. It is safe to put a model here because its whole vocabulary is <b>affirm, narrow, demote, freeze</b>: there is no verdict that grants anything. Someone in total control of its output can make the house more cautious and nothing else."},
+  {id:"archivist", badge:"⌸", floor:"f1", x:518, y:70, role:"Archivist", job:"Ledgers",
+   body:"Three append-only books: what was committed, what was refused, what was judged. Nothing here offers the house a delete or an amend, because an audit trail the agent can edit is not an audit trail and the agent is the thing being audited. Attack history may raise scrutiny — sustained refusals push a target back to rehearsal — and it may never lower it."}
 ];
 
-const WALL = ["registrar","counsel","undoer","warden","assessor"];
+const WALL = ["registrar","counsel","steward","metrologist","undoer","warden","assessor"];
 
 const PROPOSALS = [
   {id:"clean", label:"A legitimate proposal", stop:null,
@@ -264,6 +272,10 @@ const PROPOSALS = [
    say:"<b>Counsel steps in.</b> Snapshots carry no hold marker, so the answer is <code>UNKNOWN</code> — not <code>CLEAR</code>. A named person is asked, with a fourteen-day clock, because blocking forever is its own violation."},
   {id:"irreversible", label:"Delete an unattached disk", stop:"undoer",
    say:"<b>Undoer holds it.</b> There is no exact inverse, so a human decides — at every rung, however much the Warden has come to trust this job."},
+  {id:"busy", label:"Stop the idle-looking GPU node", stop:"metrologist",
+   say:"<b>Metrologist refuses.</b> The machine sits at 0.4% CPU and 94% GPU: it is training. Every other gate said yes — it is in the inventory, it is an instance, no data is destroyed, stopping is reversible, and the shape had been rehearsed. Rehearsal could never have caught this, because stopping a busy machine <em>works</em>. It stops. Witness confirms it stopped. Nobody was wrong except about what idle means."},
+  {id:"done", label:"Work that is already finished", stop:"steward",
+   say:"<b>Steward turns it away.</b> The policy is already set; there is nothing to do. Doing it again would spend a commit, a rung and an audit entry to change nothing — and three times in a row it looks exactly like a stuck agent, which is what our own reviewer called it before this gate existed."},
   {id:"unearned", label:"A job the house has never done", stop:"warden",
    say:"<b>Warden sends it to rehearsal.</b> Being right earns nothing on its own. The job runs against fake tools and commits nothing until it has five clean runs behind it."},
   {id:"budget", label:"After the hour's budget is spent", stop:"assessor",
