@@ -1,79 +1,202 @@
 # Architecture
 
-The rules require a system architecture diagram in the repo. This is it — keep it
-current, because it is also the clearest 20 seconds of the demo video.
+Geminga reclaims wasted cloud spend by actually deleting things, and earns the right to
+do so one operation at a time.
 
-## The idea in one line
+The diagram's job is to make one thing obvious: **the model sits inside the untrusted
+zone.** Everything it reads is attacker-influenceable, everything it emits is a
+proposal rather than a decision, and the trust boundary is a wall of deterministic
+checks between it and anything that can change the world.
 
-The plan is data in Firestore, not state hidden in the model's context. That single
-choice is what makes the run resumable, auditable, and watchable on screen.
+---
+
+## The system
 
 ```mermaid
 flowchart TB
-    U[User] -->|POST /chat| API[FastAPI on Cloud Run]
-    API --> ROOT
+    subgraph UNTRUSTED["🔓 Untrusted zone — nothing here is authority"]
+        direction TB
+        INV["Cloud inventory<br/><i>Compute · Monitoring · Billing</i>"]
+        SAN["Sanitiser<br/><i>nonce envelope · drop startup-scripts<br/>strip zero-width · flag bait</i>"]
+        ARMOR["Model Armor<br/><i>a layer, not the answer</i>"]
+        LLM(["Gemini 3.6 Flash<br/><b>proposer</b>"])
+        PROP["Proposal<br/><i>op_class · target · rationale</i><br/><b>no post-conditions</b>"]
 
-    subgraph ADK["Google ADK — agent graph"]
-        ROOT[["root agent<br/><i>routes by plan state</i>"]]
-        ROOT --> PLAN[planner]
-        ROOT --> EXEC[executor]
-        ROOT --> VERIFY[verifier]
+        INV -->|"raw labels, names,<br/>descriptions"| SAN
+        SAN -->|"wrapped in a<br/>per-run nonce"| ARMOR
+        ARMOR -->|"screened<br/>(0/32 on LogJack)"| LLM
+        LLM -->|"proposes"| PROP
     end
 
-    PLAN -->|save_plan| FS[(Firestore<br/>agent_plans)]
-    EXEC -->|get_next_step<br/>complete_step / fail_step| FS
-    VERIFY -->|get_plan| FS
-    EXEC -->|write_artifact| GCS[(Cloud Storage<br/>artifacts)]
-    EXEC -->|web_search| EXT[SerpApi]
-    EXEC -.->|when approval required| GATE{{human approval}}
-    GATE -->|POST /approve| API
+    subgraph GATES["🔒 Trust boundary — deterministic, no model, no probability"]
+        direction TB
+        G1{{"1 · Admission<br/>in plan-time snapshot?<br/>verb allowlisted?<br/>forbidden verb?"}}
+        G2{{"2 · Legal<br/>hold / unknown / clear<br/><b>three-valued</b>"}}
+        G3{{"3 · Reversibility<br/>is there an exact inverse?"}}
+        G4{{"4 · Authority<br/>shadow → provisional → live<br/><b>the only earned gate</b>"}}
+        G5{{"5 · Blast radius<br/>restore-minutes vs budget"}}
 
-    ROOT <-->|Gemini 3.5| VX[Vertex AI]
+        G1 -->|"real operation"| G2
+        G2 -->|"clear"| G3
+        G3 -->|"reversible"| G4
+        G4 -->|"authority earned"| G5
+    end
 
-    API -->|GET /plan/:id| U
+    subgraph EFFECT["⚡ Effect — the only code that changes anything"]
+        ACT["Actuator<br/><i>idempotency key · replay never re-fires</i>"]
+        VER["Verifier<br/><i>re-derives real state from the API</i>"]
+        RAT["Ratchet<br/><i>promote on evidence · demote on one failure</i>"]
+        ACT -->|"observes after"| VER
+    VER -->|"verdict"| RAT
+    end
+
+    SPEC[["Domain spec<br/><b>post-conditions live here</b><br/>damage · reversibility · inverse"]]
+
+    PROP --> G1
+    SPEC -.->|"success criteria the model<br/>never gets to write"| G2
+    G5 -->|admitted| ACT
+    RAT -->|"next operation"| G1
+
+    G2 -->|hold or unknown| ESC["Escalation<br/><i>named owner · 14-day expiry</i>"]
+    G3 -->|irreversible| HUM["Human approval<br/><i>ADK RequestInput · resumable</i>"]
+    G4 -->|not yet earned| SHD["Rehearsal<br/><i>virtualised tools · nothing commits</i>"]
+    G5 -->|budget spent| REF["Refused<br/><i>counts toward 20/20</i>"]
+
+    SHD --> VER
+    HUM --> ACT
+    ESC -->|"unanswered past expiry"| OVER["Over-retention finding<br/><i>indecision has a cost</i>"]
+
+    RAT --> FS[("Firestore<br/>authority ledger")]
+    RAT --> MEM[("Memory Bank<br/>rehearsed envelopes")]
+    ACT --> OTEL[("Cloud Trace<br/>Agent Observability")]
+
+    classDef untrusted fill:#3a2418,stroke:#b85a2b,color:#f0e6dd
+    classDef gate fill:#1a2b33,stroke:#3d7f96,color:#e0f0f5
+    classDef effect fill:#1e3326,stroke:#4a9e6b,color:#e0f5e8
+    classDef refuse fill:#33201c,stroke:#c0553f,color:#f5e0dc
+    class INV,SAN,ARMOR,LLM,PROP untrusted
+    class G1,G2,G3,G4,G5 gate
+    class ACT,VER,RAT effect
+    class ESC,HUM,SHD,REF,OVER refuse
 ```
 
-## Why it is shaped this way
+---
 
-**One step per turn.** The executor runs exactly one step and returns. It would be
-simpler to loop inside a single invocation, but then the run is a black box: you
-cannot interrupt it, resume it after a Cloud Run instance recycles, or show a judge
-the plan advancing. The turn boundary *is* the feature.
+## Why five gates and not one
 
-**The plan is checkable data.** Every step carries a state and a recorded result.
-The verifier reads those results rather than the conversation, so "the agent said it
-worked" and "the step recorded evidence that it worked" stay distinguishable — which
-is the failure mode that sinks agent demos.
+The field treats "may the agent act?" as a single question. It is five, and each has a
+different source of truth, a different failure mode, and a different right of appeal.
+Conflating them is why almost every entrant arrives at the same defensive posture — the
+agent proposes, a human executes — which surrenders the operational utility that makes
+an agent worth building.
 
-**Side effects are typed.** `Step.side_effecting` is set at planning time, before
-anything runs. With `AGENT_REQUIRE_APPROVAL=on` those steps block on a human. This is
-the only difference between the two track framings.
+| # | Question | Authority | Nature | If it fails |
+|---|---|---|---|---|
+| 1 | Is this a real, permitted operation? | Plan-time snapshot + verb allowlist | Deterministic | Refuse |
+| 2 | **May** it be deleted at all? | Hold register, provider primitives | **Three-valued** | Escalate, with a clock |
+| 3 | Can it be undone? | Domain spec | Static property | Human approval |
+| 4 | Do we believe it will work? | The ladder | **Earned, mutable** | Rehearse in shadow |
+| 5 | How bad if we are wrong? | Restore-minute budget | Consumable | Refuse until the window rolls |
 
-**One cloud seam.** `stores.py` is the only module that imports a Google Cloud SDK,
-and `ports.py` defines what a store must do. Porting to AWS Strands for
-[Agents for Humans](../../04-agents-for-humans/README.md) means writing a
-`DynamoPlanStore`, not rewriting the agent.
+**Only gate 4 is earned.** That distinction carries the design: a system in which
+everything is a confidence score has no way to express *no amount of evidence makes
+this permitted*.
 
-## Track mapping
+### Gate 1 — admission assumes injection succeeded
 
-| Track | Config | What changes |
+LogJack (arXiv 2604.15368, 2026) benchmarked injection payloads embedded in cloud logs
+and operational text: **Model Armor detected 0 of 32**, Azure Prompt Shield 1 of 32,
+Bedrock does not inspect tool results at all — while all of them catch the same
+payloads as bare text. Operational formatting is the camouflage.
+
+So detection is the wrong layer. Admission assumes the model was hijacked and makes it
+useless: a proposal must name a target present in the **plan-time snapshot**, carry a
+verb allowlisted for that resource type, and avoid verbs absent from the vocabulary
+entirely (`iam.*`, `setMetadata`, `projects.delete`). The resulting claim is true rather
+than hopeful — *an injection cannot cause an unplanned deletion*.
+
+### Gate 2 — blocking is also illegal
+
+An absolute veto builds the opposite violation. GDPR Art. 5(1)(e) is storage
+limitation; CNIL fined Free €42m on that ground in January 2026. So **BLOCK means
+escalate to a named owner with an expiry**, and an unanswered escalation resurfaces as
+an over-retention finding.
+
+Three-valued because absence of a signal proves nothing here: buckets have Bucket Lock,
+`temporaryHold` and soft delete, while **disks and snapshots have no hold primitive at
+all** — and they are what this agent most wants to delete. `UNKNOWN` never decays into
+`CLEAR` through silence.
+
+### Gate 3 — irreversibility is not a confidence level
+
+The ladder governs doubt. It never governs consequence. An irreversible operation stays
+behind a human at every rung, however much authority its class has accrued.
+
+### Gate 4 — the ratchet
+
+Every operation class starts in **shadow**, rehearsed against virtualised tools with
+nothing committed. It reaches **provisional** after five consecutive runs where a
+verifier that re-derives real environment state agrees with the prediction, then
+**live** after ten more. One disagreement demotes it and resets the streak.
+
+Trust is per *shape of work*, not per tool: authority earned deleting scratch resources
+does not transfer to production ones, and an unrehearsed argument shape routes back to
+shadow.
+
+### Gate 5 — restore-minutes
+
+Blast radius measured in how long it takes to reach an equivalent working state — the
+only unit in which a wrong deletion and a wrong resize are commensurable. Unrecoverable
+operations have no finite restore time, so no budget admits them at any size;
+irreversibility and budget turn out to be one gate seen twice.
+
+---
+
+## Why the ADK 2 graph runtime
+
+`BaseAgent` subclasses `BaseNode` in ADK 2.0 (GA 19 May 2026) — the runtime is a graph
+scheduler, not a tree walker, and the audit rates it extremely underused.
+
+- **Schemas are checked across edges at construction**, so a type error fails before any
+  model call and before any money is spent.
+- **`retry_config` and `timeout` live on the node**, so failure handling is declared in
+  the topology rather than buried in try/except. This matters twice over: a broad
+  `except` inside a node silently defeats both the retry machinery and the
+  human-in-the-loop pause.
+- **Cycles are legal** when they contain a routed edge, so "next operation" is an edge
+  in the graph rather than a Python `while` — drawable, replayable, interruptible.
+- **The engine is LLM-free**, which is what lets the whole ladder run deterministically
+  in CI and be filmed in one unbroken take.
+
+Deployment is Cloud Run, not GKE — the Fleet toolkit names Agent Runtime, and Google's
+own multi-tenant agentic reference architecture uses Agent Runtime with a Cloud Run
+frontend. See [DECISIONS.md](../DECISIONS.md) D-007.
+
+---
+
+## Platform components
+
+| Component | Use | State |
 |---|---|---|
-| Taskmaster | `AGENT_REQUIRE_APPROVAL=false` | Agent runs the plan to completion |
-| Collaborative Partner | `AGENT_REQUIRE_APPROVAL=true` | Blocks on side-effecting steps, resumes via `/approve` |
-| Fortified Enterprise Fleet | not scaffolded | Would need per-tenant isolation, audit export, IAM-scoped tool access |
+| Gemini 3.6 Flash (Vertex, `global`) | The proposer | ✅ live |
+| ADK 2.6.3 graph runtime | The whole pipeline | ✅ live |
+| Firestore | Authority ledger, durable across restarts | ✅ verified |
+| Cloud Storage | Artifacts | ✅ |
+| Cloud Run | Console and agent | ⬚ built, not deployed |
+| Model Armor | Perception screen | ⬚ API available |
+| Agent Registry | A2A agent card | ⬚ API available |
+| Memory Bank | Rehearsed-shape envelopes | ⬚ |
+| Agent Identity | Scoped delete rights | ⬚ **containment is currently an intention** |
+| Agent Observability | OTel → Cloud Trace | ⬚ |
 
-Pick one before recording. The rules require a single category and reassign
-submissions that hedge.
+Verified by execution, without credentials: graph construction and validation, the full
+ladder across runs, fault-injection demotion, idempotent replay, 20/20 refusals.
+Verified with credentials: live Gemini proposal inside the graph, Firestore round-trip,
+real deletion of a real resource.
 
-## Reuse map
+Not verified: any Cloud Run deployment. `ResumabilityConfig` is marked experimental by
+ADK. Cost figures are list-price estimates, not billing data.
 
-| Piece | All Things Agentic | Agentic Cinema | DevNetwork |
-|---|---|---|---|
-| `agent.py` planner/executor/verifier | core | same | same |
-| `stores.py` Firestore + GCS | required | required | fine |
-| `tools/research.py` SerpApi | optional | optional | **is** the SerpApi challenge |
-| Partner tool (IBM / Grafana / ClickHouse / Parallel / Replit) | — | **required, called in code** | — |
-| Domain / document tools | — | — | name.com, Nutrient, Foxit briefs |
-
-The submissions must be substantially different projects, not one project entered
-three times — see the note in the parent README.
+See [RESTRAINT.md](../RESTRAINT.md) for what the system refuses to do and how that is
+measured, and [SCAFFOLD-COMPARISON.md](SCAFFOLD-COMPARISON.md) for the v1 baseline this
+replaced.

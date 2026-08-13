@@ -100,7 +100,7 @@ fudge its own headline number.
 
 ## Architecture
 
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/SCAFFOLD-COMPARISON.md](docs/SCAFFOLD-COMPARISON.md)
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [RESTRAINT.md](RESTRAINT.md) · [docs/SCAFFOLD-COMPARISON.md](docs/SCAFFOLD-COMPARISON.md)
 
 Built on **ADK 2**'s graph runtime (`google.adk.workflow`) — a DAG scheduler, not a
 tree walker. Schemas are checked across edges at construction, so type errors fail
@@ -135,8 +135,9 @@ that decides whether the agent may act is provable in a plain unit test.
 PYTHONPATH=src ./.venv/bin/python -m pytest tests -q
 ```
 
-31 tests, no credentials required (one live-model test skips without them). They
-cover the claims this README makes: that authority is earned, that it is revoked, that
+56 tests, no credentials required (one live-model test skips without them). Twenty of
+them are **refusals** — cases where the correct behaviour is to decline, reported in
+[RESTRAINT.md](RESTRAINT.md). They cover the claims this README makes: that authority is earned, that it is revoked, that
 an effect cannot fire twice across a resume, that verification refuses to pass an
 operation which promised nothing, and that a real model's correct proposal is still
 routed to shadow. If they fail, the pitch is false.
