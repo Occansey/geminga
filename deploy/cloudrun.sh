@@ -24,12 +24,20 @@ gcloud firestore databases create --location="$REGION" 2>/dev/null || true
 echo "==> artifact bucket"
 gcloud storage buckets create "gs://${BUCKET}" --location="$REGION" 2>/dev/null || true
 
+# GOOGLE_CLOUD_LOCATION is deliberately "global" and not the deploy region: Gemini 3.x
+# publisher models are only served from the global endpoint, and every regional one
+# returns 404. The Cloud Run region below is a separate setting. Conflating the two
+# fails at deploy time rather than at build time, which is the expensive place to
+# find out.
+#
+# GEMINGA_ALLOW_MUTATIONS is deliberately absent. The service reads the live estate
+# and changes nothing until someone sets it explicitly.
 echo "==> deploy"
 gcloud run deploy "$SERVICE" \
   --source . \
   --region "$REGION" \
   --allow-unauthenticated \
-  --set-env-vars "GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=${PROJECT},GOOGLE_CLOUD_LOCATION=${REGION},AGENT_STORE=firestore,AGENT_BUCKET=${BUCKET}"
+  --set-env-vars "GOOGLE_GENAI_USE_VERTEXAI=true,GOOGLE_CLOUD_PROJECT=${PROJECT},GOOGLE_CLOUD_LOCATION=global,AGENT_STORE=firestore,AGENT_BUCKET=${BUCKET},GEMINGA_PROJECT=${PROJECT}"
 
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 echo

@@ -41,6 +41,7 @@ from .authority import AuthorityLedger, Decision
 from .effects import Actuator, Effect
 from .legal import EscalationQueue, HoldRegister, assess
 from .restraint import DamageBudget, UndoLedger
+from .topology import Topology, blast_shape
 from .world import VirtualWorld, verify
 
 
@@ -76,6 +77,7 @@ class Deps:
         escalations: EscalationQueue | None = None,
         undo: UndoLedger | None = None,
         specs: dict | None = None,
+        topology: Topology | None = None,
     ) -> None:
         self.ledger = ledger
         self.actuator = actuator
@@ -90,6 +92,22 @@ class Deps:
         self.escalations = escalations or EscalationQueue()
         self.undo = undo or UndoLedger()
         self.specs = specs or {}
+        # V2. Without a topology every resource is unknown, and unknown fails closed to
+        # CRITICAL — so an unconfigured deployment is over-cautious rather than blind.
+        self.topology = topology
+
+    def shape_of(self, effect: Effect) -> str:
+        """What the ladder earns authority over.
+
+        V1 keyed on the operation and the *shape* of its arguments, which deliberately
+        ignores values so trust generalises. That made stopping a spare staging box and
+        stopping the GPU node running the nightly build the same shape of work — and the
+        memory-poisoning experiment showed exactly that being exploited. V2 folds the
+        resource's blast-radius class into the key, so the two stop being interchangeable.
+        """
+        if self.topology is None:
+            return effect.shape
+        return blast_shape(effect.op_class, str(effect.params.get("target", "")), self.topology)
 
     def spec(self, op_class: str):
         return self.specs.get(op_class)
@@ -171,7 +189,7 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
             return
 
         # 4 — authority. The only earned gate.
-        decision: Decision = deps.ledger.decide(effect.op_class, effect.shape)
+        decision: Decision = deps.ledger.decide(effect.op_class, deps.shape_of(effect))
         if not decision.commits:
             yield settle(
                 "shadow", "authority", decision.reason,
@@ -267,7 +285,7 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
         last = outcomes[-1] if outcomes else {}
         effect = Effect(**queue[cursor])
         record = deps.ledger.observe(
-            effect.op_class, effect.shape, bool(last.get("passed")), last.get("reason", "")
+            effect.op_class, deps.shape_of(effect), bool(last.get("passed")), last.get("reason", "")
         )
         ctx.state["cursor"] = cursor + 1
         yield {

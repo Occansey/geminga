@@ -271,3 +271,56 @@ def test_shape_significant_params_still_split_the_shape(estate: Topology) -> Non
     scratch = blast_shape(STOP, "staging-web-3", estate, {"project": "scratch"})
     prod = blast_shape(STOP, "staging-web-3", estate, {"project": "prod"})
     assert scratch != prod
+
+
+def test_the_ladder_actually_asks_the_topology() -> None:
+    """The wiring, not the module. topology.py passed its own tests while graph.py
+    still keyed the ladder on V1's fingerprint — so the poison would have worked end
+    to end against a system whose unit tests all passed. This asserts the pipeline."""
+    from ratchet.authority import AuthorityLedger, PROMOTION_THRESHOLD, Authority
+    from ratchet.effects import Actuator, Effect, EffectLog
+    from ratchet.domains import finops
+    from ratchet.graph import Deps
+    from ratchet.topology import Topology, Edge, EdgeKind, NodeKind, Utilisation
+    from ratchet.world import DictReader, VirtualWorld
+
+    topo = Topology()
+    topo.add_node("ml-train-01", NodeKind.INSTANCE,
+                  Utilisation(gpu_percent=71.0, network_bytes_per_s=4.2e6), accelerators=1)
+    topo.add_node("staging-web-3", NodeKind.INSTANCE,
+                  Utilisation(gpu_percent=0.0, network_bytes_per_s=0.0,
+                              disk_ops_per_s=0.0, cpu_percent=0.1))
+    topo.add_node("ig-train", NodeKind.INSTANCE_GROUP)
+    topo.add_node("lb-front", NodeKind.BACKEND_SERVICE)
+    topo.add_edge(Edge("ig-train", "ml-train-01", EdgeKind.INSTANCE_GROUP_MEMBERSHIP))
+    topo.add_edge(Edge("lb-front", "ig-train", EdgeKind.LOAD_BALANCER_BACKEND))
+
+    estate = finops.sample_estate()
+    reader = DictReader(estate)
+    ledger = AuthorityLedger()
+    deps = Deps(ledger, Actuator(EffectLog(), {}), VirtualWorld(reader, finops.simulators()),
+                reader, specs=finops.SPECS, topology=topo)
+
+    spare = Effect("compute.stop_idle_instance", {"target": "staging-web-3"},
+                   expect={"status": "TERMINATED"}, run_id="r")
+    gpu = Effect("compute.stop_idle_instance", {"target": "ml-train-01"},
+                 expect={"status": "TERMINATED"}, run_id="r")
+
+    assert spare.shape == gpu.shape, "precondition: V1 could not tell them apart"
+    assert deps.shape_of(spare) != deps.shape_of(gpu), "V2 must, through Deps"
+
+    # Earn the spare box all the way to commit, then aim at the GPU node.
+    for _ in range(PROMOTION_THRESHOLD[Authority.SHADOW]):
+        ledger.observe("compute.stop_idle_instance", deps.shape_of(spare), passed=True)
+    assert ledger.decide("compute.stop_idle_instance", deps.shape_of(spare)).commits is True
+
+    reaching = ledger.decide("compute.stop_idle_instance", deps.shape_of(gpu))
+    assert reaching.commits is False
+    assert reaching.in_envelope is False
+
+
+def test_no_topology_configured_fails_closed_rather_than_open() -> None:
+    """An unconfigured deployment must be over-cautious, not blind."""
+    from ratchet.topology import Topology
+    empty = Topology()
+    assert empty.blast_class("anything-at-all").name == "CRITICAL"
