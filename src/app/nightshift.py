@@ -32,6 +32,13 @@ BOARD = Path(__file__).parent / "board.html"
 app = FastAPI(title="Nightshift", version="0.1.0")
 
 
+# Point at a real project to read live inventory; leave unset for the fixture.
+# Mutations are a *second*, separate opt-in — reading the real world and changing it
+# are different decisions and should not share a switch.
+LIVE_PROJECT = os.environ.get("GEMINGA_PROJECT", "")
+ALLOW_MUTATIONS = os.environ.get("GEMINGA_ALLOW_MUTATIONS", "").lower() in ("1", "true", "yes")
+
+
 class Estate:
     """The live environment. One per process; the demo resets it between runs."""
 
@@ -39,14 +46,25 @@ class Estate:
         self.reset()
 
     def reset(self) -> None:
-        self.rows = finops.sample_estate()
+        if LIVE_PROJECT:
+            from ratchet.domains import gcp_inventory
+
+            self.rows = gcp_inventory.read_estate(LIVE_PROJECT)
+        else:
+            self.rows = finops.sample_estate()
         self.ledger = AuthorityLedger()
         self.log = EffectLog()
         self.lying = False
         reader = DictReader(self.rows)
+        if LIVE_PROJECT:
+            from ratchet.domains import gcp_actions
+
+            tools = gcp_actions.build_tools(LIVE_PROJECT, self.rows, ALLOW_MUTATIONS)
+        else:
+            tools = {name: self._tool(name) for name in finops.SPECS}
         self.deps = Deps(
             ledger=self.ledger,
-            actuator=Actuator(self.log, {name: self._tool(name) for name in finops.SPECS}),
+            actuator=Actuator(self.log, tools),
             virtual=VirtualWorld(reader, finops.simulators()),
             reader=reader,
         )
@@ -72,10 +90,23 @@ ESTATE = Estate()
 
 
 class RunRequest(BaseModel):
-    op_class: str = "compute.stop_idle_instance"
-    target: str = "staging-web-3"
+    # Unset means "pick the most valuable thing you are allowed to act on", which
+    # is the only sensible default once the estate is real and changes under you.
+    op_class: str | None = None
+    target: str | None = None
     runs: int = 8
     lie_from: int | None = None
+
+
+def best_candidate() -> tuple[str, str]:
+    """Highest-cost row the domain has an operation for. Falls back to any row."""
+    ranked = sorted(ESTATE.rows.items(), key=lambda kv: -kv[1].get("monthly_cost_usd", 0))
+    for scope, row in ranked:
+        op_class, target = scope.split(":", 1)
+        if op_class in finops.SPECS and row.get("idle_candidate", True):
+            return op_class, target
+    scope = ranked[0][0]
+    return scope.split(":", 1)[0], scope.split(":", 1)[1]
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -87,6 +118,8 @@ def board() -> str:
 def estate() -> dict:
     return {
         "spend": ESTATE.spend,
+        "project": LIVE_PROJECT or "fixture",
+        "mutations": ALLOW_MUTATIONS,
         "resources": [
             {
                 "scope": scope,
@@ -120,12 +153,13 @@ async def run(req: RunRequest) -> StreamingResponse:
 
         @node
         async def propose(ctx, goal: str, run_id: str):
-            ctx.state["queue"] = [finops.propose_effect(req.op_class, {"target": req.target}, run_id)]
+            ctx.state["queue"] = [finops.propose_effect(op_class, {"target": target}, run_id)]
             ctx.state["cursor"] = 0
             yield {"proposed": 1, "goal": goal}
 
+        op_class, target = (req.op_class, req.target) if req.op_class and req.target else best_candidate()
         adk_app = build_app(ESTATE.deps, propose, name="nightshift")
-        scope = scope_of(req.op_class, {"target": req.target})
+        scope = scope_of(op_class, {"target": target})
         pristine = dict(ESTATE.rows[scope])
 
         for i in range(1, req.runs + 1):
@@ -145,11 +179,11 @@ async def run(req: RunRequest) -> StreamingResponse:
                 if getattr(event, "output", None) is not None and isinstance(event.output, dict):
                     final = event.output
 
-            record = next(r for r in ESTATE.ledger.board() if r.op_class == req.op_class)
+            record = next(r for r in ESTATE.ledger.board() if r.op_class == op_class)
             payload = {
                 "run": i,
-                "op_class": req.op_class,
-                "target": req.target,
+                "op_class": op_class,
+                "target": target,
                 "authority": record.authority.label,
                 "streak": record.streak,
                 "passes": record.passes,

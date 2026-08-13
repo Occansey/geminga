@@ -36,7 +36,12 @@ MACHINE_MONTHLY = {
 }
 DISK_MONTHLY_PER_GB = {"pd-standard": 0.044, "pd-balanced": 0.114, "pd-ssd": 0.187}
 SNAPSHOT_MONTHLY_PER_GB = 0.026
-UNUSED_IP_MONTHLY = 7.30          # a reserved external IP attached to nothing
+# Since 1 Feb 2024 Google bills *every* external IPv4 address, not just idle ones.
+# An in-use address on a VM is ~$0.005/hr; an unattached reservation is dearer.
+# Treating in-use as free — as the first draft did — understates the bill, which is
+# the wrong direction for a tool whose job is to find money.
+IN_USE_IP_MONTHLY = 3.65
+UNUSED_IP_MONTHLY = 7.30
 IDLE_CPU_THRESHOLD = 5.0          # percent, 7-day mean
 STALE_SNAPSHOT_DAYS = 180
 
@@ -101,7 +106,7 @@ def read_estate(project: str, idle_days: int = 7) -> dict[str, dict[str, Any]]:
                 "status": address.status,
                 "attached_to": _last(address.users[0]) if address.users else None,
                 "region": _last(region),
-                "monthly_cost_usd": 0.0 if in_use else UNUSED_IP_MONTHLY,
+                "monthly_cost_usd": IN_USE_IP_MONTHLY if in_use else UNUSED_IP_MONTHLY,
                 "exists": True,
                 "cost_is_estimate": True,
                 "idle_candidate": not in_use,
