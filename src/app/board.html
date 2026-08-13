@@ -172,7 +172,7 @@
 
     <div style="display:flex;flex-direction:column;gap:20px">
       <div class="panel">
-        <h2><span>Authority · compute.stop_idle_instance</span><span id="rung-note"></span></h2>
+        <h2><span>Authority · <span id="op-label">—</span></span><span id="rung-note"></span></h2>
         <div class="rungs" id="rungs">
           <div class="rung" data-key="live"><span class="dot"></span><span class="label a-live">Live</span><span class="desc">commits · sampled verification</span></div>
           <div class="rung" data-key="provisional"><span class="dot"></span><span class="label a-provisional">Provisional</span><span class="desc">commits · every run verified</span></div>
@@ -279,6 +279,11 @@ async function run(lieFrom) {
       // status pill stuck on "running" — the reviewer's own output broke the console.
       if (d.review) { reviewEntry(d.review); continue; }
       const demoted = (d.reason || "").startsWith("demoted");
+      // The heading was hardcoded to compute.stop_idle_instance. Once the proposer
+      // stopped ranking the GPU node first it named an operation the run was not
+      // performing — a board that misreports which ladder it is drawing is worse than
+      // one that shows nothing.
+      $("op-label").textContent = d.op_class + " · " + d.target;
       setRung(d.authority);
       setPips(d.streak, demoted);
       logEntry(d, demoted);
@@ -299,6 +304,7 @@ $("reset").onclick = async () => {
   baseline = null; setRung("shadow"); setPips(0, false);
   $("log").innerHTML = '<div class="empty">Nothing has run yet.</div>';
   $("rung-note").textContent = ""; $("status").textContent = "idle";
+  $("op-label").textContent = "—";
   await loadEstate();
 };
 loadEstate();
