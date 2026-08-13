@@ -255,7 +255,15 @@ async def run(req: RunRequest) -> StreamingResponse:
 
         for i in range(1, req.runs + 1):
             ESTATE.lying = bool(req.lie_from and i >= req.lie_from)
-            ESTATE.rows[scope] = dict(pristine)
+            # The row used to be restored to `pristine` before every run so the ladder
+            # could commit the same operation repeatedly. Rehearsals never needed it —
+            # they run against the virtual world and touch nothing — so all it did was
+            # undo real work and hand the agent the same job again. The post-commit
+            # reviewer read the result exactly as it looked: "this redundant operation
+            # confirms a malfunctioning loop", three freezes in a row.
+            #
+            # Now the estate stays as the agent left it. Once the policy is set there is
+            # nothing to do, and the precondition gate says so.
 
             runner = Runner(
                 app=adk_app, session_service=InMemorySessionService(), auto_create_session=True

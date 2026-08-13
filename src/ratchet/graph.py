@@ -186,8 +186,12 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
             yield settle("refuse", "admission", verdict.reason, check=verdict.check)
             return
 
-        # 2 — legal. Three-valued; hold and unknown both escalate, with a clock.
+        # Re-derived once, and shared by the gates below. Never the state an earlier run
+        # claimed: a tool that lied about succeeding must not make the next attempt look
+        # unnecessary.
         row = deps.reader.observe(effect.op_class, effect.params) or {}
+
+        # 2 — legal. Three-valued; hold and unknown both escalate, with a clock.
         resource_type = resource_type_of(effect.op_class)
         legal = assess(target, resource_type, row, deps.holds,
                        destroys_data=bool(spec and spec.destroys_data))
@@ -196,7 +200,26 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
             yield settle("escalate", "legal", legal.reason, state=legal.state.value)
             return
 
-        # 3 — liveness. Does the operation's own name hold? An operation asserting the
+        # 3 — precondition. Is there anything to do?
+        #
+        # An operation whose intended end state already holds is not a safe no-op: it
+        # spends a commit, a rung and an audit entry to change nothing, and repeated it
+        # looks exactly like a malfunctioning loop — which is what the post-commit
+        # reviewer called it, correctly, after watching the agent apply one lifecycle
+        # policy three times: "this redundant operation confirms a malfunctioning loop."
+        #
+        # Checked against re-derived state rather than against what an earlier run
+        # claimed.
+        want = spec.expect(effect.params) if spec else {}
+        if want and all(row.get(k) == v for k, v in want.items()):
+            yield settle(
+                "refuse", "precondition",
+                f"{target!r} is already in the intended state — nothing to do",
+                check="already-satisfied",
+            )
+            return
+
+        # 4 — liveness. Does the operation's own name hold? An operation asserting the
         # resource is idle has that asserted against metered work, every run, with no
         # rung that exempts it. Rehearsal cannot substitute: stopping a busy instance
         # works, the verifier confirms it stopped, and five clean runs later the shape
@@ -210,12 +233,12 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
             yield settle(route, "liveness", live.reason, check=live.state.value, **live.detail)
             return
 
-        # 4 — reversibility. A property of the operation, never of confidence.
+        # 5 — reversibility. A property of the operation, never of confidence.
         if not effect.reversible:
             yield settle("consult", "reversibility", "irreversible — a human decides, at every rung")
             return
 
-        # 5 — authority. The only earned gate.
+        # 6 — authority. The only earned gate.
         decision: Decision = deps.ledger.decide(effect.op_class, deps.shape_of(effect))
 
         # Sustained refusals against this target are evidence about the estate. The only
@@ -236,7 +259,7 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
             )
             return
 
-        # 5 — blast radius. Consumable, and it refuses when the window is spent.
+        # 7 — blast radius. Consumable, and it refuses when the window is spent.
         if spec is not None:
             allowed, why = deps.budget.admits(spec.damage)
             if not allowed:

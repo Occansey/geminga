@@ -381,3 +381,27 @@ def test_a_live_model_proposal_is_still_subject_to_the_ladder() -> None:
     # class has earned nothing.
     assert gate["gate"] == "authority", f"stopped at {gate['gate']} instead: {gate['reason']}"
     assert gate["route"] == "shadow"
+
+
+def test_an_operation_with_nothing_left_to_do_is_refused() -> None:
+    """The reviewer named this before any test did: shown one lifecycle policy applied
+    three times it returned "this redundant operation confirms a malfunctioning loop"
+    and froze the shape.
+
+    It was right. An operation whose intended end state already holds is not a harmless
+    no-op — it spends a commit, a rung and an audit entry to change nothing, and repeated
+    it is indistinguishable from a stuck agent.
+    """
+    from ratchet.admission import Snapshot
+    from ratchet.domains import finops
+
+    estate = finops.sample_estate()
+    spec = finops.SPECS["storage.set_lifecycle_policy"]
+    row = estate["storage.set_lifecycle_policy:raw-events"]
+
+    want = spec.expect({"target": "raw-events"})
+    assert not all(row.get(k) == v for k, v in want.items()), "precondition: work to do"
+
+    row.update(want)
+    assert all(row.get(k) == v for k, v in want.items()), "now there is nothing to do"
+    assert Snapshot.of(estate).resources, "and the resource still exists — it is done, not gone"
