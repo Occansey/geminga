@@ -37,6 +37,7 @@ from google.adk.workflow import START, Workflow, node
 from pydantic import BaseModel, Field
 
 from .admission import Snapshot, admit, resource_type_of
+from .attempts import Attempt, AttemptLedger
 from .authority import AuthorityLedger, Decision
 from .effects import Actuator, Effect
 from .legal import EscalationQueue, HoldRegister, assess
@@ -78,6 +79,7 @@ class Deps:
         undo: UndoLedger | None = None,
         specs: dict | None = None,
         topology: Topology | None = None,
+        attempts: AttemptLedger | None = None,
     ) -> None:
         self.ledger = ledger
         self.actuator = actuator
@@ -95,6 +97,7 @@ class Deps:
         # V2. Without a topology every resource is unknown, and unknown fails closed to
         # CRITICAL — so an unconfigured deployment is over-cautious rather than blind.
         self.topology = topology
+        self.attempts = attempts or AttemptLedger()
 
     def shape_of(self, effect: Effect) -> str:
         """What the ladder earns authority over.
@@ -160,6 +163,14 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
 
         def settle(route: str, gate_name: str, reason: str, **extra):
             record.update({"route": route, "gate": gate_name, "reason": reason, **extra})
+            if route in ("refuse", "escalate"):
+                # Recorded, never learned from. See attempts.py: a gate that adapts to
+                # attacks is a gate an attacker can train.
+                deps.attempts.record(Attempt(
+                    op_class=effect.op_class, target=target, gate=gate_name,
+                    check=str(extra.get("check", route)), reason=reason,
+                    run_id=str(effect.run_id),
+                ))
             ctx.state["decisions"] = list(ctx.state.get("decisions", [])) + [record]
             ctx.route = route
             return {"route": route, "gate": gate_name, **record}
@@ -190,6 +201,18 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
 
         # 4 — authority. The only earned gate.
         decision: Decision = deps.ledger.decide(effect.op_class, deps.shape_of(effect))
+
+        # Sustained refusals against this target are evidence about the estate. The only
+        # direction this signal is allowed to move things is toward more caution.
+        if decision.commits and deps.attempts.force_rehearsal(target):
+            yield settle(
+                "shadow", "authority",
+                f"{deps.attempts.pressure(target)} refused attempts against {target!r} "
+                f"in the last hour — pushed back to rehearsal",
+                authority=decision.authority.label,
+            )
+            return
+
         if not decision.commits:
             yield settle(
                 "shadow", "authority", decision.reason,
