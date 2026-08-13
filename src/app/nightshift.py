@@ -23,7 +23,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 
-from ratchet.authority import AuthorityLedger
+from ratchet.authority import AuthorityLedger, OperationRecord
 from ratchet.domains import finops
 from ratchet.effects import Actuator, Effect, EffectLog
 from ratchet.admission import Snapshot
@@ -260,17 +260,27 @@ async def run(req: RunRequest) -> StreamingResponse:
                     "before": pristine, "after": dict(ESTATE.rows[scope]),
                 })
 
-            record = next(r for r in ESTATE.ledger.board() if r.op_class == op_class)
+            # A refusal at admission never reaches the ladder, so no record exists — and
+            # `next()` without a default raises StopIteration, which inside an async
+            # generator becomes a RuntimeError that kills the stream. The console went
+            # blank on exactly the behaviour the product exists to demonstrate. Refusing
+            # is this system's normal day; it has to render.
+            record = next(
+                (r for r in ESTATE.ledger.board() if r.op_class == op_class),
+                OperationRecord(op_class=op_class),
+            )
             payload = {
                 "run": i,
                 "op_class": op_class,
                 "target": target,
                 "authority": record.authority.label,
+                "refused": final.get("refused") or (not final.get("committed") and not record.passes),
+                "gate": final.get("gate", ""),
                 "streak": record.streak,
                 "passes": record.passes,
                 "failures": record.failures,
                 "demotions": record.demotions,
-                "reason": record.last_reason,
+                "reason": record.last_reason or final.get("reason", "refused before the ladder"),
                 "acted": bool(final.get("committed")),
                 "lying": ESTATE.lying,
                 "resource": ESTATE.rows[scope],

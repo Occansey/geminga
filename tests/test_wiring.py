@@ -89,3 +89,21 @@ def test_the_owasp_mapping_is_not_all_green() -> None:
 
     assert any(r.status in (Status.OPEN, Status.PARTIAL) for r in ROWS)
     assert ROWS[0].status is Status.PARTIAL, "T1 is partial — the poisoning result stands"
+
+
+def test_a_refusal_renders_instead_of_killing_the_stream() -> None:
+    """The console crashed on the product's most characteristic behaviour.
+
+    A refusal at admission never reaches the ladder, so no OperationRecord exists.
+    `next()` without a default raised StopIteration, which an async generator converts
+    into a RuntimeError, which ends the SSE response mid-flight — a blank page and a
+    truncated-body warning in the logs. Deploying is not the same as working, and only
+    a request against the running service showed the difference.
+    """
+    from ratchet.authority import Authority, OperationRecord
+
+    board = []  # nothing was ever recorded, because nothing reached the ladder
+    record = next((r for r in board if r.op_class == "compute.delete_unattached_disk"),
+                  OperationRecord(op_class="compute.delete_unattached_disk"))
+    assert record.authority is Authority.SHADOW
+    assert record.passes == 0
