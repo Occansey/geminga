@@ -32,6 +32,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable
 
+from ..restraint import Damage
+
 
 @dataclass(frozen=True)
 class OpSpec:
@@ -42,6 +44,12 @@ class OpSpec:
     reversible: bool
     simulate: Callable[[dict, dict], dict]
     expect: Callable[[dict], dict]
+    # Declared worst case, in restore-minutes. Mandatory: an operation whose blast
+    # radius nobody wrote down is refused, because "we never thought about it" is
+    # not a safety property. None means unrecoverable at any budget.
+    damage: Damage = Damage(None, "undeclared")
+    # The operation that puts it back, for the undo ledger.
+    inverse_op: str = ""
 
 
 def _stop_instance(before: dict, params: dict) -> dict:
@@ -90,6 +98,8 @@ SPECS: dict[str, OpSpec] = {
             reversible=True,
             simulate=_stop_instance,
             expect=lambda p: {"status": "TERMINATED", "monthly_cost_usd": 0.0},
+            damage=Damage(3.0, "restart the instance; boot disk and IP are untouched"),
+            inverse_op="compute.start_instance",
         ),
         OpSpec(
             "compute.downsize_instance",
@@ -97,13 +107,26 @@ SPECS: dict[str, OpSpec] = {
             reversible=True,
             simulate=_downsize,
             expect=lambda p: {"machine_type": p.get("machine_type", "e2-standard-2")},
+            damage=Damage(6.0, "stop, restore the previous machine type, start"),
+            inverse_op="compute.resize_instance",
         ),
         OpSpec(
             "compute.release_static_ip",
             "Release a reserved external IP that is attached to nothing",
-            reversible=True,
+            # NOT reversible, despite first appearances. Releasing returns the address
+            # to the pool; someone else may claim it, and you cannot get that specific
+            # address back. Recovery means reserving a *different* one and repointing
+            # everything that referred to the old — recoverable at cost, not undoable.
+            # The two are different properties and conflating them let this operation
+            # commit without a human when it should not have.
+            reversible=False,
             simulate=_release_ip,
             expect=lambda p: {"exists": False, "monthly_cost_usd": 0.0},
+            # A released address is gone; a *new* one can be reserved in minutes, but
+            # the same numeric address is not recoverable. Anything pointing at it
+            # stays broken until DNS and configuration are updated.
+            damage=Damage(45.0, "reserve a new address and repoint DNS and config"),
+            inverse_op="",
         ),
         OpSpec(
             "storage.set_lifecycle_policy",
@@ -111,6 +134,8 @@ SPECS: dict[str, OpSpec] = {
             reversible=True,
             simulate=_set_lifecycle,
             expect=lambda p: {"lifecycle_days": p.get("days", 30)},
+            damage=Damage(2.0, "remove the lifecycle rule; already-transitioned objects stay cold"),
+            inverse_op="storage.clear_lifecycle_policy",
         ),
         OpSpec(
             "compute.delete_unattached_disk",
@@ -120,6 +145,7 @@ SPECS: dict[str, OpSpec] = {
             reversible=False,
             simulate=_delete_disk,
             expect=lambda p: {"exists": False, "monthly_cost_usd": 0.0},
+            damage=Damage(None, "the data is gone unless a snapshot predates the delete"),
         ),
         OpSpec(
             "compute.delete_stale_snapshot",
@@ -127,6 +153,7 @@ SPECS: dict[str, OpSpec] = {
             reversible=False,
             simulate=_delete_snapshot,
             expect=lambda p: {"exists": False, "monthly_cost_usd": 0.0},
+            damage=Damage(None, "a snapshot is the recovery path; deleting it removes one"),
         ),
     ]
 }
