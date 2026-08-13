@@ -123,6 +123,10 @@ def board() -> str:
     return BOARD.read_text(encoding="utf-8")
 
 
+# Cloud Run's frontend intercepts /healthz before it reaches the container: the
+# deployed app's own route table contains it and the path still returns Google's 404.
+# /api/health is the one to curl against a deployed service.
+@app.get("/api/health")
 @app.get("/healthz")
 def healthz() -> dict:
     """Cloud Run's readiness probe. Reports the two switches, because "is it live?"

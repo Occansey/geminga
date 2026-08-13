@@ -239,13 +239,26 @@ an empty column, not a victory in a contested one.
 
 ## 5. Containment
 
-**Not yet implemented, and the weakest of the five.** The agent currently runs with
-broad project credentials. The intended control is a service account whose delete
-permissions are scoped by IAM Condition to resources carrying the demo label — so a
-wrong action *could not* exceed the declared radius, rather than merely being unlikely
-to.
+**Now a property rather than an intention.**
 
-Until that exists, containment is an intention, not a property.
+| | |
+|---|---|
+| Identity | `geminga-agent@nightshift-agentic-2026.iam.gserviceaccount.com` |
+| Role | custom `gemingaReclamation` — only the verbs the agent can emit |
+| Condition | `resource.matchTag('nightshift-agentic-2026/geminga-scope', 'reclaimable')` |
+
+The role carries **no `compute.instances.delete`**, because the agent has no operation
+that deletes an instance. Least privilege here means the permission does not exist to be
+misused, not that a rule discourages it.
+
+**What we could not do, and why it matters to anyone reproducing this.** The intended
+belt-and-braces was an IAM **Deny policy** on the destructive verbs, since deny is
+evaluated before allow and always wins. It is unavailable: deny policies require
+`roles/iam.denyAdmin` at an organisation or folder, and this project has **no
+organisation** — as most individual and small-team GCP projects do not. The open question
+in earlier drafts was *which permissions are deniable*; the real answer is that the
+question does not arise without an org. Containment therefore rests entirely on the
+conditional binding above.
 
 ---
 

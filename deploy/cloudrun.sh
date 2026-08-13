@@ -3,6 +3,11 @@
 #   ./deploy/cloudrun.sh my-gcp-project us-central1
 set -euo pipefail
 
+# Run from the repository root regardless of where this was invoked. Without it,
+# `--source .` uploads whatever directory the caller happened to be in — which is
+# how a deploy silently produced no service and left a one-line log.
+cd "$(dirname "$0")/.."
+
 PROJECT="${1:?usage: cloudrun.sh <project-id> [region]}"
 REGION="${2:-us-central1}"
 SERVICE="agentic-core"
