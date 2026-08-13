@@ -31,31 +31,17 @@ what the shadow rung is for.
 
 from __future__ import annotations
 
-from typing import Any
-
-from pydantic import BaseModel, Field
-
 from google.adk.apps import App, ResumabilityConfig
 from google.adk.events.request_input import RequestInput
 from google.adk.workflow import START, Workflow, node
+from pydantic import BaseModel, Field
 
-from .admission import Snapshot, admit
+from .admission import Snapshot, admit, resource_type_of
 from .authority import AuthorityLedger, Decision
-from .effects import Actuator, Effect, EffectLog
-from .legal import EscalationQueue, Hold, HoldRegister, assess
+from .effects import Actuator, Effect
+from .legal import EscalationQueue, HoldRegister, assess
 from .restraint import DamageBudget, UndoLedger
 from .world import VirtualWorld, verify
-
-# Operation class -> resource type, for the legal gate. Explicit, for the same reason
-# admission keeps an explicit table: guessing fails open.
-_RESOURCE_TYPE = {
-    "compute.stop_idle_instance": "instance",
-    "compute.downsize_instance": "instance",
-    "compute.delete_unattached_disk": "disk",
-    "compute.release_static_ip": "address",
-    "compute.delete_stale_snapshot": "snapshot",
-    "storage.set_lifecycle_policy": "bucket",
-}
 
 
 class RunState(BaseModel):
@@ -171,7 +157,7 @@ def build_workflow(deps: Deps, propose, to_effect=None) -> Workflow:
 
         # 2 — legal. Three-valued; hold and unknown both escalate, with a clock.
         row = deps.reader.observe(effect.op_class, effect.params) or {}
-        resource_type = _RESOURCE_TYPE.get(effect.op_class, "")
+        resource_type = resource_type_of(effect.op_class)
         legal = assess(target, resource_type, row, deps.holds,
                        destroys_data=bool(spec and spec.destroys_data))
         if not legal.may_delete:

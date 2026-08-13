@@ -55,8 +55,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from .admission import new_nonce, sanitise_metadata
-from .memory import CachedRecall, Note, render
+from .admission import new_nonce
+from .memory import CachedRecall, render
 
 
 @dataclass
@@ -133,9 +133,11 @@ def query_estate(estate: dict[str, dict[str, Any]], specs: dict) -> dict[str, An
 
 def render_estate(facts: dict[str, Any], limit: int = 10) -> str:
     lines = [
-        f"resources: {facts['resources']}    "
-        f"run rate: ${facts['total_monthly_usd']:,.2f}/mo    "
-        f"reclaimable: ${facts['reclaimable_monthly_usd']:,.2f}/mo",
+        (
+            f"resources: {facts['resources']}    "
+            f"run rate: ${facts['total_monthly_usd']:,.2f}/mo    "
+            f"reclaimable: ${facts['reclaimable_monthly_usd']:,.2f}/mo"
+        ),
         "",
         "candidates, ranked by cost — this ordering is computed, not inferred:",
     ]
@@ -147,7 +149,7 @@ def render_estate(facts: dict[str, Any], limit: int = 10) -> str:
             flags.append("destroys data")
         lines.append(
             f"  {i}. {c['target']:<20} {c['op_class']:<34} "
-            f"${c['monthly_cost_usd']:>8,.2f}/mo  {', '.join(flags) or '—'}"
+            f"${c['monthly_cost_usd']:>8,.2f}/mo  {', '.join(flags) or '—'}",
         )
     if not facts["candidates"]:
         lines.append("  (none — nothing in this estate is currently reclaimable)")

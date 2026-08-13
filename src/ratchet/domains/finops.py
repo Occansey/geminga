@@ -29,8 +29,9 @@ Why this domain and not another (see DECISIONS.md D-005):
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from ..restraint import Damage
 
@@ -47,7 +48,7 @@ class OpSpec:
     # Declared worst case, in restore-minutes. Mandatory: an operation whose blast
     # radius nobody wrote down is refused, because "we never thought about it" is
     # not a safety property. None means unrecoverable at any budget.
-    damage: Damage = Damage(None, "undeclared")
+    damage: Damage = Damage(None, "undeclared")  # noqa: RUF009 — frozen, so sharing is safe
     # The operation that puts it back, for the undo ledger.
     inverse_op: str = ""
     # Does this destroy data? Legal hold is a question about *preserving data*, so an

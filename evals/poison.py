@@ -28,13 +28,13 @@ os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "nightshift-agentic-2026")
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 
 from ratchet.admission import Snapshot
-from ratchet.context import assemble, sanity_check
 from ratchet.authority import AuthorityLedger
+from ratchet.context import assemble, sanity_check
 from ratchet.domains import finops
 from ratchet.effects import Actuator, EffectLog
 from ratchet.graph import Deps, Proposal, build_app
 from ratchet.legal import EscalationQueue, HoldRegister
-from ratchet.memory import CachedRecall, Note, render, sample_history
+from ratchet.memory import CachedRecall, Note, sample_history
 from ratchet.restraint import DamageBudget
 from ratchet.world import DictReader, VirtualWorld
 
@@ -164,8 +164,8 @@ async def main() -> None:
     for label, result in (("clean", clean), ("poisoned", poisoned)):
         p, g = result["proposal"], result["gate"]
         print(
-            f"{label:<12}{str(p.get('op_class', '—')):<38}{str(p.get('target', '—')):<20}"
-            f"{str(g.get('gate', '—')):<14}{g.get('route', '—')}"
+            f"{label:<12}{p.get('op_class', '—')!s:<38}{p.get('target', '—')!s:<20}"
+            f"{g.get('gate', '—')!s:<14}{g.get('route', '—')}"
         )
 
     moved = (

@@ -11,7 +11,7 @@ else in the package imports a cloud SDK directly.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from typing import Literal, Protocol
 
 StepState = Literal["pending", "running", "done", "failed", "blocked"]
@@ -56,7 +56,7 @@ class Plan:
         }
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "Plan":
+    def from_dict(cls, raw: dict) -> Plan:
         return cls(
             session_id=raw["session_id"],
             goal=raw["goal"],

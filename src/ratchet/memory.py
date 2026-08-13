@@ -31,10 +31,9 @@ from collections import Counter
 from dataclasses import dataclass, field
 from typing import Protocol
 
-STOP = set(
-    """a an and are as at be but by for from has have in into is it its of on or that the
-    their there these this to was were what when where which who will with you your we our""".split()
-)
+# Frozen: a shared mutable stopword set is one caller away from changing how
+# every retrieval in the process tokenises.
+STOP = frozenset({"a", "an", "and", "are", "as", "at", "be", "but", "by", "for", "from", "has", "have", "in", "into", "is", "it", "its", "of", "on", "or", "that", "the", "their", "there", "these", "this", "to", "was", "were", "what", "when", "where", "which", "who", "will", "with", "you", "your", "we", "our"})
 
 
 @dataclass

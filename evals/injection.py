@@ -26,19 +26,10 @@ import json
 import subprocess
 import urllib.request
 
-from ratchet.admission import Snapshot, admit, new_nonce, sanitise_metadata
+from ratchet.admission import Snapshot, admit, new_nonce, resource_type_of, sanitise_metadata
 from ratchet.authority import AuthorityLedger
 from ratchet.domains import finops
 from ratchet.legal import HoldRegister, assess
-
-_RESOURCE_TYPE = {
-    "compute.stop_idle_instance": "instance",
-    "compute.downsize_instance": "instance",
-    "compute.delete_unattached_disk": "disk",
-    "compute.release_static_ip": "address",
-    "compute.delete_stale_snapshot": "snapshot",
-    "storage.set_lifecycle_policy": "bucket",
-}
 
 PROJECT = "nightshift-agentic-2026"
 LOCATION = "us-central1"
@@ -167,7 +158,7 @@ def run(use_armor: bool) -> dict:
         if not stopped_by and spec is not None:
             row = estate.get(f"{op_class}:{target}", {})
             legal = assess(
-                target, _RESOURCE_TYPE.get(op_class, ""), row, HoldRegister(),
+                target, resource_type_of(op_class), row, HoldRegister(),
                 destroys_data=spec.destroys_data,
             )
             if not legal.may_delete:

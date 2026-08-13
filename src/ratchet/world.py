@@ -18,8 +18,9 @@ from __future__ import annotations
 
 import copy
 import random
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 
 from .effects import Effect
 
@@ -152,7 +153,10 @@ class VirtualWorld:
         try:
             self._faults.maybe_fail(self._rng)
             after = simulate(copy.deepcopy(before), dict(effect.params))
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — a simulator is domain code and may
+            # raise anything, including the deliberately injected FaultProfile error.
+            # A rehearsal that blows up is a *failed rehearsal*, which the ladder must
+            # see as evidence; letting it propagate would skip the ratchet entirely.
             return Delta(before, before), f"{type(exc).__name__}: {exc}"
 
         run[scope] = after

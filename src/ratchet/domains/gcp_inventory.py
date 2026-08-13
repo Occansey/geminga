@@ -20,8 +20,10 @@ is exactly why stopping one starts in shadow and has to earn its way out.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
+from collections.abc import Mapping
+from datetime import UTC, datetime, timedelta
+from types import MappingProxyType
+from typing import Any, ClassVar
 
 # europe-west1 list prices, USD/month, rounded. Sourced from Google's public pricing
 # pages; refresh if the demo project moves region. Deliberately a small explicit
@@ -139,7 +141,7 @@ def read_estate(project: str, idle_days: int = 7) -> dict[str, dict[str, Any]]:
             }
 
     # --- snapshots ---------------------------------------------------------
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for snap in compute_v1.SnapshotsClient().list(project=project):
         age = None
         if snap.creation_timestamp:
@@ -172,7 +174,7 @@ def _cpu_averages(project: str, days: int) -> dict[str, float]:
         return {}
 
     client = monitoring_v3.MetricServiceClient()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     interval = monitoring_v3.TimeInterval(
         start_time=now - timedelta(days=days),
         end_time=now,
@@ -192,7 +194,10 @@ def _cpu_averages(project: str, days: int) -> dict[str, float]:
             aggregation=aggregation,
             view=monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL,
         )
-    except Exception:
+    except Exception:  # noqa: BLE001 — Monitoring fails in many ways (quota, permission,
+        # transport). A missing CPU average must read as *unknown*, never as idle;
+        # narrowing this would let an unanticipated error abort the whole inventory read
+        # and, worse, could leave callers treating absence as evidence.
         return {}
 
     out: dict[str, float] = {}
@@ -226,7 +231,9 @@ class GcpReader:
     verified against.
     """
 
-    GONE = {"exists": False, "monthly_cost_usd": 0.0}
+    # Immutable: a shared mutable default on a class is one caller away from
+    # rewriting what "gone" means for everyone else.
+    GONE: ClassVar[Mapping[str, Any]] = MappingProxyType({"exists": False, "monthly_cost_usd": 0.0})
 
     def __init__(self, project: str, estate: dict[str, dict[str, Any]]) -> None:
         self.project = project

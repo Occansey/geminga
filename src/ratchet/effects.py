@@ -16,7 +16,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
 
@@ -155,7 +155,10 @@ class Actuator:
 
         try:
             observed = tool(**effect.params) or {}
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — a tool is arbitrary third-party code
+            # and may raise anything. The contract is that a failure is *recorded*, not
+            # propagated: an exception escaping here would bypass the effect log and
+            # leave the ledger unable to say whether the world changed.
             return self._log.record(
                 EffectResult(effect.key, effect.op_class, False, error=f"{type(exc).__name__}: {exc}")
             )

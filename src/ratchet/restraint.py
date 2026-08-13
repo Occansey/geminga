@@ -32,8 +32,9 @@ undoable. It is recoverable at cost, which is a different and weaker thing.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 # Restore-minutes the fleet may place at risk within a rolling window. Deliberately
 # small: this is not a throughput target, it is a ceiling on how much undoing a bad

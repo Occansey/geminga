@@ -8,5 +8,5 @@ survive the port to Agentic Cinema (partner tool swap) and Agents for Humans
 from .config import settings
 from .ports import Plan, Step
 
-__all__ = ["settings", "Plan", "Step"]
+__all__ = ["Plan", "Step", "settings"]
 __version__ = "0.1.0"

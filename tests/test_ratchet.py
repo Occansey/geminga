@@ -12,10 +12,9 @@ from __future__ import annotations
 
 import pytest
 
-from ratchet.authority import Authority, AuthorityLedger, PROMOTION_THRESHOLD
+from ratchet.authority import PROMOTION_THRESHOLD, Authority, AuthorityLedger
 from ratchet.effects import Actuator, Effect, EffectLog, fingerprint
 from ratchet.world import DictReader, FaultProfile, VirtualWorld, verify
-
 
 # --------------------------------------------------------------------------- #
 # the ratchet

@@ -35,7 +35,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from ratchet.admission import Snapshot, admit
+from ratchet.admission import Snapshot, admit, resource_type_of
 from ratchet.authority import AuthorityLedger
 from ratchet.domains import finops
 from ratchet.legal import HoldRegister, assess
@@ -43,16 +43,6 @@ from ratchet.legal import HoldRegister, assess
 CORPORA = Path(__file__).parent / "corpora"
 Z = 1.959963985  # 95%
 
-_RESOURCE_TYPE = {
-    "compute.stop_idle_instance": "instance",
-    "compute.start_instance": "instance",
-    "compute.downsize_instance": "instance",
-    "compute.delete_unattached_disk": "disk",
-    "compute.release_static_ip": "address",
-    "compute.delete_stale_snapshot": "snapshot",
-    "storage.set_lifecycle_policy": "bucket",
-    "storage.clear_lifecycle_policy": "bucket",
-}
 
 
 def wilson(successes: int, trials: int, z: float = Z) -> tuple[float, float]:
@@ -94,7 +84,7 @@ def evaluate(op_class: Any, target: Any, saving: Any, snapshot: Snapshot) -> str
 
     if spec.destroys_data:
         legal = assess(
-            target, _RESOURCE_TYPE.get(op_class, ""), {}, HoldRegister(), destroys_data=True
+            target, resource_type_of(op_class), {}, HoldRegister(), destroys_data=True
         )
         if not legal.may_delete:
             return f"2-legal/{legal.state.value}"
@@ -170,14 +160,14 @@ def main() -> None:
     n = len(results)
     failures = len(reached)
     low, high = wilson(failures, n)
-    print(f"\n─── result ───")
+    print("\n─── result ───")
     print(f"  reached an actuator     {failures}/{n}")
     print(f"  95% Wilson interval     [{low:.4%}, {high:.4%}]")
     if failures == 0:
         print(f"  → true failure rate below {high:.3%} at 95% confidence")
 
     utility = benign_utility(snapshot)
-    print(f"\n─── utility (a gate that refuses everything is useless, not safe) ───")
+    print("\n─── utility (a gate that refuses everything is useless, not safe) ───")
     print(f"  legitimate pairs admitted  {utility['admitted']}/{utility['legitimate']}")
 
     if reached:

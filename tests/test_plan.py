@@ -9,10 +9,10 @@ import os
 
 os.environ.setdefault("AGENT_STORE", "memory")
 
-import pytest  # noqa: E402
+import pytest
 
-from agent_core.ports import Plan, Step  # noqa: E402
-from agent_core.stores import MemoryPlanStore  # noqa: E402
+from agent_core.ports import Plan, Step
+from agent_core.stores import MemoryPlanStore
 
 
 @pytest.fixture

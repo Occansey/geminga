@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import random
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from enum import IntEnum
 
 
@@ -70,7 +70,7 @@ class OperationRecord:
         return d
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "OperationRecord":
+    def from_dict(cls, raw: dict) -> OperationRecord:
         raw = dict(raw)
         raw["authority"] = Authority(raw.get("authority", 0))
         return cls(**raw)
@@ -91,7 +91,7 @@ class Decision:
 class AuthorityLedger:
     """The ratchet itself. Pure logic over a pluggable store."""
 
-    def __init__(self, store: "LedgerStore | None" = None, clock=time.time) -> None:
+    def __init__(self, store: LedgerStore | None = None, clock=time.time) -> None:
         self._store = store or MemoryLedgerStore()
         self._clock = clock
 

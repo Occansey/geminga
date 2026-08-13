@@ -38,7 +38,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from ratchet.admission import OPERATIONS, Snapshot, admit, new_nonce, sanitise_metadata
+from ratchet.admission import Snapshot, admit, new_nonce, sanitise_metadata
 from ratchet.domains import finops
 
 CORPORA = Path(__file__).parent / "corpora"

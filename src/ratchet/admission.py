@@ -71,7 +71,7 @@ VERB_ALLOWLIST: dict[str, frozenset[str]] = {
 # talking the model into deleting the fleet does.
 IMPLAUSIBLE_MONTHLY_SAVING_USD = 1000.0
 
-_ZERO_WIDTH = dict.fromkeys(map(ord, "​‌‍⁠﻿"))
+_ZERO_WIDTH = dict.fromkeys(map(ord, "\u200b‌‍⁠﻿"))
 _INSTRUCTION_BAIT = re.compile(
     r"(ignore\s+(all\s+)?previous|disregard\s+(the\s+)?above|system\s*:|"
     r"you\s+are\s+now|new\s+instructions?|<\s*!--|curl\s+[^|]*\|\s*(ba)?sh)",
@@ -149,7 +149,7 @@ class Snapshot:
         return self.resources.get(target, frozenset())
 
     @classmethod
-    def of(cls, estate: dict[str, dict[str, Any]]) -> "Snapshot":
+    def of(cls, estate: dict[str, dict[str, Any]]) -> Snapshot:
         """Records what each resource *is*, not merely that it existed.
 
         Storing bare names let a proposal delete "snapshot api-prod-2" — a real target
@@ -182,6 +182,22 @@ class Admission:
 
     def to_dict(self) -> dict:
         return {"allowed": self.allowed, "reason": self.reason, "check": self.check}
+
+
+def resource_type_of(op_class: str) -> str:
+    """The kind of resource an operation acts on, from the one canonical table.
+
+    Exists because this mapping had been copied into four modules and two had already
+    drifted — `graph.py` was missing two operations, so the legal gate would have
+    received an empty resource type for them. Nothing broke yet only because neither
+    operation is in the domain spec. A duplicated table inside a security control is a
+    latent type-confusion bug waiting for someone to add a row to one copy.
+    """
+    return OPERATIONS.get(op_class, ("", ""))[0]
+
+
+def verb_of(op_class: str) -> str:
+    return OPERATIONS.get(op_class, ("", ""))[1]
 
 
 def _as_number(value: Any) -> float:

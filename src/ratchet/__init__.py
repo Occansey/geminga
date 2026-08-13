@@ -19,17 +19,17 @@ from .effects import Actuator, Effect, EffectLog, fingerprint
 from .world import Delta, FaultProfile, Verdict, VirtualWorld, verify
 
 __all__ = [
+    "Actuator",
     "Authority",
     "AuthorityLedger",
-    "OperationRecord",
-    "Actuator",
+    "Delta",
     "Effect",
     "EffectLog",
-    "fingerprint",
-    "Delta",
     "FaultProfile",
+    "OperationRecord",
     "Verdict",
     "VirtualWorld",
+    "fingerprint",
     "verify",
 ]
 __version__ = "0.1.0"

@@ -13,7 +13,8 @@ of people and one you can only run once.
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 
 def _zone_of(estate: dict, op_class: str, target: str, key: str = "zone") -> str:

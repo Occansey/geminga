@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from ratchet.authority import Authority, AuthorityLedger, PROMOTION_THRESHOLD
+from ratchet.authority import PROMOTION_THRESHOLD, Authority, AuthorityLedger
 from ratchet.domains import finops
 from ratchet.effects import Actuator, Effect, EffectLog
 from ratchet.restraint import Damage, DamageBudget, UndoLedger
@@ -411,6 +411,7 @@ def test_the_thousand_case_red_team_still_finds_nothing() -> None:
     from pathlib import Path
 
     from evals.redteam import evaluate
+
     from ratchet.admission import Snapshot
 
     corpora = Path(__file__).resolve().parents[1] / "evals" / "corpora"
