@@ -337,7 +337,16 @@ async def run(req: RunRequest) -> StreamingResponse:
                 "passes": record.passes,
                 "failures": record.failures,
                 "demotions": record.demotions,
-                "reason": final.get("gate_reason") or record.last_reason or "refused before the ladder",
+                # Two different sentences, and which one is true depends on how far the run got.
+                # A refusal never reaches an outcome, so the gate's reason is all there is.
+                # A run that committed has a verified result, and that is the one worth
+                # reading — surfacing the gate's pre-run decision instead replaced
+                # "demoted to shadow: 2 post-conditions did not hold" with "provisional —
+                # every run verified", which is the opposite of what had just happened.
+                "reason": (
+                    record.last_reason if final.get("operations")
+                    else final.get("gate_reason") or "refused before the ladder"
+                ),
                 "acted": bool(final.get("committed")),
                 "lying": ESTATE.lying,
                 "resource": ESTATE.rows[scope],

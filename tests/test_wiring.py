@@ -150,3 +150,21 @@ def test_the_reader_still_sees_the_restored_rows() -> None:
     would leave every gate reading a world nobody updates any more."""
     ns.ESTATE.restore_world()
     assert ns.ESTATE.deps.reader.state is ns.ESTATE.rows
+
+
+def test_the_log_reads_the_outcome_when_there_was_one() -> None:
+    """A refusal and a completed run carry different sentences, and picking the wrong one
+    inverts the meaning. Surfacing the gate's pre-run decision on a run that had already
+    committed and failed verification replaced "demoted to shadow: 2 post-conditions did
+    not hold" with "provisional — every run verified" — the opposite of what happened.
+    """
+    def reason_for(final, last_reason):
+        return (last_reason if final.get("operations")
+                else final.get("gate_reason") or "refused before the ladder")
+
+    committed = {"operations": 1, "gate_reason": "provisional — every run verified"}
+    assert reason_for(committed, "demoted to shadow: 2 post-conditions did not hold") \
+        == "demoted to shadow: 2 post-conditions did not hold"
+
+    refused = {"operations": 0, "gate_reason": "GPU at 94% — accelerator work does not show"}
+    assert reason_for(refused, "") == "GPU at 94% — accelerator work does not show"
