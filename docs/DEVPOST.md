@@ -116,7 +116,7 @@ finops, cloud-cost-optimization, devops, devsecops, ai-safety, prompt-injection
 
 1. **Live console (Cloud Run)**: deploy first with `./deploy/cloudrun.sh <project> us-central1`
 2. **GitHub repo**: code, README setup, `RESTRAINT.md`, `CLAIMS.md`
-3. **Architecture**: `docs/ARCHITECTURE.md`
+3. **Architecture**: `ARCHITECTURE.md` (same folder as this file; from the repo root it is `docs/ARCHITECTURE.md`)
 
 ## Track
 
@@ -124,8 +124,8 @@ Taskmaster, autonomous multi-step workflows end to end (`AGENT_REQUIRE_APPROVAL=
 
 ## Media checklist
 
-- **Cover and gallery**: `brand/geminga-cover.png` (3:2 crop), `brand/geminga-logo-tile.png`
-- **Architecture diagram (required)**: export a PNG from `docs/architecture-3d.html`
+- **Cover and gallery**: `../brand/geminga-cover.png` (3:2 crop), `../brand/geminga-logo-tile.png`
+- **Architecture diagram (required)**: export a PNG from `architecture-3d.html` (same folder as this file; full path `02-all-things-agentic/docs/architecture-3d.html`)
 - **Demo video, roughly 4 minutes (required)**: must show live functionality and proof of Google Cloud deployment. Suggested cut:
   1. The estate. Real resources, real monthly spend, reclaimable figure, labelled list price.
   2. The ladder. Four rehearsals with the estate untouched, promotion on the fifth, first real commit on the sixth.
