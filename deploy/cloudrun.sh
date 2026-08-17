@@ -47,5 +47,6 @@ gcloud run deploy "$SERVICE" \
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 echo
 echo "Service: $URL"
-echo "Health:  curl $URL/healthz"
+echo "Health:  curl $URL/api/health"   # not /healthz: Google Frontend reserves that path
+echo "         on Cloud Run and answers it with its own 404 before the container sees it."
 echo "Put that URL in the submission — it is the deployment proof the rules ask for."
