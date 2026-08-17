@@ -120,7 +120,14 @@ finops, cloud-cost-optimization, devops, devsecops, ai-safety, prompt-injection
 
 ## Track
 
-Taskmaster, autonomous multi-step workflows end to end (`AGENT_REQUIRE_APPROVAL=false`).
+**Fortified Enterprise Fleet.** Scalable agent networks with security, compliance and governance.
+
+Eleven agents across three floors with a hard trust boundary between them: three untrusted
+readers upstairs whose output is a proposal and never a decision, five inspectors in the middle
+that use no model at all, and only the ground floor able to change anything. Governance is the
+product, not a wrapper on it: authority is earned per operation class, revoked on a single
+disagreement, and the whole thing is evidenced by 20 refusal tests and a measured injection
+result with its threat model stated.
 
 ## Media checklist
 

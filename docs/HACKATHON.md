@@ -123,7 +123,7 @@ curl "$URL/plan/demo"
 
 ## Decisions still open
 
-- **Track.** Taskmaster (`AGENT_REQUIRE_APPROVAL=false`) or Collaborative Partner
+- **Track. DECIDED: Fortified Enterprise Fleet.** (Was: Taskmaster (`AGENT_REQUIRE_APPROVAL=false`) or Collaborative Partner
   (`=true`). The code path is identical; the rules require you name one category.
 - **The actual goal domain.** The scaffold is domain-neutral on purpose. Pick a
   problem where multi-step autonomy is obviously the right shape, not a chatbot.
