@@ -1,0 +1,93 @@
+<meta charset="utf-8">
+<style>
+  :root{
+    --ground:#0C1016; --deep:#080B10; --panel:#121822; --line:#202A37;
+    --ink:#E9EDF1; --mid:#8C99A6; --dim:#5A6470;
+    --oxide:#C2612F; --oxide-d:#4E2917; --steel:#57A0B6; --live:#46997A;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{width:1200px;height:675px;overflow:hidden;background:var(--ground);
+    font-family:var(--sans);color:var(--ink);position:relative}
+  /* faint field: the sky the source sits in */
+  .field{position:absolute;inset:0;
+    background:radial-gradient(60% 70% at 78% 42%, rgba(194,97,47,.13), transparent 60%),
+               radial-gradient(90% 90% at 50% 50%, transparent 45%, rgba(0,0,0,.5) 100%);}
+  .grid{position:absolute;inset:0;opacity:.35;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),
+                     linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:60px 60px;
+    -webkit-mask-image:radial-gradient(70% 70% at 30% 55%, #000 20%, transparent 75%)}
+  .wrap{position:absolute;inset:0;padding:60px 68px;display:flex;flex-direction:column;z-index:3}
+
+  .top{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:13px;
+    letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
+  .top .mk{width:22px;height:22px;color:var(--oxide)}
+  .top b{color:var(--ink);font-weight:500;letter-spacing:.34em}
+  .top .r{margin-left:auto;letter-spacing:.18em}
+
+  .mid{flex:1;display:flex;align-items:center;gap:56px}
+  .copy{flex:1;display:flex;flex-direction:column;gap:20px}
+  h1{font-family:var(--sans);font-size:104px;line-height:.94;letter-spacing:-.035em;font-weight:600}
+  .tag{font-size:25px;line-height:1.4;color:var(--mid);max-width:26ch;font-weight:400}
+  .tag i{color:var(--ink);font-style:normal}
+  .mark{width:250px;height:250px;color:var(--oxide);flex:none;
+    filter:drop-shadow(0 0 34px rgba(194,97,47,.4))}
+
+  /* the ladder — the product's actual mechanism */
+  .rungs{display:flex;gap:10px;margin-top:6px}
+  .rung{flex:1;background:var(--panel);border:1px solid var(--line);padding:11px 13px;
+    border-top:2px solid var(--line)}
+  .rung.a{border-top-color:var(--dim)}
+  .rung.b{border-top-color:var(--steel)}
+  .rung.c{border-top-color:var(--live)}
+  .rung .n{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
+  .rung .d{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:5px;letter-spacing:.03em}
+
+  .bot{display:flex;align-items:flex-end;gap:38px;border-top:1px solid var(--line);
+    padding-top:20px;margin-top:20px}
+  .stat .n{font-family:var(--mono);font-size:33px;line-height:1;color:var(--oxide);font-weight:600}
+  .stat.q .n{color:var(--ink)}
+  .stat .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--dim);margin-top:8px;white-space:nowrap}
+  .bot .right{margin-left:auto;text-align:right;font-family:var(--mono);font-size:11px;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--dim);line-height:1.9}
+</style>
+<div class="field"></div><div class="grid"></div>
+
+<svg style="position:absolute;width:0;height:0"><defs><g id="mk">
+  <g fill="none" stroke="currentColor" stroke-linecap="butt">
+    <path d="M 148.5 51.5 A 68 68 0 1 0 165 88" stroke-width="7"/>
+    <circle cx="100" cy="100" r="40" stroke-width="3.5"/>
+  </g>
+  <circle cx="106" cy="94" r="8.5" fill="currentColor"/>
+</g></defs></svg>
+
+<div class="wrap">
+  <div class="top">
+    <svg class="mk" viewBox="0 0 200 200"><use href="#mk"/></svg>
+    <b>GEMINGA</b>
+    <span class="r">All Things Agentic &middot; ADK 2 &middot; Gemini</span>
+  </div>
+
+  <div class="mid">
+    <div class="copy">
+      <h1>Geminga</h1>
+      <div class="tag">An agent earns the right to act, <i>one operation at a time</i> — and loses it the moment it stops being correct.</div>
+      <div class="rungs">
+        <div class="rung a"><div class="n">Shadow</div><div class="d">rehearses · commits nothing</div></div>
+        <div class="rung b"><div class="n">Provisional</div><div class="d">commits · every run verified</div></div>
+        <div class="rung c"><div class="n">Live</div><div class="d">commits · sampled, never zero</div></div>
+      </div>
+    </div>
+    <svg class="mark" viewBox="0 0 200 200"><use href="#mk"/></svg>
+  </div>
+
+  <div class="bot">
+    <div class="stat"><div class="n">0 / 1,000</div><div class="l">injections reached an actuator</div></div>
+    <div class="stat q"><div class="n">14 / 14</div><div class="l">benign ops still admitted</div></div>
+    <div class="stat q"><div class="n">&lt;0.383%</div><div class="l">true failure, 95% CI</div></div>
+    <div class="right">reclaims wasted cloud spend<br>idle VMs &middot; orphaned disks</div>
+  </div>
+</div>
