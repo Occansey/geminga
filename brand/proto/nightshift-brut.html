@@ -1,0 +1,118 @@
+<!doctype html><meta charset="utf-8"><title>Nightshift · ledger</title>
+<style>
+  :root{
+    --paper:#e7e3d6; --card:#f4f1e7; --ink:#141210; --line:#141210;
+    --orange:#ff4d00; --blue:#2438ff; --green:#0b8a3d; --grey:#8f887a;
+    --sans:'Helvetica Neue',Arial,sans-serif; --mono:'Courier New',ui-monospace,monospace;
+    --sh:6px 6px 0 var(--ink);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);padding:32px 40px 60px;
+    background-image:radial-gradient(var(--ink) 1px,transparent 1px);background-size:22px 22px;
+    background-position:-11px -11px;}
+  .wrap{max-width:1180px;margin:0 auto}
+  .masthead{border:3px solid var(--ink);background:var(--card);box-shadow:var(--sh);
+    display:flex;justify-content:space-between;align-items:stretch}
+  .mast-l{padding:20px 26px}
+  .kicker{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    background:var(--ink);color:var(--paper);display:inline-block;padding:3px 8px;margin-bottom:12px}
+  h1{font-size:64px;font-weight:900;letter-spacing:-.03em;line-height:.86;text-transform:uppercase}
+  .tag{font-family:var(--mono);font-size:12px;margin-top:10px;max-width:52ch;line-height:1.5}
+  .figs{display:flex;border-left:3px solid var(--ink)}
+  .fig{padding:20px 24px;min-width:210px;display:flex;flex-direction:column;justify-content:center}
+  .fig+.fig{border-left:3px solid var(--ink)}
+  .fig .k{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  .fig .v{font-size:44px;font-weight:900;line-height:1;margin-top:6px;font-variant-numeric:tabular-nums}
+  .fig.waste .v{color:var(--orange)} .fig.saved{background:var(--green);color:var(--card)}
+  .fig.saved .k{color:var(--card)}
+
+  .controls{display:flex;gap:14px;align-items:center;margin:22px 0 24px;flex-wrap:wrap}
+  button{font-family:var(--sans);font-size:15px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+    padding:13px 22px;border:3px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer;
+    box-shadow:4px 4px 0 var(--ink);transition:.08s}
+  button:active{transform:translate(4px,4px);box-shadow:none}
+  button.go{background:var(--ink);color:var(--paper)}
+  button.fault{background:var(--orange);color:var(--card)}
+  .status{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    border:3px solid var(--ink);padding:9px 12px;background:var(--card)}
+  .status .blink{color:var(--green)}
+
+  .grid{display:grid;grid-template-columns:1.4fr 1fr;gap:22px;align-items:start}
+  .card{border:3px solid var(--ink);background:var(--card);box-shadow:var(--sh)}
+  .card>h2{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    background:var(--ink);color:var(--paper);padding:9px 14px;display:flex;justify-content:space-between}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;text-align:left;
+    padding:10px 14px;border-bottom:3px solid var(--ink)}
+  th.r,td.r{text-align:right}
+  td{padding:12px 14px;border-bottom:1.5px solid var(--ink);font-variant-numeric:tabular-nums}
+  tr:nth-child(even) td{background:rgba(20,18,16,.04)}
+  td .name{font-weight:800} td .sub{font-family:var(--mono);font-size:11px;color:var(--grey)}
+  td.op{font-family:var(--mono);font-size:12px}
+  td.cost{font-weight:900;color:var(--orange)}
+  .human{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.08em;color:var(--card);
+    background:var(--orange);padding:2px 5px;margin-left:6px;border:2px solid var(--ink)}
+  tr.focus td{background:#fff3b0}
+
+  .stamp{border:3px solid var(--ink);padding:16px 18px;margin:14px;display:flex;align-items:center;gap:16px;
+    position:relative;background:var(--card)}
+  .stamp .mark{font-family:var(--sans);font-weight:900;font-size:22px;letter-spacing:.04em;text-transform:uppercase;
+    border:4px double var(--grey);color:var(--grey);padding:6px 12px;transform:rotate(-5deg)}
+  .stamp .d{font-family:var(--mono);font-size:11px;color:var(--grey);flex:1;line-height:1.5}
+  .stamp.on{background:var(--blue);color:var(--card);box-shadow:5px 5px 0 var(--ink)}
+  .stamp.on .mark{border-color:var(--card);color:var(--card);transform:rotate(-3deg)}
+  .stamp.on .d{color:rgba(255,255,255,.85)}
+  .pips{display:flex;gap:6px;padding:0 14px 16px}
+  .pips i{flex:1;height:14px;border:3px solid var(--ink);background:var(--card)}
+  .pips i.on{background:var(--blue)}
+  .streak{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    padding:10px 14px 6px}
+  .foot{font-family:var(--mono);font-size:11px;margin-top:22px;border-top:3px solid var(--ink);padding-top:14px;line-height:1.7}
+</style>
+<div class="wrap">
+  <div class="masthead">
+    <div class="mast-l">
+      <span class="kicker">Fortified Enterprise Fleet / Gemini 3.6 / ADK 2</span>
+      <h1>Nightshift</h1>
+      <div class="tag">Every operation starts in rehearsal. It commits when it earns the right, and loses it the moment it stops being correct.</div>
+    </div>
+    <div class="figs">
+      <div class="fig waste"><div class="k">Monthly waste</div><div class="v">$3,408.90</div></div>
+      <div class="fig saved"><div class="k">Reclaimed</div><div class="v">$174.30</div></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="go">▶ Run the ladder</button>
+    <button class="fault">✕ Make the tool lie · run 6</button>
+    <button>Reset</button>
+    <span class="status"><span class="blink">●</span> LIVE · RUN 8 / 8</span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2><span>The estate</span><span>7 resources / us-central1</span></h2>
+      <table>
+        <tr><th>Resource</th><th>Operation</th><th class="r">$ / month</th></tr>
+        <tr class="focus"><td><span class="name">staging-web-3</span><br><span class="sub">e2-standard-4 · cpu 0.1%</span></td><td class="op">stop_idle_instance</td><td class="r cost">$97.80</td></tr>
+        <tr><td><span class="name">ml-train-01</span><br><span class="sub">a2-highgpu-1g · cpu 0.4%</span></td><td class="op">stop_idle_instance</td><td class="r cost">$2,632.00</td></tr>
+        <tr><td><span class="name">pd-ml-scratch</span><br><span class="sub">unattached · 2 TB</span></td><td class="op">delete_unattached_disk<span class="human">HUMAN</span></td><td class="r cost">$340.00</td></tr>
+        <tr><td><span class="name">raw-events</span><br><span class="sub">14.2 TB · no lifecycle</span></td><td class="op">set_lifecycle_policy</td><td class="r cost">$290.50</td></tr>
+        <tr><td><span class="name">api-prod-2</span><br><span class="sub">e2-standard-8 · cpu 6.2%</span></td><td class="op">downsize_instance</td><td class="r cost">$195.60</td></tr>
+        <tr><td><span class="name">snap-2024-03-11</span><br><span class="sub">517 days old</span></td><td class="op">delete_stale_snapshot<span class="human">HUMAN</span></td><td class="r cost">$20.00</td></tr>
+        <tr><td><span class="name">legacy-lb-ip</span><br><span class="sub">reserved · unattached</span></td><td class="op">release_static_ip</td><td class="r cost">$7.30</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="card">
+        <h2><span>Authority</span><span>stop_idle_instance</span></h2>
+        <div class="stamp"><span class="mark">Shadow</span><span class="d">rehearses only<br>never commits</span></div>
+        <div class="stamp on"><span class="mark">Provisional</span><span class="d">commits for real<br>every run verified</span></div>
+        <div class="stamp"><span class="mark">Live</span><span class="d">commits for real<br>sampled verification</span></div>
+        <div class="streak">Consecutive verified runs — 3 / 5 to promote</div>
+        <div class="pips"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      </div>
+      <div class="foot">Verification re-derives state from the estate. It never asks the agent how it went. Irreversible operations stay behind a human at every rung.</div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,177 @@
+<!doctype html><meta charset="utf-8"><title>Nightshift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Fragment+Mono:ital@0;1&display=swap" rel="stylesheet">
+<script src="gsap.min.js"></script>
+<style>
+  :root{
+    --bg:#e9e6dd; --ink:#0c0b09; --mut:#8b8578; --hair:#c9c4b6;
+    --sig:#3f2bff; --red:#e8380d;
+    --disp:'Fraunces',Georgia,serif;
+    --mono:'Fragment Mono','SF Mono',ui-monospace,monospace;
+    --curl:"SOFT" 80,"WONK" 1;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--disp);overflow-x:hidden}
+  body{padding:34px 5vw 0;min-height:100vh;display:flex;flex-direction:column}
+  ::selection{background:var(--sig);color:#f3f1ea}
+  .row{display:flex;justify-content:space-between;align-items:baseline}
+  .mono{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .mono b{color:var(--ink)}
+  .ch,.wd{display:inline-block;will-change:transform}
+  .clip{overflow:hidden;display:inline-block;vertical-align:top}
+
+  .hero{margin:6vh 0 3vh}
+  .hero .lead{font-family:var(--mono);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin-bottom:12px}
+  .money{font-size:20vw;font-weight:600;line-height:.82;letter-spacing:-.03em;font-variant-numeric:tabular-nums;
+    font-variation-settings:"opsz" 144,"SOFT" 90,"WONK" 1;display:flex;align-items:flex-start}
+  .money .cur{font-size:8vw;font-weight:500;margin-right:.5vw;margin-top:1.5vw}
+  .money .dig{display:inline-block;will-change:transform}
+  .hero .of{font-family:var(--mono);font-size:13px;letter-spacing:.04em;color:var(--mut);margin-top:20px}
+  .hero .of s{color:var(--red);text-decoration:none}
+
+  .controls{display:flex;gap:32px;align-items:center;margin:5vh 0 3vh}
+  .act{font-family:var(--mono);font-size:14px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;
+    background:none;border:0;color:var(--ink);padding:0 0 4px;border-bottom:2px solid var(--ink);transition:.2s}
+  .act:hover{color:var(--sig);border-color:var(--sig)}
+  .act.fault{color:var(--red);border-color:var(--red)} .act.ghost{color:var(--mut);border-color:var(--hair)}
+  .live{margin-left:auto;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .live .d{color:var(--sig)}
+
+  .split{display:grid;grid-template-columns:1fr 0.62fr;gap:6vw;border-top:2px solid var(--ink);padding-top:24px;flex:1;padding-bottom:36px}
+  .col-h{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);display:flex;justify-content:space-between;margin-bottom:6px}
+  .item{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:baseline;padding:15px 0;border-bottom:1px solid var(--hair)}
+  .item .r{font-size:30px;font-weight:500;letter-spacing:-.01em;font-variation-settings:"SOFT" 80,"WONK" 1}
+  .item .r .op{font-family:var(--mono);font-size:12px;font-weight:400;color:var(--mut);letter-spacing:.03em;text-transform:uppercase;display:block;margin-top:5px}
+  .item .c{font-family:var(--mono);font-size:22px;font-weight:400;color:var(--ink);font-variant-numeric:tabular-nums}
+  .item.focus .r{color:var(--sig)}
+  .human{font-family:var(--mono);font-size:9px;letter-spacing:.08em;color:var(--red);border:1.5px solid var(--red);padding:2px 5px;margin-left:8px;vertical-align:middle}
+
+  .ladder{display:flex;flex-direction:column;gap:0;margin-top:0}
+  .rung{font-size:clamp(26px,3.55vw,70px);white-space:nowrap;font-weight:600;letter-spacing:-.03em;line-height:1.12;color:transparent;
+    -webkit-text-stroke:1.3px var(--mut);text-transform:uppercase;font-variation-settings:"SOFT" 95,"WONK" 1;transition:color .5s,-webkit-text-stroke .5s}
+  .rung.on{color:var(--sig);-webkit-text-stroke:1.3px var(--sig)}
+  .rung .m{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.08em;color:var(--mut);-webkit-text-stroke:0;display:block;margin-top:0}
+  .rung.on .m{color:var(--ink)}
+  .streak{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-top:18px}
+  .pips{display:flex;gap:5px;margin-top:8px}
+  .pips i{width:34px;height:4px;background:var(--hair)}.pips i.on{background:var(--sig)}
+
+  .ticker{border-top:2px solid var(--ink);margin:0 -5vw;padding:11px 0;overflow:hidden;white-space:nowrap;font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--mut)}
+  .ticker b{color:var(--ink)} .ticker .sig{color:var(--sig)} .ticker .red{color:var(--red)}
+  #tick{display:inline-block;padding-left:100%}
+</style>
+<div class="row">
+  <div class="mono">Nightshift — <b>Fortified Enterprise Fleet</b></div>
+  <div class="mono">Gemini 3.6 · ADK 2 graph runtime</div>
+</div>
+
+<div class="hero">
+  <div class="lead">Reclaimed · run 8 of 8</div>
+  <div class="money" id="money"><span class="cur">$</span><span id="num">0.00</span></div>
+  <div class="of" data-split="word">of <s>$3,583.20</s> monthly waste, on the record, earned one verified operation at a time</div>
+</div>
+
+<div class="controls">
+  <button class="act" id="run">▶ Run the ladder</button>
+  <button class="act fault" id="fault">Make the tool lie · run 6</button>
+  <button class="act ghost" id="reset">Reset</button>
+  <span class="live"><span class="d">●</span> LIVE · US-CENTRAL1</span>
+</div>
+
+<div class="split">
+  <div>
+    <div class="col-h"><span>The estate</span><span>7 resources</span></div>
+    <div id="estate">
+      <div class="item focus"><div class="r" data-split="char">staging-web-3<span class="op">stop_idle_instance · e2-standard-4 · cpu 0.1%</span></div><div class="c">$97.80</div></div>
+      <div class="item"><div class="r" data-split="char">ml-train-01<span class="op">stop_idle_instance · a2-highgpu-1g · cpu 0.4%</span></div><div class="c">$2,632.00</div></div>
+      <div class="item"><div class="r" data-split="char">pd-ml-scratch<span class="op">delete_unattached_disk<span class="human">HUMAN</span> · 2 TB</span></div><div class="c">$340.00</div></div>
+      <div class="item"><div class="r" data-split="char">raw-events<span class="op">set_lifecycle_policy · 14.2 TB</span></div><div class="c">$290.50</div></div>
+      <div class="item"><div class="r" data-split="char">api-prod-2<span class="op">downsize_instance · e2-standard-8 · cpu 6.2%</span></div><div class="c">$195.60</div></div>
+      <div class="item"><div class="r" data-split="char">legacy-lb-ip<span class="op">release_static_ip · reserved</span></div><div class="c">$7.30</div></div>
+    </div>
+  </div>
+  <div>
+    <div class="col-h"><span>Authority</span><span>stop_idle_instance</span></div>
+    <div class="ladder">
+      <div class="rung" data-k="shadow" data-split="char">Shadow<span class="m">rehearses only · never commits</span></div>
+      <div class="rung on" data-k="provisional" data-split="char">Provisional<span class="m">commits · every run verified</span></div>
+      <div class="rung" data-k="live" data-split="char">Live<span class="m">commits · sampled verification</span></div>
+    </div>
+    <div class="streak">Consecutive verified runs — 3 / 5 to promote</div>
+    <div class="pips"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+  </div>
+</div>
+
+<div class="ticker"><span id="tick"><b>run 7</b> · provisional · <span class="sig">acted</span> · reclaimed staging-web-3 &nbsp;———&nbsp; <b>run 8</b> · <span class="red">no-op caught</span> · 'raw-events' already in intended state · reviewer froze the class &nbsp;———&nbsp; verification re-derives state from the estate; it never asks the agent how it went &nbsp;———&nbsp;</span></div>
+
+<script>
+  const g = gsap;
+  // split any [data-split] element's FIRST text node into animatable spans, leaving child nodes intact
+  function split(el){
+    const mode = el.dataset.split;
+    const t = el.firstChild;                       // the leading text node
+    if(!t || t.nodeType!==3) return [];
+    const frag = document.createDocumentFragment(), out=[];
+    const units = mode==='word' ? t.textContent.split(/(\s+)/) : [...t.textContent];
+    units.forEach(u=>{
+      if(mode==='word' && /^\s+$/.test(u)){ frag.appendChild(document.createTextNode(u)); return; }
+      const s=document.createElement('span'); s.className=mode==='word'?'wd':'ch'; s.textContent=u;
+      if(u===' ') s.style.width='0.3em';
+      frag.appendChild(s); out.push(s);
+    });
+    el.replaceChild(frag, t);
+    return out;
+  }
+  document.fonts.ready.then(()=>{
+    const tl = g.timeline({defaults:{ease:"power4.out"}});
+    // header
+    tl.from('.row .mono',{y:-14,opacity:0,duration:.6,stagger:.1},0);
+    // MONEY: count up + a soft settle, with a per-glyph curl wobble at the end
+    const o={v:0};
+    tl.to(o,{v:174.30,duration:1.7,ease:"power3.out",onUpdate:()=>{
+      document.getElementById('num').textContent=o.v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }},.1);
+    tl.from('.money',{yPercent:18,opacity:0,filter:"blur(14px)",duration:1.1},.1);
+    tl.to('.money',{onComplete:()=>{ // animate each settled digit with a curvy pop
+      const chars=[...document.getElementById('money').querySelectorAll('*')];
+    }},"+=0");
+    // per-character reveal on the money digits after count settles
+    tl.add(()=>{
+      const money=document.getElementById('money');
+      // wrap current number glyphs
+      const numEl=document.getElementById('num'), text=numEl.textContent;
+      numEl.innerHTML=[...text].map(c=>`<span class="dig">${c}</span>`).join('');
+      g.from(money.querySelectorAll('.dig, .cur'),{yPercent:60,opacity:0,rotationX:-40,duration:.5,stagger:.04,ease:"back.out(1.7)"});
+    },"-=0.2");
+    // lead + of-line
+    tl.from('.hero .lead',{y:10,opacity:0,duration:.6},"-=1.2");
+    const ofw=split(document.querySelector('.of'));
+    tl.from(ofw,{yPercent:100,opacity:0,duration:.5,stagger:.02},"-=0.7");
+    // controls
+    tl.from('.controls .act',{y:10,opacity:0,duration:.5,stagger:.08},"-=0.5");
+    // estate resource names — letter by letter
+    document.querySelectorAll('.item .r').forEach((el,i)=>{
+      const chars=split(el);
+      tl.from(el.closest('.item'),{y:20,opacity:0,duration:.5},"-=0.4"+(i?"":""));
+      tl.from(chars,{yPercent:110,opacity:0,duration:.4,stagger:.02,ease:"power3.out"},"<");
+    });
+    // ladder words — letter stagger, big curvy
+    document.querySelectorAll('.rung').forEach((el,i)=>{
+      const chars=split(el);
+      tl.from(chars,{yPercent:120,opacity:0,rotation:i%2?4:-4,duration:.5,stagger:.03},i===0?"-=0.3":"<0.12");
+    });
+  });
+  // ambient
+  g.to('#tick',{xPercent:-100,duration:26,ease:"none",repeat:-1});
+  g.to('.live .d',{opacity:.25,duration:.7,repeat:-1,yoyo:true});
+  // RUN: re-count with a blur pulse, letter-pop the affected row, promote ladder
+  document.getElementById('run').onclick=()=>{
+    const t={v:parseFloat(document.getElementById('num').textContent.replace(/,/g,''))||174.30};
+    g.to(t,{v:271.90,duration:1,ease:"power2.out",onUpdate:()=>{
+      document.getElementById('num').textContent=t.v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }});
+    g.fromTo('.money',{filter:"blur(8px)"},{filter:"blur(0px)",duration:.6});
+    document.querySelectorAll('.rung').forEach(r=>r.classList.toggle('on',r.dataset.k==='live'));
+    g.fromTo('.rung.on .ch',{yPercent:60,opacity:.3},{yPercent:0,opacity:1,duration:.4,stagger:.03,ease:"back.out(2)"});
+  };
+</script>

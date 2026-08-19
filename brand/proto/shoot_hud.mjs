@@ -1,0 +1,14 @@
+import { createRequire } from "node:module";
+import path from "node:path";
+const require = createRequire("/Users/maxwell/hackathon/film/");
+const puppeteer = require("puppeteer-core");
+const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const dir = import.meta.dirname;
+const b = await puppeteer.launch({ executablePath: CHROME, headless: "shell" });
+const p = await b.newPage();
+await p.setViewport({ width: 1280, height: 860, deviceScaleFactor: 2 });
+await p.goto("file://" + path.join(dir, "nightshift-hud.html"), { waitUntil: "networkidle0" });
+await new Promise(r => setTimeout(r, 500));
+await p.screenshot({ path: path.join(dir, "nightshift-hud.png"), type: "png" });
+console.log("wrote nightshift-hud.png");
+await b.close();

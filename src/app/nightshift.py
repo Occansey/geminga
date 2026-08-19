@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
 from ratchet.authority import AuthorityLedger, OperationRecord
@@ -214,6 +214,15 @@ def best_candidate() -> tuple[str, str]:
 @app.get("/", response_class=HTMLResponse)
 def board() -> str:
     return BOARD.read_text(encoding="utf-8")
+
+
+GSAP = Path(__file__).parent / "gsap.min.js"
+
+
+@app.get("/gsap.min.js")
+def gsap() -> Response:
+    # Self-hosted so the console's motion needs no third-party CDN and survives any CSP.
+    return Response(GSAP.read_text(encoding="utf-8"), media_type="application/javascript")
 
 
 # Cloud Run's frontend intercepts /healthz before it reaches the container: the
