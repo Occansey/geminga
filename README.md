@@ -87,7 +87,9 @@ e = inv.read_estate('YOUR_PROJECT')
 print(f'{len(e)} resources, \${inv.monthly_spend(e)}/mo, \${inv.monthly_spend(inv.reclaimable(e))} reclaimable')"
 ```
 
-Reads live Compute and Monitoring APIs. Costs are **list-price estimates**, labelled
+Reads live Compute and Monitoring APIs when `GEMINGA_PROJECT` is set; the **public demo runs a
+fixture** (`finops.sample_estate`) so the console shows a meaningful estate rather than an empty
+project, and the console says so on screen. Costs are **list-price estimates**, labelled
 as such everywhere they surface; the authoritative figure is the BigQuery billing
 export. A system arguing for verification against the environment does not get to
 fudge its own headline number.

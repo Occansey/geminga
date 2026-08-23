@@ -65,7 +65,9 @@ That choice does real work. Schemas are checked across edges at construction, so
 
 `authority`, `effects` and `world` import neither ADK nor any cloud SDK. The code that decides whether the agent may act is provable in a plain unit test. That is why the ladder runs deterministically in CI with no credentials and no model in the loop.
 
-On Google Cloud: Gemini 3.x on Vertex AI proposes, Compute and Monitoring APIs supply live estate inventory, Cloud Run hosts the console.
+On Google Cloud: Gemini 3.x on Vertex AI proposes, Compute and Monitoring APIs supply estate inventory, Cloud Run hosts the console.
+
+One disclosure, because it is the kind of thing worth saying before a judge finds it: the hosted demo runs a fixture estate, not a live project. The live path is real and is the same code (`GEMINGA_PROJECT` points it at a project, and it then reads Compute and Monitoring directly), but the account we could point it at is empty, and a console showing $0.00 across the board demonstrates nothing. The fixture gives the ladder something to actually reclaim. The console states this on screen, and the ladder, the verification and the demotion logic are identical either way.
 
 ## Challenges we ran into
 
