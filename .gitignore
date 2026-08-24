@@ -11,3 +11,8 @@ build/
 .claude/*
 # Skills are shared working knowledge, not local config — keep them versioned.
 !.claude/skills/
+
+# film: raw capture + node deps are large and reproducible from shoot.mjs
+film/node_modules/
+film/out/*.webm
+film/out/frame_*.png
