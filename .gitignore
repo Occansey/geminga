@@ -16,3 +16,5 @@ build/
 film/node_modules/
 film/out/*.webm
 film/out/frame_*.png
+film/out/*.wav
+film/out/vo/

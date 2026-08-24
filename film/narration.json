@@ -1,0 +1,47 @@
+{
+ "1": {
+  "at": 0.0,
+  "until": 10.5,
+  "text": "Monday morning, a billing alert. Something has been running since Friday. The engineer on call already knows what to delete. That was never the hard part."
+ },
+ "2": {
+  "at": 11.5,
+  "until": 33.5,
+  "text": "The hard part is blast radius. Delete the wrong disk at 9am and you cost more than the bill. So the ticket gets parked, and the same alert fires next month."
+ },
+ "3": {
+  "at": 34.5,
+  "until": 53.5,
+  "text": "Every agent aimed at this lands on the same answer: never let it act. That doesn't fix anything. It just leaves a person to be brave before coffee."
+ },
+ "4": {
+  "at": 54.5,
+  "until": 98.5,
+  "text": "So Geminga asks a different question. Not how do we make the agent confident, but how does it earn the right to act. Every operation starts in rehearsal. It predicts a delta and commits nothing."
+ },
+ "5": {
+  "at": 99.5,
+  "until": 123.5,
+  "text": "Five consecutive runs where a verifier that re-derives real state agrees with the prediction. Only then does it commit. That is the first money this agent was ever allowed to touch."
+ },
+ "6": {
+  "at": 124.5,
+  "until": 163.5,
+  "text": "Now the interesting part. From run six the tool reports success while changing nothing. This is the failure every agent demo skips."
+ },
+ "7": {
+  "at": 164.5,
+  "until": 188.5,
+  "text": "Verification does not ask the actuator how it went. It re-derives state from the environment, sees the gap, and takes the authority back. One disagreement, one rung, immediately."
+ },
+ "8": {
+  "at": 187.5,
+  "until": 204.5,
+  "text": "Irreversible operations stay behind a human at every rung, forever. The ladder governs doubt. It does not govern consequence."
+ },
+ "9": {
+  "at": 205.5,
+  "until": 224.5,
+  "text": "An agent earns the right to act, one operation at a time. And loses it the moment it stops being correct."
+ }
+}

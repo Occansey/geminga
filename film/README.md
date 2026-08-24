@@ -15,3 +15,17 @@ Shot list and narration: [`../docs/FILM.md`](../docs/FILM.md).
 
 Why not Remotion: it renders a *depiction* of the product. Here the product itself is the
 strongest asset, and a judge can tell the difference.
+
+## Narration + final cut
+
+    python gen_vo.py                      # Gemini TTS, same two voices as the other films
+                                          # -> out/vo/*.wav + out/vo.json (measured durations)
+    # bed, subtitles and mux: see the block in docs/FILM.md
+
+`gen_vo.py` prints a warning if any line overruns the shot it belongs to, so the copy is checked
+against the picture rather than assumed. The final cut carries a soft English subtitle track
+(`mov_text`) because the rules require English or English subtitles, and soft beats burned-in
+here: the console's own type is the thing being demonstrated.
+
+Verified on the finished file: narration audible at all nine cues (~-16 dB), true silence
+between them (-91 dB), zero overlapping lines, 3:54 against a 4:00 limit.
