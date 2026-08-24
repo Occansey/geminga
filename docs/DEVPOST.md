@@ -140,3 +140,38 @@ result with its threat model stated.
   2. The ladder. Four rehearsals with the estate untouched, promotion on the fifth, first real commit on the sixth.
   3. The lie. From run 6 the tool reports success while changing nothing. Verification re-derives state, catches it, demotes.
   4. The Cloud Run URL on screen, live.
+
+---
+
+## Upload checklist (the parts that need a signed-in browser)
+
+**Video** — `film/out/geminga.mp4`, 3:54, 1080p, narrated, English subtitles embedded (`mov_text`).
+
+Title:
+
+    Geminga — an agent that earns the right to act
+
+Description:
+
+    Geminga cleans up cloud waste, and earns the authority to do it one operation class at a
+    time. Every operation starts in rehearsal. It commits only after a verifier that re-derives
+    real environment state agrees with its prediction, five runs running. One disagreement
+    demotes it a rung, immediately.
+
+    In this recording, taken against the live Cloud Run deployment: rehearsals in shadow,
+    promotion, the first real commit ($174.30 reclaimed), then an injected fault where the tool
+    reports success while changing nothing. Verification catches the lie and the ladder falls
+    back to shadow. Irreversible operations stay behind a human at every rung.
+
+    Gemini 3.x on Vertex AI, ADK 2's graph runtime, Cloud Run.
+    Live: https://agentic-core-468826425509.us-central1.run.app
+    Code: (repo URL)
+
+    All Things Agentic — Fortified Enterprise Fleet track.
+
+Visibility: **Public or Unlisted** (rules require publicly visible). Not made for kids.
+
+**Repo access** — public, or invite `testing@devpost.com` and `cloudhackathons@google.com`.
+
+**Devpost fields** — the story above, the architecture diagram (`brand/geminga-architecture-3x2.png`),
+the live URL, and the video link.
