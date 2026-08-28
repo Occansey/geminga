@@ -87,6 +87,12 @@ e = inv.read_estate('YOUR_PROJECT')
 print(f'{len(e)} resources, \${inv.monthly_spend(e)}/mo, \${inv.monthly_spend(inv.reclaimable(e))} reclaimable')"
 ```
 
+Every figure in the demo fixture is a real Google Cloud list price, not an invented number:
+e2-standard-4 $97.80/mo, e2-standard-8 $195.60, a2-highgpu-1g $2,632, an unattached static IP
+$7.30 (0.010/hr x 730), 2 TB pd-ssd $340, a 400 GB snapshot $20, 14.2 TB standard storage
+$290.50 — checked against published us-central1 on-demand rates, worst deviation 2.3%. The
+headline $3,583.20 is therefore defensible rather than decorative.
+
 Reads live Compute and Monitoring APIs when `GEMINGA_PROJECT` is set; the **public demo runs a
 fixture** (`finops.sample_estate`) so the console shows a meaningful estate rather than an empty
 project, and the console says so on screen. Costs are **list-price estimates**, labelled

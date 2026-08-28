@@ -12,6 +12,13 @@ Monday morning, a billing alert. Something has been running since Friday. The en
 
 The hard part is blast radius. Deleting the wrong resource at 9am costs more than the bill does. So the ticket gets parked, the resource stays up, and the same alert fires next month. Anyone who has held a pager knows this loop.
 
+This is not only our experience. The FinOps Foundation's practitioner work puts *getting
+engineers to act on cost recommendations* at the top of the field's challenges, named by around
+40% of respondents, ahead of finding the waste in the first place; the reason given is that
+engineers lack the confidence to delete a resource nobody owns. Meanwhile Flexera's State of the
+Cloud reporting has enterprises wasting on the order of 30% of cloud spend. So the industry does
+not have a detection problem. It has an *acting* problem, and that is the one we went after.
+
 Every agent aimed at this problem lands on the same answer: never let the agent act. It drafts, a human approves, a human clicks. That does not fix anything. It just leaves the person as the one who has to be brave before coffee.
 
 We wanted to work on the actual question. Not "how do we make the agent more confident," but "how does an agent earn the right to act, and how fast can we take that right away when it stops being correct."
