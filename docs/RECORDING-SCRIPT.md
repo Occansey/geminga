@@ -16,11 +16,11 @@ The `?presenter=1` puts your webcam in a circular bubble over the console, so on
 recording captures both you and the demo. Allow the camera prompt. Drag the bubble somewhere it
 covers nothing — bottom-right is clear. `P` hides it.
 
-**Tab 2 — the architecture, for shot 10:**
+**Tab 2 — the architecture, for shot 3:**
 
     https://agentic-core-468826425509.us-central1.run.app/architecture
 
-Open it now and leave it loaded, so at 3:20 you switch to a ready tab instead of watching it
+Open it now and leave it loaded, so at 0:38 you switch to a ready tab instead of watching it
 load on camera.
 
 Full screen, URL bar visible. That `run.app` address on screen *is* the Google Cloud deployment
@@ -28,8 +28,7 @@ proof, so do not hide the chrome.
 
 ---
 
-Timings below are measured from real read-throughs. Every line sits between 47 and 84 words per
-minute, so you can speak slowly. **Total speech is 1:43 inside a 3:55 cut** — the rest is silence
+Timings below are measured from real read-throughs. Nothing exceeds a calm speaking pace, so you can slow down. **Total speech is about 2:34 inside a 3:52 cut** — the rest is silence
 while the demo runs, which is intentional. Do not rush to fill it.
 
 ---
