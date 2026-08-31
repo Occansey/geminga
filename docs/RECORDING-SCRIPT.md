@@ -44,7 +44,7 @@ two lines — let "Connected. 7 resources found" land.
 
 ---
 
-## 4 · 1:00–1:30 — the estate
+## 4 · 1:00–1:26 — the estate
 
 **On screen:** scroll the resource list slowly. Hover so the details are readable: machine type,
 zone, created date, days running, CPU average. Pause on **pd-ml-scratch — "orphaned by a deleted
@@ -55,7 +55,7 @@ VM"** and on a red **HUMAN** badge.
 
 ---
 
-## 5 · 1:30–2:00 — the three levels (say each one)
+## 5 · 1:26–1:56 — the three levels (say each one)
 
 **On screen:** scroll to SHADOW · PROVISIONAL · LIVE. Hold long enough for each description to be
 read. Point at the row of pips underneath.
@@ -78,16 +78,16 @@ read. Point at the row of pips underneath.
 
 ---
 
-## 6 · 2:00–2:35 — click RUN THE LADDER
+## 6 · 1:56–2:20 — click RUN THE LADDER
 
 **On screen:** click it and **stop talking**. Let runs 1–5 play in SHADOW. The pips fill. Nothing
 in the estate changes. This silence is the point: the agent is working and touching nothing.
 
-> *(silence — roughly 20 seconds)*
+> *(silence — roughly 18 seconds. Let it run. This is the agent working and touching nothing.)*
 
 ---
 
-## 7 · 2:35–2:55 — promotion and the first real commit
+## 7 · 2:20–2:40 — promotion and the first real commit
 
 **On screen:** PROVISIONAL lights up. RECLAIMED climbs off zero. A resource changes.
 
@@ -96,7 +96,7 @@ in the estate changes. This silence is the point: the agent is working and touch
 
 ---
 
-## 8 · 2:55–3:20 — click MAKE THE TOOL LIE · RUN 6
+## 8 · 2:40–3:02 — click MAKE THE TOOL LIE · RUN 6
 
 **On screen:** click it. From run six the tool reports success while changing nothing.
 
@@ -105,7 +105,7 @@ in the estate changes. This silence is the point: the agent is working and touch
 
 ---
 
-## 9 · 3:20–3:40 — the catch and the demotion
+## 9 · 3:02–3:20 — the catch and the demotion
 
 **On screen:** the run log line where the reviewer explains itself. The ladder falls back to
 SHADOW. A pip turns red.
@@ -115,7 +115,25 @@ SHADOW. A pip turns red.
 
 ---
 
-## 10 · 3:40–3:55 — close
+## 10 · 3:20–3:36 — the architecture (open it here)
+
+**On screen:** open a second tab on
+`https://agentic-core-468826425509.us-central1.run.app/architecture`
+Drag once so it spins, so it is obviously live and not a picture. Do not click a bot; there is
+no time. Just let the three floors and the red wall be visible.
+
+This is the moment a viewer is asking *how did it catch that*, so answer it here rather than
+earlier. It is also on your own deployment, which quietly reinforces that this runs on Google
+Cloud.
+
+> That check is not one function. It is fifteen agents on three floors, and a hard wall between
+> them. Everything above the wall is untrusted, because everything it reads was written by
+> somebody. Nothing above the wall is allowed to decide. Only the ground floor can change
+> anything, and only after the floor above has re-read the real machines.
+
+---
+
+## 11 · 3:36–3:50 — close
 
 **On screen:** scroll to a **HUMAN** badge, then back to the top so the Cloud Run URL is the last
 thing visible.
