@@ -16,7 +16,14 @@ The `?presenter=1` puts your webcam in a circular bubble over the console, so on
 recording captures both you and the demo. Allow the camera prompt. Drag the bubble somewhere it
 covers nothing — bottom-right is clear. `P` hides it.
 
-**Tab 2 — the architecture, for shot 3:**
+**Tab 2 — the title card, your opening shot:**
+
+    https://agentic-core-468826425509.us-central1.run.app/intro
+
+Your name, the mark, what Geminga means and why you built it. Open on this for five seconds
+before anything else.
+
+**Tab 3 — the architecture, for shot 3:**
 
     https://agentic-core-468826425509.us-central1.run.app/architecture
 

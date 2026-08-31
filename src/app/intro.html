@@ -1,0 +1,76 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Geminga</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Fragment+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#e9e6dd;--ink:#0c0b09;--mut:#8b8578;--hair:#c9c4b6;--sig:#3f2bff;--oxide:#C2612F;
+    --disp:'Fraunces',Georgia,serif;--mono:'Fragment Mono','SF Mono',ui-monospace,monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--disp);min-height:100vh}
+  body{display:flex;flex-direction:column;justify-content:center;padding:6vh 7vw;overflow-x:hidden}
+  .top{display:flex;align-items:center;gap:26px}
+  .mark{width:96px;height:96px;flex:none;opacity:0;transform:scale(.9)}
+  .who{font-family:var(--mono);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);line-height:2}
+  .who b{color:var(--ink);display:block;font-size:15px;letter-spacing:.16em}
+  h1{font-size:clamp(72px,15vw,196px);font-weight:600;line-height:.86;letter-spacing:-.04em;
+     margin:5vh 0 0;font-variation-settings:"opsz" 144,"SOFT" 95,"WONK" 1}
+  .say{font-family:var(--mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--oxide);margin-top:18px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:5vw;margin-top:6vh;max-width:1180px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr;gap:34px}h1{font-size:clamp(56px,17vw,110px)}}
+  .col h2{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--mut);padding-bottom:10px;border-bottom:2px solid var(--ink);margin-bottom:16px}
+  .col p{font-size:19px;line-height:1.65;font-variation-settings:"SOFT" 60}
+  .col p+p{margin-top:14px}
+  .col em{font-style:italic;color:var(--oxide)}
+  .col b{color:var(--sig);font-weight:600}
+  .foot{margin-top:7vh;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--mut);display:flex;gap:26px;flex-wrap:wrap}
+  .foot a{color:var(--sig);text-decoration:none;border-bottom:1px solid var(--hair)}
+  .foot a:hover{border-color:var(--sig)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+  <div class="top">
+    <img class="mark" id="mark" src="/mark.png" alt="Geminga mark">
+    <div class="who">Built by<b>Maxwell Occansey</b>All Things Agentic · Fortified Enterprise Fleet</div>
+  </div>
+
+  <h1 id="title">Geminga</h1>
+  <div class="say" id="say">gh’è minga — “it’s not there”</div>
+
+  <div class="grid">
+    <div class="col" id="c1">
+      <h2>The name</h2>
+      <p>Geminga is a gamma ray pulsar that shows up in gamma rays and in almost nothing else.
+         For twenty years nobody could find its counterpart at any other wavelength.</p>
+      <p>Astronomers in Milan named it for the pun in their own dialect: <em>gh’è minga</em>,
+         which means <em>it’s not there</em>.</p>
+    </div>
+    <div class="col" id="c2">
+      <h2>Why I built this</h2>
+      <p>Cloud agents are being handed delete permissions on production, and the industry’s answer
+         to the risk is to never let them act.</p>
+      <p>I wanted the harder answer: an agent that <b>earns the right to act</b>, one operation at
+         a time, and loses it the moment it stops being correct.</p>
+      <p>Everything here follows from the name. <b>A thing reported is not a thing confirmed.</b></p>
+    </div>
+  </div>
+
+  <div class="foot">
+    <a href="/">▶ the console</a>
+    <a href="/architecture">the architecture</a>
+    <span>agentic-core · us-central1 · Cloud Run</span>
+  </div>
+
+<script>
+  const r = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const seq = [["#mark",0],["#title",120],["#say",380],["#c1",560],["#c2",700],[".foot",860]];
+  for (const [sel, delay] of seq) {
+    const el = document.querySelector(sel); if (!el) continue;
+    if (r) { el.style.opacity = 1; el.style.transform = "none"; continue; }
+    el.style.opacity = 0; el.style.transform = "translateY(14px)";
+    el.style.transition = "opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1)";
+    setTimeout(() => { el.style.opacity = 1; el.style.transform = "none"; }, delay + 80);
+  }
+</script></body></html>

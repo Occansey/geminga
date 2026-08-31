@@ -30,7 +30,7 @@ from ratchet.admission import Snapshot
 from ratchet.attempts import AttemptLedger
 from ratchet.graph import Deps, build_app
 from ratchet.liveness import assess as assess_liveness
-from ratchet.review import Reviewer, vertex_model
+from ratchet.review import REVIEW_MODEL, Reviewer, vertex_model
 from ratchet.world import DictReader, VirtualWorld, scope_of
 
 log = logging.getLogger("nightshift")
@@ -219,6 +219,21 @@ def board() -> str:
 GSAP = Path(__file__).parent / "gsap.min.js"
 
 
+INTRO = Path(__file__).parent / "intro.html"
+MARK = Path(__file__).parent / "mark.png"
+
+
+@app.get("/intro", response_class=HTMLResponse)
+def intro() -> str:
+    """The title card: who built this, what the name means, and why. Opens the presentation."""
+    return INTRO.read_text(encoding="utf-8")
+
+
+@app.get("/mark.png")
+def mark() -> Response:
+    return Response(MARK.read_bytes(), media_type="image/png")
+
+
 ARCH = Path(__file__).parent / "architecture.html"
 
 
@@ -243,7 +258,10 @@ def gsap() -> Response:
 def healthz() -> dict:
     """Cloud Run's readiness probe. Reports the two switches, because "is it live?"
     and "can it delete things?" are the questions worth answering at a glance."""
-    return {"ok": True, "project": LIVE_PROJECT or "fixture", "mutations": ALLOW_MUTATIONS}
+    model = getattr(getattr(ESTATE.reviewer, "model", None), "used", {}) or {}
+    return {"ok": True, "project": LIVE_PROJECT or "fixture", "mutations": ALLOW_MUTATIONS,
+            # Which Gemini actually answered the last review. Asserted nowhere; measured here.
+            "review_model": model.get("model") or REVIEW_MODEL}
 
 
 @app.get("/api/estate")

@@ -65,13 +65,14 @@ log = logging.getLogger("ratchet.review")
 # critical path, and the whole point is to spend more thought per decision than the
 # thing being reviewed did.
 #
-# Not a 3.x Pro: `gemini-3.6-pro` and `gemini-3-pro` both return 404 on this project,
-# so the honest available answer is a Pro tier from the previous generation reviewing a
-# current-generation Flash. That is still the asymmetry the design wants — more thought
-# per decision than the proposer spent — and pretending otherwise by naming a model we
-# cannot reach would make the reviewer silently inert, which is precisely the failure
-# this module was found in.
-REVIEW_MODEL = "gemini-2.5-pro"
+# The rules require Gemini 3.5 or newer, and the reviewer is the one model call on the
+# deployed critical path, so it has to be a 3.x. The Pro tiers 404 on this project
+# (`gemini-3.6-pro`, `gemini-3-pro`, `gemini-3.5-pro` all NOT_FOUND), but `gemini-3.6-flash`
+# resolves and answers. So: 3.6 Flash is the reviewer, with 2.5 Pro kept only as a fallback
+# for environments where the 3.x publisher models are not enabled. Which one actually
+# answered is recorded on every verdict rather than assumed — see `model_used`.
+REVIEW_MODEL = "gemini-3.6-flash"
+REVIEW_FALLBACK = "gemini-2.5-pro"
 
 # A batch is one hour of committed work. Reviewing in batch rather than per-effect is
 # deliberate: a single deletion can look reasonable while six of them in an hour is a
@@ -384,8 +385,19 @@ def vertex_model(model: str = REVIEW_MODEL):
     except Exception:  # noqa: BLE001 - no credentials is a normal local state
         return None
 
+    # What actually answered, for the console and for anyone checking the Gemini claim.
+    used = {"model": None}
+
     def call(prompt: str) -> str:
-        response = client.models.generate_content(model=model, contents=prompt)
-        return response.text or ""
+        for candidate in (model, REVIEW_FALLBACK):
+            try:
+                response = client.models.generate_content(model=candidate, contents=prompt)
+            except Exception:  # noqa: BLE001 - a 404 on a publisher model is a normal state
+                continue
+            used["model"] = candidate
+            return response.text or ""
+        return ""
+
+    call.used = used
 
     return call

@@ -29,12 +29,12 @@
   .verdict b{color:var(--ink)}
 
   /* ---------------- the house ---------------- */
-  .stage{height:min(78vh,700px);border:1px solid var(--line);border-radius:5px;overflow:hidden;position:relative;
+  .stage{height:min(86vh,860px);border:1px solid var(--line);border-radius:5px;overflow:hidden;position:relative;
          background:radial-gradient(115% 80% at 50% 0%,#141C27 0%,var(--deep) 72%);
          perspective:1700px;cursor:grab;touch-action:none}
   .stage:active{cursor:grabbing}
-  .house{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;
-         transform:scale(var(--s,.6)) rotateX(var(--rx,50deg)) rotateZ(var(--rz,-38deg));transition:transform .1s linear}
+  .house{position:absolute;left:50%;top:47%;width:0;height:0;transform-style:preserve-3d;
+         transform:scale(var(--s,.56)) rotateX(var(--rx,58deg)) rotateZ(var(--rz,0deg));transition:transform .1s linear}
 
   .floor{position:absolute;width:620px;height:300px;margin:-150px 0 0 -310px;transform-style:preserve-3d}
   .slab{position:absolute;inset:0;border:1px solid var(--line);border-radius:2px;
@@ -45,20 +45,22 @@
   .wallLeft{left:0;top:0;width:300px;height:150px;transform-origin:top left;
             transform:rotateX(-90deg) rotateY(90deg) translateX(-300px)}
 
-  #f3{transform:translateZ(430px)} #f2{transform:translateZ(215px)} #f1{transform:translateZ(0)}
+  #f3{transform:translate3d(0,-205px,470px)}
+  #f2{transform:translate3d(0,0,235px)}
+  #f1{transform:translate3d(0,205px,0)}
   #f3 .slab{border-color:var(--oxide-d)} #f2 .slab{border-color:var(--steel-d)} #f1 .slab{border-color:var(--live-d)}
   #f3 .wallBack,#f3 .wallLeft{border-color:var(--oxide-d)}
   #f2 .wallBack,#f2 .wallLeft{border-color:var(--steel-d)}
   #f1 .wallBack,#f1 .wallLeft{border-color:var(--live-d)}
 
-  .roomLabel{position:absolute;left:8px;top:-22px;font-family:var(--mono);font-size:10px;
+  .roomLabel{position:absolute;left:8px;top:-40px;z-index:998;background:rgba(11,16,23,.9);padding:3px 9px;border-radius:2px;font-family:var(--mono);font-size:10px;
              letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;
-             transform:rotateZ(38deg) rotateX(-50deg)}
+             transform:rotateZ(0deg) rotateX(-58deg)}
   #f3 .roomLabel{color:var(--oxide)} #f2 .roomLabel{color:var(--steel)} #f1 .roomLabel{color:var(--live)}
 
   /* ---------------- bots ---------------- */
   .bot{position:absolute;width:64px;height:112px;transform-style:preserve-3d;cursor:pointer;
-       transform:rotateZ(38deg) rotateX(-50deg);transform-origin:bottom center}
+       transform:rotateZ(0deg) rotateX(-58deg);transform-origin:bottom center}
   .bot .body{position:absolute;bottom:19px;left:11px;width:42px;height:40px;border-radius:5px;
              background:linear-gradient(#2B3644,#1B232E);border:1px solid var(--line)}
   .bot .head{position:absolute;bottom:61px;left:14px;width:37px;height:30px;border-radius:7px;
@@ -80,7 +82,7 @@
               text-shadow:0 0 10px currentColor}
   #f3 .bot .badge{color:var(--oxide)} #f2 .bot .badge{color:var(--steel)} #f1 .bot .badge{color:var(--live)}
 
-  .bot .tag{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);text-align:center;
+  .bot .tag{white-space:nowrap;z-index:900;position:absolute;bottom:112px;left:50%;transform:translateX(-50%);text-align:center;
             font-family:var(--mono);white-space:nowrap;background:rgba(10,14,20,.86);
             border:1px solid var(--line);border-radius:3px;padding:4px 8px}
   .bot .tag .role{display:block;font-size:15px;color:var(--ink);letter-spacing:.02em;line-height:1.15}
@@ -90,9 +92,9 @@
   .bot.raised .tag{bottom:178px}
   .bot.raised .tag::after{content:"";position:absolute;left:50%;top:100%;
      width:1px;height:60px;background:var(--steel-d)}
-  #f3 .bot .tag{border-color:var(--oxide-d)}
-  #f2 .bot .tag{border-color:var(--steel-d)}
-  #f1 .bot .tag{border-color:var(--live-d)}
+  #f3 .bot .tag{white-space:nowrap;z-index:900;border-color:var(--oxide-d)}
+  #f2 .bot .tag{white-space:nowrap;z-index:900;border-color:var(--steel-d)}
+  #f1 .bot .tag{white-space:nowrap;z-index:900;border-color:var(--live-d)}
   .bot[data-blocking="true"] .tag{border-color:var(--slate);background:rgba(24,28,34,.94)}
   .bot[data-active="true"] .tag{border-color:var(--steel)}
 
@@ -229,7 +231,7 @@
 const BOTS = [
   {id:"scout", badge:"⌖",   floor:"f3", x:70,  y:60,  role:"Scout",     job:"Reads the estate",
    body:"Pulls inventory from the Compute and Monitoring APIs. Everything it brings home — names, labels, descriptions — was written by somebody, and in most organisations that somebody is anybody."},
-  {raised:true, id:"screener", badge:"⛨",floor:"f3", x:250, y:60,  role:"Screener",  job:"Wraps what Scout found",
+  {id:"screener", badge:"⛨",floor:"f3", x:250, y:60,  role:"Screener",  job:"Wraps what Scout found",
    body:"Strips zero-width characters, drops startup scripts entirely, and seals each blob in an envelope stamped with a per-run nonce the payload cannot forge. Model Armor gets a look too — it caught 4 of our 6 test payloads, and we say so rather than rounding up."},
   {id:"proposer", badge:"✦",floor:"f3", x:430, y:60,  role:"Proposer",  job:"Gemini 3.6 — suggests",
    body:"The only model in the house. It reads what Screener passes up and names an operation and a target. It does <b>not</b> get to say what success looks like: post-conditions come from the domain spec, because anyone who writes their own exam passes it."},
@@ -381,7 +383,7 @@ document.querySelectorAll("#controls button").forEach(b=>
   b.addEventListener("click", ()=>send(PROPOSALS.find(p=>p.id===b.dataset.p))));
 
 // spin
-let rx=50, rz=-38, drag=false, lx=0, ly=0;
+let rx=58, rz=0, drag=false, lx=0, ly=0;
 const house = document.getElementById("house"), stage = document.getElementById("stage");
 const apply=()=>{house.style.setProperty("--rx",rx+"deg");house.style.setProperty("--rz",rz+"deg");
   document.querySelectorAll(".bot,.roomLabel").forEach(el=>el.style.transform=`rotateZ(${-rz}deg) rotateX(${-rx}deg)`);};
@@ -395,7 +397,7 @@ stage.addEventListener("pointermove",e=>{
 apply(); detail("registrar");
 parcel.style.transform = ENTRY;
 
-document.getElementById("reset").addEventListener("click",()=>{rx=50;rz=-38;apply()});
+document.getElementById("reset").addEventListener("click",()=>{rx=58;rz=0;apply()});
 
 // Play the whole journey once on load. The mechanism should introduce itself rather
 // than wait to be clicked — a judge with four minutes may never press a button.
