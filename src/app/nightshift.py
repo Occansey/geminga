@@ -219,6 +219,16 @@ def board() -> str:
 GSAP = Path(__file__).parent / "gsap.min.js"
 
 
+ARCH = Path(__file__).parent / "architecture.html"
+
+
+@app.get("/architecture", response_class=HTMLResponse)
+def architecture() -> str:
+    """The interactive cutaway, served from the same origin as the console so a presenter can
+    open it mid-demo without leaving the deployment."""
+    return ARCH.read_text(encoding="utf-8")
+
+
 @app.get("/gsap.min.js")
 def gsap() -> Response:
     # Self-hosted so the console's motion needs no third-party CDN and survives any CSP.

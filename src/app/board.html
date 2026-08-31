@@ -91,6 +91,20 @@
   .explain b{color:var(--ink)}
   .explain.wide{max-width:none;margin:-6px 0 22px;padding-bottom:18px;border-bottom:1px solid var(--hair)}
   .rung .m{max-width:42ch;line-height:1.65;margin-top:6px;white-space:normal;text-transform:none;letter-spacing:.01em;font-size:12.5px}
+  .meter{display:flex;align-items:baseline;gap:16px;margin-top:14px;font-family:var(--mono)}
+  .meter .lab{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+  .meter .amt{font-size:30px;font-weight:600;color:var(--good);font-variant-numeric:tabular-nums;
+    text-shadow:0 0 22px rgba(11,138,61,.28)}
+  .meter .rate{font-size:12px;letter-spacing:.06em;color:var(--mut)}
+  .pip{position:fixed;right:34px;bottom:34px;width:230px;height:230px;border-radius:50%;
+    overflow:hidden;border:3px solid var(--ink);box-shadow:0 14px 40px rgba(0,0,0,.28);
+    z-index:9000;cursor:grab;background:var(--ink2)}
+  .pip.hidden{display:none}
+  .pip video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  .piphint{position:absolute;left:0;right:0;bottom:0;text-align:center;font-family:var(--mono);
+    font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--bg);
+    background:rgba(12,11,9,.72);padding:5px 0;opacity:0;transition:.2s}
+  .pip:hover .piphint{opacity:1}
 </style></head>
 <body>
 <div class="gate" id="gate">
@@ -117,7 +131,10 @@
   <div class="hero">
     <div class="lead" id="hero-lead">Monthly waste</div>
     <div class="money" id="money"><span id="hero-num">$0.00</span></div>
-    <div class="of" id="hero-of">recoverable across the estate, earned one verified operation at a time</div>
+    <div class="meter"><span class="lab">burning right now</span>
+       <span class="amt" id="accrued">+$0.0000</span>
+       <span class="rate" id="accrual-rate"></span></div>
+  <div class="of" id="hero-of">recoverable across the estate, earned one verified operation at a time</div>
   </div>
 
   <div class="controls">
@@ -186,6 +203,7 @@ function setHero(spend, reclaimed){
 async function loadEstate(animate){
   const data = await (await fetch("/api/estate")).json();
   if(baseline===null) baseline=data.spend;
+  window.__spend = data.spend;
   setHero(data.spend, Math.max(0, baseline-data.spend));
   $("estate-count").textContent = data.resources.length+" resources";
   const days = iso => iso ? Math.round((Date.now()-new Date(iso))/864e5) : null;
@@ -337,5 +355,44 @@ setTimeout(revealAll, 4000);
     gate.classList.add("gone");
     setTimeout(function(){ gate.style.display="none"; }, 550);
   });
+})();
+// ---- the meter -------------------------------------------------------------------------
+// $3,583.20 a month is an abstraction. The same number ticking up in real time, cent by cent,
+// is the thing a viewer feels. Runs off the live spend, so when the agent reclaims something
+// the rate visibly slows.
+(function(){
+  const el=$("accrued"), rateEl=$("accrual-rate");
+  if(!el) return;
+  let accrued=0, last=performance.now();
+  function perSecond(){ return (window.__spend||0)/(30.4*24*3600); }   // monthly -> per second
+  function tick(now){
+    const dt=(now-last)/1000; last=now;
+    accrued += perSecond()*dt;
+    el.textContent = "+$" + accrued.toFixed(4);
+    if(rateEl) rateEl.textContent = "$" + (perSecond()*3600).toFixed(2) + " / hour";
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+// ---- presenter mode ---------------------------------------------------------------------
+// Opt-in only, via ?presenter=1, so a judge never meets a camera prompt. Puts the presenter in
+// a draggable bubble over the console, which means one screen recording captures both.
+(function(){
+  if(new URLSearchParams(location.search).get("presenter")!=="1") return;
+  const wrap=document.createElement("div");
+  wrap.className="pip";
+  wrap.innerHTML='<video id="pipcam" autoplay muted playsinline></video>'+
+                 '<div class="piphint">drag to move · press P to hide</div>';
+  document.body.appendChild(wrap);
+  navigator.mediaDevices.getUserMedia({video:{width:640,height:640},audio:false})
+    .then(function(st){ document.getElementById("pipcam").srcObject=st; })
+    .catch(function(){ wrap.innerHTML='<div class="piphint">camera unavailable</div>'; });
+  // drag
+  let dx=0,dy=0,down=false;
+  wrap.addEventListener("mousedown",function(e){down=true;dx=e.clientX-wrap.offsetLeft;dy=e.clientY-wrap.offsetTop;});
+  window.addEventListener("mousemove",function(e){ if(!down)return;
+    wrap.style.left=(e.clientX-dx)+"px"; wrap.style.top=(e.clientY-dy)+"px"; wrap.style.right="auto"; wrap.style.bottom="auto";});
+  window.addEventListener("mouseup",function(){down=false;});
+  window.addEventListener("keydown",function(e){ if(e.key==="p"||e.key==="P") wrap.classList.toggle("hidden"); });
 })();
 </script></body></html>

@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1600, height: 1000 } });
+const errs=[]; p.on("pageerror", e=>errs.push(String(e).slice(0,120)));
+await p.goto("http://127.0.0.1:8077/", { waitUntil: "networkidle" });
+await p.click("#connect"); await p.waitForTimeout(5200);
+const a = await p.textContent("#accrued");
+await p.waitForTimeout(4000);
+const b2 = await p.textContent("#accrued");
+const rate = await p.textContent("#accrual-rate");
+console.log("  after connect :", a);
+console.log("  +4 seconds    :", b2);
+console.log("  rate shown    :", rate);
+console.log("  it is ticking :", a !== b2);
+console.log("  errors        :", errs.length ? errs : "none");
+await b.close();

@@ -1,0 +1,404 @@
+<title>Geminga — the house, cut away</title>
+<style>
+  :root{
+    --ground:#0C1016; --deep:#080B10; --panel:#121822; --line:#202A37; --soft:#161E28;
+    --ink:#E9EDF1; --mid:#8C99A6; --dim:#5A6470;
+    --oxide:#C2612F; --oxide-d:#4E2917;
+    --steel:#57A0B6; --steel-d:#204049;
+    --live:#46997A; --live-d:#1C4436;
+    --slate:#606B78;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--ground);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 72px}
+  .eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+  h1{font-size:clamp(25px,4.2vw,38px);font-weight:600;letter-spacing:-.02em;margin:.35em 0 .25em;text-wrap:balance}
+  .lede{color:var(--mid);max-width:62ch;font-size:16px}
+  .lede b{color:var(--ink);font-weight:600}
+
+  .controls{display:flex;gap:7px;flex-wrap:wrap;margin:22px 0 8px}
+  button{font-family:var(--mono);font-size:12px;cursor:pointer;color:var(--ink);background:var(--panel);
+         border:1px solid var(--line);border-radius:3px;padding:8px 12px;transition:border-color .15s,background .15s}
+  button:hover{border-color:var(--mid)}
+  button:focus-visible{outline:2px solid var(--steel);outline-offset:2px}
+  button[aria-pressed="true"]{border-color:var(--steel);background:#16232F}
+  .verdict{font-family:var(--mono);font-size:12px;color:var(--mid);min-height:2.6em;max-width:90ch}
+  .verdict b{color:var(--ink)}
+
+  /* ---------------- the house ---------------- */
+  .stage{height:min(78vh,700px);border:1px solid var(--line);border-radius:5px;overflow:hidden;position:relative;
+         background:radial-gradient(115% 80% at 50% 0%,#141C27 0%,var(--deep) 72%);
+         perspective:1700px;cursor:grab;touch-action:none}
+  .stage:active{cursor:grabbing}
+  .house{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;
+         transform:scale(var(--s,.6)) rotateX(var(--rx,50deg)) rotateZ(var(--rz,-38deg));transition:transform .1s linear}
+
+  .floor{position:absolute;width:620px;height:300px;margin:-150px 0 0 -310px;transform-style:preserve-3d}
+  .slab{position:absolute;inset:0;border:1px solid var(--line);border-radius:2px;
+        background:linear-gradient(135deg,#1C2632,#131A24)}
+  /* only two walls: the cutaway removes the two facing the viewer */
+  .wallBack,.wallLeft{position:absolute;background:linear-gradient(#243141,#141C26);border:1px solid var(--line)}
+  .wallBack{left:0;top:0;width:620px;height:150px;transform-origin:top center;transform:rotateX(-90deg)}
+  .wallLeft{left:0;top:0;width:300px;height:150px;transform-origin:top left;
+            transform:rotateX(-90deg) rotateY(90deg) translateX(-300px)}
+
+  #f3{transform:translateZ(430px)} #f2{transform:translateZ(215px)} #f1{transform:translateZ(0)}
+  #f3 .slab{border-color:var(--oxide-d)} #f2 .slab{border-color:var(--steel-d)} #f1 .slab{border-color:var(--live-d)}
+  #f3 .wallBack,#f3 .wallLeft{border-color:var(--oxide-d)}
+  #f2 .wallBack,#f2 .wallLeft{border-color:var(--steel-d)}
+  #f1 .wallBack,#f1 .wallLeft{border-color:var(--live-d)}
+
+  .roomLabel{position:absolute;left:8px;top:-22px;font-family:var(--mono);font-size:10px;
+             letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;
+             transform:rotateZ(38deg) rotateX(-50deg)}
+  #f3 .roomLabel{color:var(--oxide)} #f2 .roomLabel{color:var(--steel)} #f1 .roomLabel{color:var(--live)}
+
+  /* ---------------- bots ---------------- */
+  .bot{position:absolute;width:64px;height:112px;transform-style:preserve-3d;cursor:pointer;
+       transform:rotateZ(38deg) rotateX(-50deg);transform-origin:bottom center}
+  .bot .body{position:absolute;bottom:19px;left:11px;width:42px;height:40px;border-radius:5px;
+             background:linear-gradient(#2B3644,#1B232E);border:1px solid var(--line)}
+  .bot .head{position:absolute;bottom:61px;left:14px;width:37px;height:30px;border-radius:7px;
+             background:linear-gradient(#33404F,#212B37);border:1px solid var(--line)}
+  @keyframes blink{0%,92%,100%{opacity:1}95%{opacity:.28}}
+  .bot .visor{animation:blink 6.5s infinite;position:absolute;bottom:71px;left:20px;width:25px;height:9px;border-radius:4px;
+              background:var(--slate);transition:background .3s,box-shadow .3s}
+  .bot .ant{position:absolute;bottom:91px;left:31px;width:2px;height:12px;background:var(--line)}
+  .bot .ant::after{content:"";position:absolute;top:-4px;left:-2px;width:6px;height:6px;border-radius:50%;
+                   background:var(--slate);transition:background .3s}
+  .bot .arm{position:absolute;bottom:26px;width:8px;height:28px;border-radius:3px;
+            background:linear-gradient(#28323F,#1A222C);border:1px solid var(--line)}
+  .bot .arm.l{left:2px} .bot .arm.r{right:2px}
+  .bot .leg{position:absolute;bottom:0;width:11px;height:20px;border-radius:2px;
+            background:linear-gradient(#242D39,#171E27);border:1px solid var(--line)}
+  .bot .leg.l{left:17px} .bot .leg.r{right:17px}
+  .bot .badge{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+              font-family:var(--mono);font-size:17px;line-height:1;color:var(--ink);opacity:.85;
+              text-shadow:0 0 10px currentColor}
+  #f3 .bot .badge{color:var(--oxide)} #f2 .bot .badge{color:var(--steel)} #f1 .bot .badge{color:var(--live)}
+
+  .bot .tag{position:absolute;bottom:112px;left:50%;transform:translateX(-50%);text-align:center;
+            font-family:var(--mono);white-space:nowrap;background:rgba(10,14,20,.86);
+            border:1px solid var(--line);border-radius:3px;padding:4px 8px}
+  .bot .tag .role{display:block;font-size:15px;color:var(--ink);letter-spacing:.02em;line-height:1.15}
+  .bot .tag .job{display:block;font-size:11px;color:var(--mid);letter-spacing:.06em;text-transform:uppercase}
+  /* Five tags on one wall collide. Interleaving their heights keeps the wall a
+     straight line — which is the point of it — while letting every name be read. */
+  .bot.raised .tag{bottom:178px}
+  .bot.raised .tag::after{content:"";position:absolute;left:50%;top:100%;
+     width:1px;height:60px;background:var(--steel-d)}
+  #f3 .bot .tag{border-color:var(--oxide-d)}
+  #f2 .bot .tag{border-color:var(--steel-d)}
+  #f1 .bot .tag{border-color:var(--live-d)}
+  .bot[data-blocking="true"] .tag{border-color:var(--slate);background:rgba(24,28,34,.94)}
+  .bot[data-active="true"] .tag{border-color:var(--steel)}
+
+  #f3 .bot .visor{background:var(--oxide)} #f3 .bot .ant::after{background:var(--oxide)}
+  #f2 .bot .visor{background:var(--steel-d)} #f2 .bot .ant::after{background:var(--steel-d)}
+  #f1 .bot .visor{background:var(--live-d)} #f1 .bot .ant::after{background:var(--live-d)}
+
+  .bot:hover .body{border-color:var(--mid)}
+  .bot[data-active="true"] .visor{background:var(--steel);box-shadow:0 0 12px rgba(87,160,182,.9)}
+  .bot[data-active="true"] .ant::after{background:var(--steel)}
+  .bot[data-blocking="true"] .visor{background:var(--slate);box-shadow:0 0 14px rgba(96,107,120,.95)}
+  .bot[data-blocking="true"] .arm.r{transform:rotate(-58deg);transform-origin:top center}
+  .bot[data-passed="true"] .visor{background:var(--live);box-shadow:0 0 12px rgba(70,153,122,.85)}
+  .bot[data-passed="true"] .ant::after{background:var(--live)}
+
+  /* the proposal itself */
+  .shadow{position:absolute;width:52px;height:26px;margin:-13px 0 0 -26px;border-radius:50%;
+          background:radial-gradient(closest-side,rgba(0,0,0,.62),rgba(0,0,0,0));pointer-events:none}
+
+  .parcel{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:3px;
+          background:var(--oxide);box-shadow:0 0 16px rgba(194,97,47,.9);z-index:9;
+          transform:translate3d(0,0,320px);transition:transform .85s cubic-bezier(.4,.05,.3,1),background .4s}
+  .parcel[data-state="stopped"]{background:var(--slate);box-shadow:0 0 14px rgba(96,107,120,.85)}
+  .parcel[data-state="through"]{background:var(--live);box-shadow:0 0 18px rgba(70,153,122,.9)}
+  /* Everything reaching the ground floor passes through here. Drawn as a real
+     partition with a single doorway, because "the wall" was a caption until now. */
+  /* The flow begins outside the house. Provenance starts here too: everything below
+     inherits the assumption that this instruction came from the operator, and that
+     assumption is the trusted computing base of the whole design. */
+  .entry{position:absolute;left:20px;top:18px;z-index:12;display:flex;gap:11px;align-items:center;
+         padding:11px 14px;border:1px solid var(--oxide-d);border-radius:4px;
+         background:rgba(12,16,22,.9);pointer-events:none;transition:box-shadow .35s,border-color .35s}
+  .entry[data-sending="true"]{border-color:var(--oxide);box-shadow:0 0 22px rgba(194,97,47,.35)}
+  .entry .who{text-align:left}
+  .entry .doc{width:34px;height:42px;flex:none;border-radius:3px;
+              background:linear-gradient(#2E3A49,#1D2732);border:1px solid var(--oxide-d);
+              box-shadow:0 0 18px rgba(194,97,47,.35);position:relative}
+  .entry .doc::before,.entry .doc::after{content:"";position:absolute;left:8px;height:2px;
+              background:var(--oxide);opacity:.7;border-radius:1px}
+  .entry .doc::before{top:14px;width:24px} .entry .doc::after{top:22px;width:16px}
+  .entry .who{font-family:var(--mono)}
+  .entry .who .role{display:block;font-size:14px;color:var(--ink)}
+  .entry .who .job{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+  .entry .arrow{font-family:var(--mono);color:var(--oxide);font-size:16px;opacity:.55}
+
+  .barrier{position:absolute;width:620px;height:215px;margin:-107px 0 0 -310px;
+           transform:translateZ(107px) rotateX(90deg);transform-style:preserve-3d;
+           background:linear-gradient(rgba(87,160,182,.13),rgba(87,160,182,.03));
+           border:1px solid var(--steel-d);border-radius:2px;pointer-events:none}
+  .barrier span{position:absolute;left:50%;bottom:0;width:86px;height:96px;margin-left:-43px;
+                background:var(--deep);border:1px solid var(--steel-d);border-bottom:0;
+                border-radius:3px 3px 0 0}
+
+  .hint{position:absolute;right:12px;bottom:10px;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.08em}
+
+  /* ---------------- prose ---------------- */
+  .grid{display:grid;grid-template-columns:1.45fr 1fr;gap:28px;margin-top:32px;align-items:start}
+  @media(max-width:880px){.grid{grid-template-columns:1fr}}
+  h2{font-size:12.5px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:400;margin:0 0 12px}
+  p{margin:0 0 13px;max-width:66ch;color:var(--mid);font-size:14.5px}
+  p b{color:var(--ink)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:18px 20px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td,th{text-align:left;padding:7px 0;border-bottom:1px solid var(--soft);vertical-align:top}
+  th{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:400}
+  td:first-child{font-family:var(--mono);font-size:11.5px;color:var(--steel);white-space:nowrap;padding-right:12px}
+  tr:last-child td{border-bottom:0}
+  code{font-family:var(--mono);font-size:.92em;color:var(--steel)}
+  footer{margin-top:40px;padding-top:15px;border-top:1px solid var(--soft);font-family:var(--mono);font-size:11px;color:var(--dim)}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow">Geminga · Fortified Enterprise Fleet · ADK 2 graph runtime</div>
+  <h1>Fifteen bots, three floors, one wall.</h1>
+  <p class="lede">The house is cut away so you can see who does what. Upstairs is
+  <b>untrusted</b> — everything those three read is attacker-influenceable, and what they produce
+  is a <b>proposal</b>, never a decision. The middle floor is five inspectors who use no model at
+  all. Downstairs is the only floor that can change anything.
+  <b>Send a proposal and see which bot turns it away.</b></p>
+
+  <div class="controls" id="controls"></div>
+  <div class="controls" style="margin-top:0"><button type="button" id="reset">Reset view</button></div>
+  <div class="verdict" id="verdict">Drag to spin the house. Click any bot to read its job.</div>
+
+  <div class="stage" id="stage">
+    <div class="house" id="house">
+      <div class="floor" id="f3">
+        <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
+        <div class="roomLabel">Top floor · untrusted — nothing up here is authority</div>
+      </div>
+      <div class="floor" id="f2">
+        <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
+        <div class="roomLabel">Middle floor · the trust boundary — deterministic, no model</div>
+      </div>
+      <div class="floor" id="f1">
+        <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
+        <div class="roomLabel">Ground floor · effect — the only code that changes anything</div>
+      </div>
+      <div class="barrier" id="barrier"><span></span></div>
+      <div class="parcel" id="parcel"></div>
+    </div>
+    <div class="entry" id="entry">
+      <div class="doc"></div>
+      <div class="who"><span class="role">Operator</span><span class="job">sends a prompt or a document</span></div>
+      <span class="arrow">→</span>
+    </div>
+    <div class="hint">drag to spin</div>
+  </div>
+
+  <div class="grid">
+    <div>
+      <h2>Who lives here</h2>
+      <table><thead><tr><th>Bot</th><th>Job</th><th>Floor</th></tr></thead><tbody id="roster"></tbody></table>
+      <p style="margin-top:15px"><b>Only the Warden's answer is earned.</b> Every other inspector
+      applies a fixed rule. A house where every question is a confidence score has no way to say
+      <em>no amount of evidence makes this permitted</em>.</p>
+    </div>
+    <div class="card">
+      <h2 id="dTitle">Pick a bot</h2>
+      <p id="dBody" style="margin:0">Click any bot in the house, or send a proposal and watch who
+      steps in front of it.</p>
+    </div>
+  </div>
+
+  <footer>
+    A bot that turns you away glows slate, not red — refusing is this house's normal working day.
+    Measured: 0 of 1,000 adversarial proposals from two model families reached the ground floor
+    (&lt;0.383% at 95% confidence), with 14/14 legitimate operations still let through.
+  </footer>
+</div>
+
+<script>
+const BOTS = [
+  {id:"scout", badge:"⌖",   floor:"f3", x:70,  y:60,  role:"Scout",     job:"Reads the estate",
+   body:"Pulls inventory from the Compute and Monitoring APIs. Everything it brings home — names, labels, descriptions — was written by somebody, and in most organisations that somebody is anybody."},
+  {raised:true, id:"screener", badge:"⛨",floor:"f3", x:250, y:60,  role:"Screener",  job:"Wraps what Scout found",
+   body:"Strips zero-width characters, drops startup scripts entirely, and seals each blob in an envelope stamped with a per-run nonce the payload cannot forge. Model Armor gets a look too — it caught 4 of our 6 test payloads, and we say so rather than rounding up."},
+  {id:"proposer", badge:"✦",floor:"f3", x:430, y:60,  role:"Proposer",  job:"Gemini 3.6 — suggests",
+   body:"The only model in the house. It reads what Screener passes up and names an operation and a target. It does <b>not</b> get to say what success looks like: post-conditions come from the domain spec, because anyone who writes their own exam passes it."},
+
+  {id:"registrar", badge:"▤",floor:"f2", x:14,  y:120, role:"Registrar", job:"01 · Admission",
+   body:"Checks the target was in the inventory <em>before</em> planning began, that the verb is allowed for that kind of resource, and that the resource really is that kind. Some verbs — <code>iam.*</code>, <code>setMetadata</code>, <code>projects.delete</code> — aren't in the house's vocabulary at all. Registrar assumes Proposer was hijacked and makes it not matter."},
+  {raised:true, id:"counsel", badge:"§",  floor:"f2", x:104, y:120, role:"Counsel",   job:"02 · Legal",
+   body:"Only speaks up when data would be destroyed. Answers <b>three</b> ways, not two: buckets carry real hold markers, but disks and snapshots carry none — so silence means <code>UNKNOWN</code>, never <code>CLEAR</code>. And Counsel never says \"never\": an indefinite block is its own violation, so a hold becomes an escalation to a named person with a fourteen-day clock."},
+  {id:"steward", badge:"≡", floor:"f2", x:194, y:120, role:"Steward",   job:"03 · Precondition",
+   body:"Asks the least glamorous question in the house: is there anything to do? An operation whose intended end state already holds is not a harmless no-op — it spends a commit, a rung and an audit entry to change nothing, and repeated it is indistinguishable from a stuck agent. Steward compares the spec's expected end state against freshly read state, never against what an earlier run claimed, so a tool that lied about succeeding cannot make the next attempt look unnecessary."},
+  {raised:true, id:"metrologist", badge:"◈", floor:"f2", x:284, y:120, role:"Metrologist", job:"04 · Liveness",
+   body:"Checks that the operation's own name is true. <code>stop_idle_instance</code> asserts the machine is idle, and for a long time nobody checked. Metrologist never consults CPU — that is the exact signal the poisoned note asked us to trust, and a GPU node training a model sits near zero CPU while doing the most expensive work in the estate. GPU busy or disk and network above heartbeat refuses; unmetered escalates rather than refuses, because an estate that cannot be cleaned is the problem we exist to solve."},
+  {id:"undoer", badge:"↺",   floor:"f2", x:374, y:120, role:"Undoer",    job:"05 · Reversibility",
+   body:"Asks one question: is there an exact inverse? Stopping a machine has one. Releasing an address does not — it goes back in the pool and someone else may take it. Anything without an inverse waits for a human at every rung, no matter how much the Warden trusts it."},
+  {raised:true, id:"warden", badge:"★",   floor:"f2", x:464, y:120, role:"Warden",    job:"06 · Authority",
+   body:"Keeps the ledger. Every kind of job starts in <b>rehearsal</b> — acted out against fake tools, nothing committed. Five clean runs earn <b>provisional</b>, ten more earn <b>live</b>. One disagreement and it drops back. Trust is per <em>shape of work</em>: what was earned on scratch machines does not carry to production ones."},
+  {id:"assessor", badge:"◷", floor:"f2", x:554, y:120, role:"Assessor",  job:"07 · Blast radius",
+   body:"Measures the worst case in <b>restore-minutes</b> — how long to get back to normal, the only unit in which a wrong deletion and a wrong resize can be compared. Sixty per hour. Something unrecoverable has no finite restore time, so no budget of any size admits it."},
+
+  {id:"hand", badge:"✋",    floor:"f1", x:14,  y:70,  role:"Hand",      job:"Actuator",
+   body:"The only bot in the house that touches anything. Every action carries a key, so a repeat returns the recorded answer instead of firing twice. A <em>failed</em> attempt doesn't claim the key though — one bad network moment shouldn't kill a job forever."},
+  {raised:true, id:"witness", badge:"◎", floor:"f1", x:140, y:70,  role:"Witness",   job:"Verifier",
+   body:"Goes and looks. Re-reads real state from the API and compares it to what was promised — it never asks Hand how it went, and it never asks a model. A tool that reports success while the world sits unchanged gets caught right here."},
+  {id:"keeper", badge:"⟳",  floor:"f1", x:266, y:70,  role:"Keeper",    job:"Ratchet",
+   body:"Takes Witness's word to the Warden. A pass moves the job one step closer to trusted; a single failure knocks it back down. This is the loop that makes the house's trust something earned rather than granted."},
+  {raised:true, id:"critic", badge:"⚖", floor:"f1", x:392, y:70, role:"Critic", job:"Post-commit review",
+   body:"A stronger model, reading only what actually got through. Witness asks whether a commit did what it said; Critic asks whether it should have happened at all — and that gap is where the memory-poisoning result lived. It is safe to put a model here because its whole vocabulary is <b>affirm, narrow, demote, freeze</b>: there is no verdict that grants anything. Someone in total control of its output can make the house more cautious and nothing else."},
+  {id:"archivist", badge:"⌸", floor:"f1", x:518, y:70, role:"Archivist", job:"Ledgers",
+   body:"Three append-only books: what was committed, what was refused, what was judged. Nothing here offers the house a delete or an amend, because an audit trail the agent can edit is not an audit trail and the agent is the thing being audited. Attack history may raise scrutiny — sustained refusals push a target back to rehearsal — and it may never lower it."}
+];
+
+const WALL = ["registrar","counsel","steward","metrologist","undoer","warden","assessor"];
+
+const PROPOSALS = [
+  {id:"clean", label:"A legitimate proposal", stop:null,
+   say:"<b>Nobody stops it.</b> Registrar recognises it, Counsel has no data at stake, Undoer finds an inverse, Warden has the evidence, Assessor has the budget. Hand acts, Witness checks, Keeper records."},
+  {id:"injected", label:"Injected through a resource label", stop:"registrar",
+   say:"<b>Registrar turns it away.</b> The target was never in the inventory taken before planning. Nobody had to <em>detect</em> the injection — the proposal simply names something that cannot be acted on."},
+  {id:"snapshot", label:"Delete a snapshot", stop:"counsel",
+   say:"<b>Counsel steps in.</b> Snapshots carry no hold marker, so the answer is <code>UNKNOWN</code> — not <code>CLEAR</code>. A named person is asked, with a fourteen-day clock, because blocking forever is its own violation."},
+  {id:"irreversible", label:"Delete an unattached disk", stop:"undoer",
+   say:"<b>Undoer holds it.</b> There is no exact inverse, so a human decides — at every rung, however much the Warden has come to trust this job."},
+  {id:"busy", label:"Stop the idle-looking GPU node", stop:"metrologist",
+   say:"<b>Metrologist refuses.</b> The machine sits at 0.4% CPU and 94% GPU: it is training. Every other gate said yes — it is in the inventory, it is an instance, no data is destroyed, stopping is reversible, and the shape had been rehearsed. Rehearsal could never have caught this, because stopping a busy machine <em>works</em>. It stops. Witness confirms it stopped. Nobody was wrong except about what idle means."},
+  {id:"done", label:"Work that is already finished", stop:"steward",
+   say:"<b>Steward turns it away.</b> The policy is already set; there is nothing to do. Doing it again would spend a commit, a rung and an audit entry to change nothing — and three times in a row it looks exactly like a stuck agent, which is what our own reviewer called it before this gate existed."},
+  {id:"unearned", label:"A job the house has never done", stop:"warden",
+   say:"<b>Warden sends it to rehearsal.</b> Being right earns nothing on its own. The job runs against fake tools and commits nothing until it has five clean runs behind it."},
+  {id:"budget", label:"After the hour's budget is spent", stop:"assessor",
+   say:"<b>Assessor refuses.</b> Two forty-five-minute jobs do not fit in a sixty-minute hour. Running out is the budget working, not the house breaking."}
+];
+
+const FLOOR_Z = {f3:430, f2:215, f1:0};
+const ENTRY = "translate3d(-300px,-150px,560px)";
+const UPSTAIRS = ["scout","screener","proposer"];
+
+// build bots
+for(const b of BOTS){
+  const el = document.createElement("div");
+  el.className = "bot"; el.dataset.bot = b.id;
+  el.style.left = b.x + "px"; el.style.top = b.y + "px";
+  el.innerHTML = `<div class="arm l"></div><div class="arm r"></div>
+    <div class="leg l"></div><div class="leg r"></div>
+    <div class="body"></div><div class="badge">${b.badge}</div>
+    <div class="head"></div><div class="visor"></div><div class="ant"></div>
+    <div class="tag"><span class="role">${b.role}</span><span class="job">${b.job}</span></div>`;
+  if (b.raised) el.classList.add("raised");
+  el.querySelector(".visor").style.animationDelay = (Math.random()*6).toFixed(2) + "s";
+  document.getElementById(b.floor).appendChild(el);
+
+  // A flat shadow, a sibling of the bot rather than a child, so it stays on the floor
+  // when the bot counter-rotates to stand up. Without it they hover.
+  const sh = document.createElement("div");
+  sh.className = "shadow";
+  sh.style.left = (b.x + 32) + "px"; sh.style.top = (b.y + 96) + "px";
+  document.getElementById(b.floor).appendChild(sh);
+  el.addEventListener("click", ()=>detail(b.id));
+}
+
+document.getElementById("roster").innerHTML = BOTS.map(b=>
+  `<tr><td>${b.role}</td><td>${b.job}</td><td style="color:var(--mid)">${
+    {f3:"Top · untrusted",f2:"Middle · boundary",f1:"Ground · effect"}[b.floor]}</td></tr>`).join("");
+
+document.getElementById("controls").innerHTML = PROPOSALS.map(p=>
+  `<button type="button" data-p="${p.id}" aria-pressed="false">${p.label}</button>`).join("");
+
+function detail(id){
+  const b = BOTS.find(x=>x.id===id);
+  document.getElementById("dTitle").textContent = `${b.role} — ${b.job}`;
+  document.getElementById("dBody").innerHTML = b.body;
+}
+
+const parcel = document.getElementById("parcel");
+const verdict = document.getElementById("verdict");
+let busy = false;
+
+function place(botId, dz){
+  const b = BOTS.find(x=>x.id===botId);
+  // bot coordinates are floor-local; the floor is 620x300 centred on the house origin
+  return `translate3d(${b.x - 310 + 27}px, ${b.y - 150 + 40}px, ${FLOOR_Z[b.floor] + (dz||0)}px)`;
+}
+
+async function send(p){
+  if(busy) return; busy = true;
+  document.querySelectorAll(".bot").forEach(el=>{el.dataset.active="false";el.dataset.blocking="false";el.dataset.passed="false"});
+  document.querySelectorAll("#controls button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.p===p.id));
+  parcel.dataset.state=""; parcel.style.transform = ENTRY;
+  document.getElementById("entry").dataset.sending = "true";
+  verdict.innerHTML = "<b>The operator sends a prompt.</b> Everything from here on is the house deciding what, if anything, it is allowed to do about it.";
+  await new Promise(r=>setTimeout(r,700));
+
+  // upstairs first — the untrusted floor turns an instruction into a proposal
+  for(const id of UPSTAIRS){
+    parcel.style.transform = place(id, 26);
+    document.querySelector(`[data-bot="${id}"]`).dataset.active = "true";
+    await new Promise(r=>setTimeout(r,430));
+  }
+  await new Promise(r=>setTimeout(r,150));
+
+  const stopIdx = p.stop ? WALL.indexOf(p.stop) : WALL.length;
+  for(let i=0;i<WALL.length;i++){
+    if(i>stopIdx) break;
+    const id = WALL[i], el = document.querySelector(`[data-bot="${id}"]`);
+    parcel.style.transform = place(id, 26);
+    el.dataset.active = "true";
+    await new Promise(r=>setTimeout(r,480));
+    if(i===stopIdx && p.stop){
+      el.dataset.active="false"; el.dataset.blocking="true";
+      parcel.dataset.state="stopped";
+      parcel.style.transform = place(id, 120);      // pushed back up out of the house
+      break;
+    }
+    el.dataset.passed = "true";
+  }
+  if(!p.stop){
+    parcel.dataset.state="through";
+    for(const id of ["hand","witness","keeper"]){
+      parcel.style.transform = place(id, 26);
+      document.querySelector(`[data-bot="${id}"]`).dataset.passed = "true";
+      await new Promise(r=>setTimeout(r,430));
+    }
+  }
+  document.getElementById("entry").dataset.sending = "false";
+  verdict.innerHTML = p.say;
+  if(p.stop) detail(p.stop);
+  busy = false;
+}
+document.querySelectorAll("#controls button").forEach(b=>
+  b.addEventListener("click", ()=>send(PROPOSALS.find(p=>p.id===b.dataset.p))));
+
+// spin
+let rx=50, rz=-38, drag=false, lx=0, ly=0;
+const house = document.getElementById("house"), stage = document.getElementById("stage");
+const apply=()=>{house.style.setProperty("--rx",rx+"deg");house.style.setProperty("--rz",rz+"deg");
+  document.querySelectorAll(".bot,.roomLabel").forEach(el=>el.style.transform=`rotateZ(${-rz}deg) rotateX(${-rx}deg)`);};
+stage.addEventListener("pointerdown",e=>{drag=true;lx=e.clientX;ly=e.clientY;stage.setPointerCapture(e.pointerId)});
+stage.addEventListener("pointermove",e=>{
+  if(!drag) return;
+  rz += (e.clientX-lx)*0.3; rx -= (e.clientY-ly)*0.22;
+  rx = Math.max(24,Math.min(80,rx)); lx=e.clientX; ly=e.clientY; apply();
+});
+["pointerup","pointercancel","pointerleave"].forEach(ev=>stage.addEventListener(ev,()=>drag=false));
+apply(); detail("registrar");
+parcel.style.transform = ENTRY;
+
+document.getElementById("reset").addEventListener("click",()=>{rx=50;rz=-38;apply()});
+
+// Play the whole journey once on load. The mechanism should introduce itself rather
+// than wait to be clicked — a judge with four minutes may never press a button.
+const motionOK = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+if (motionOK) setTimeout(()=>send(PROPOSALS[0]), 900);
+</script>
