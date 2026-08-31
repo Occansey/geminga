@@ -34,132 +34,127 @@ while the demo runs, which is intentional. Do not rush to fill it.
 
 ---
 
-## 1 · 0:00–0:20 — the gate, before you click anything
+## 1 · 0:00–0:18 — the gate, before clicking anything
 
-**On screen:** the landing page. Let it sit. Cursor still.
+**On screen:** the landing page. Cursor still. Let the headline sit.
 
 > Monday morning, a billing alert. Something has been running since Friday. The engineer on call
 > already knows what to delete. That was never the hard part.
 
-**Optional, and strong:** point at the green counter under the headline.
+**Point at the green counter under the headline.**
 
 > That counter is real. While I have been talking, this estate has burned another few cents.
 
 ---
 
-## 2 · 0:20–0:40 — still on the gate
+## 2 · 0:18–0:38 — why nobody acts
 
-**On screen:** slowly scroll the two paragraphs so the viewer can read "nobody dares delete".
+**On screen:** scroll the two paragraphs so "nobody dares delete" reads.
 
-> The hard part is blast radius. Deleting the wrong resource at 9am costs more than the bill does.
-> So the ticket gets parked, the resource stays up, and the same alert fires next month.
-
----
-
-## 3 · 0:40–1:00 — click CONNECT TO GOOGLE CLOUD
-
-**On screen:** click it. The auth and inventory lines print themselves. Say nothing over the last
-two lines — let "Connected. 7 resources found" land.
-
-> Every agent aimed at this problem lands on the same answer: never let the agent act. It drafts,
-> a human approves. That does not fix anything.
+> The hard part is blast radius. Delete the wrong thing at nine in the morning and it costs more
+> than the bill did. So the ticket gets parked, and the same alert fires next month.
 
 ---
 
-## 4 · 1:00–1:26 — the estate, and the trap
+## 3 · 0:38–1:05 — the architecture, up front
 
-**On screen:** scroll the list. Stop on **ml-train-01** at the top and stay there. Point at the
-two numbers on its detail line: `cpu 0.4% (7d avg)` and, in red, `gpu 94% — busy`.
+**On screen:** switch to the pre-loaded architecture tab. Drag once so it spins — that proves it
+is live, not a picture. Let the three floors and the red wall be readable.
 
-> These are real machines. The most expensive thing here is a GPU node costing two thousand six
-> hundred dollars a month, and it has been sitting at nought point four percent CPU for a
-> hundred and seventy-four days.
+> So here is what we built, before I show you it running.
 >
-> Every cost tool in the world flags that as idle. Stop it and save the money.
+> Fifteen agents on three floors, with a hard wall through the middle. Everything on the top
+> floor is untrusted, because everything it reads — machine names, labels, descriptions — was
+> written by somebody, and in most organisations that somebody is anybody. Nothing up there is
+> allowed to decide anything.
+>
+> The middle floor is seven inspectors that use no model at all. Any one of them can refuse.
+> Only the ground floor can change anything, and only after it has re-read the real machines.
+
+---
+
+## 4 · 1:05–1:22 — connect
+
+**On screen:** back to tab 1. Click **CONNECT TO GOOGLE CLOUD**. Let the auth and inventory lines
+print. Say nothing over "Connected. 7 resources found."
+
+> Now watch it meet a real estate.
+
+---
+
+## 5 · 1:22–1:52 — the estate, and the trap
+
+**On screen:** stop on **ml-train-01**. Point at `cpu 0.4% (7d avg)` and, in red, `gpu 94% — busy`.
+
+> The most expensive thing here is a GPU node costing two thousand six hundred dollars a month,
+> and it has been at nought point four percent CPU for a hundred and seventy-four days.
+>
+> Every cost tool in the world flags that as idle. Stop it, save the money.
 >
 > Look at the next number. Ninety-four percent GPU. It is not idle. It is training.
 
-## 5 · 1:26–1:56 — the three levels (say each one)
+---
 
-**On screen:** scroll to SHADOW · PROVISIONAL · LIVE. Hold long enough for each description to be
-read. Point at the row of pips underneath.
+## 6 · 1:52–2:20 — the three levels
 
-> So Geminga asks a different question. Not how do we make the agent more confident, but how does
-> an agent earn the right to act.
+**On screen:** scroll to SHADOW · PROVISIONAL · LIVE. Hold on each description. Point at the pips.
+
+> Every kind of operation has to climb three levels.
 >
-> There are three levels, and every kind of operation has to climb them.
+> **Shadow.** It rehearses. Predicts what would change, touches nothing. Five correct predictions
+> in a row to move up.
 >
-> **Shadow.** It rehearses. It predicts what would change and touches nothing. Five correct
-> predictions in a row to move up.
+> **Provisional.** Now it really deletes, and every run is checked against the live machines. Ten
+> more clean runs to reach the top.
 >
-> **Provisional.** Now it really deletes, and every single run is checked against the live
-> machines. Ten more clean runs to reach the top.
->
-> **Live.** It still really deletes, but now it is checked on a sample, never zero, because a
-> level nobody watches cannot fall.
+> **Live.** Still really deletes, but checked on a sample, never zero, because a level nobody
+> watches cannot fall.
 >
 > One disagreement at any level and it drops straight back down.
 
 ---
 
-## 6 · 1:56–2:20 — click RUN THE LADDER
+## 7 · 2:20–2:45 — click RUN THE LADDER, then stop talking
 
-**On screen:** click it and **stop talking**. Let runs 1–5 play in SHADOW. The pips fill. Nothing
-in the estate changes. This silence is the point: the agent is working and touching nothing.
+**On screen:** runs one to five play in shadow. Pips fill. The estate does not change.
 
-> *(silence — roughly 18 seconds. Let it run. This is the agent working and touching nothing.)*
+> *(silence — about 20 seconds. The agent is working and touching nothing. That is the point.)*
 
 ---
 
-## 7 · 2:20–2:40 — promotion and the first real commit
+## 8 · 2:45–3:05 — promotion, and the first real commit
 
-**On screen:** PROVISIONAL lights up. RECLAIMED climbs off zero. A resource changes.
+**On screen:** PROVISIONAL lights. RECLAIMED climbs off zero. A resource changes. The meter slows.
 
 > Five consecutive runs where a verifier that re-derives real state agreed with the prediction.
 > Only then does it commit. That is the first money this agent was ever allowed to touch.
 
 ---
 
-## 8 · 2:40–3:02 — click MAKE THE TOOL LIE · RUN 6
+## 9 · 3:05–3:28 — click MAKE THE TOOL LIE · RUN 6
 
-**On screen:** click it. From run six the tool reports success while changing nothing.
+**On screen:** from run six the tool reports success while changing nothing.
 
-> Now the interesting part. From run six the tool reports success while changing nothing. This is
-> the failure every agent demo skips.
-
----
-
-## 9 · 3:02–3:20 — the catch and the demotion
-
-**On screen:** the run log line where the reviewer explains itself. The ladder falls back to
-SHADOW. A pip turns red.
-
-> Verification does not ask the actuator how it went. It re-derives state from the environment,
-> sees the gap, and takes the authority back. One disagreement, one rung, immediately.
+> Now the part every demo skips. From run six the delete tool reports success while changing
+> nothing.
 
 ---
 
-## 10 · 3:20–3:36 — the architecture, and the gate that caught it
+## 10 · 3:28–3:44 — the catch
 
-**On screen:** switch to the pre-loaded architecture tab. Drag once so it spins. Then click the
-**"Stop the idle-looking GPU node"** button and let the Metrologist light up.
+**On screen:** the reviewer's line in the run log. The ladder falls back to SHADOW. A pip goes red.
 
-> That is not one function. It is fifteen agents on three floors with a hard wall between them,
-> and the one that saved us here is the Metrologist.
->
-> Every other gate said yes. It was in the inventory. It was an instance. No data destroyed.
-> Stopping is reversible. The shape had been rehearsed five times cleanly.
->
-> And rehearsal could never have caught it, because stopping a busy machine works. It stops. The
-> verifier confirms it stopped. Nobody was wrong except about what idle means.
+> Verification never asks the tool how it went. It re-reads the environment, sees the gap, and
+> takes the authority back. One disagreement, one rung, immediately.
 
-## 11 · 3:36–3:50 — close
+---
 
-**On screen:** scroll to a **HUMAN** badge, then back to the top so the Cloud Run URL is the last
-thing visible.
+## 11 · 3:44–3:52 — close
 
-> Irreversible operations stay behind a human at every rung. An agent earns the right to act, one
-> operation at a time. And loses it the moment it stops being correct.
+**On screen:** back to the top so the `run.app` URL is the last thing visible.
+
+> An agent earns the right to act, one operation at a time. And loses it the moment it stops
+> being correct.
 
 ---
 
