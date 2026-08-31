@@ -1,0 +1,10 @@
+import { chromium } from "playwright"; import path from "node:path";
+const dir = path.join(import.meta.dirname, "..", "brand");
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 2200, height: 1020 }, deviceScaleFactor: 1 });
+await p.goto("file://" + path.join(dir, "architecture-3d-stairs.html"), { waitUntil: "networkidle" });
+await p.waitForTimeout(1400);
+const stage = await p.$(".stage");
+await (stage || p).screenshot({ path: path.join(dir, "geminga-architecture-3d-stairs.png") });
+console.log("wrote geminga-architecture-3d-stairs.png");
+await b.close();
