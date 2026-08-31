@@ -66,16 +66,18 @@ two lines — let "Connected. 7 resources found" land.
 
 ---
 
-## 4 · 1:00–1:26 — the estate
+## 4 · 1:00–1:26 — the estate, and the trap
 
-**On screen:** scroll the resource list slowly. Hover so the details are readable: machine type,
-zone, created date, days running, CPU average. Pause on **pd-ml-scratch — "orphaned by a deleted
-VM"** and on a red **HUMAN** badge.
+**On screen:** scroll the list. Stop on **ml-train-01** at the top and stay there. Point at the
+two numbers on its detail line: `cpu 0.4% (7d avg)` and, in red, `gpu 94% — busy`.
 
-> These are real machines. A GPU node at 0.4% CPU for a hundred and seventy-four days. A two
-> terabyte disk orphaned when someone deleted its VM. Every one of them is billing you monthly.
-
----
+> These are real machines. The most expensive thing here is a GPU node costing two thousand six
+> hundred dollars a month, and it has been sitting at nought point four percent CPU for a
+> hundred and seventy-four days.
+>
+> Every cost tool in the world flags that as idle. Stop it and save the money.
+>
+> Look at the next number. Ninety-four percent GPU. It is not idle. It is training.
 
 ## 5 · 1:26–1:56 — the three levels (say each one)
 
@@ -137,23 +139,19 @@ SHADOW. A pip turns red.
 
 ---
 
-## 10 · 3:20–3:36 — the architecture (open it here)
+## 10 · 3:20–3:36 — the architecture, and the gate that caught it
 
-**On screen:** open a second tab on
-`https://agentic-core-468826425509.us-central1.run.app/architecture`
-Drag once so it spins, so it is obviously live and not a picture. Do not click a bot; there is
-no time. Just let the three floors and the red wall be visible.
+**On screen:** switch to the pre-loaded architecture tab. Drag once so it spins. Then click the
+**"Stop the idle-looking GPU node"** button and let the Metrologist light up.
 
-This is the moment a viewer is asking *how did it catch that*, so answer it here rather than
-earlier. It is also on your own deployment, which quietly reinforces that this runs on Google
-Cloud.
-
-> That check is not one function. It is fifteen agents on three floors, and a hard wall between
-> them. Everything above the wall is untrusted, because everything it reads was written by
-> somebody. Nothing above the wall is allowed to decide. Only the ground floor can change
-> anything, and only after the floor above has re-read the real machines.
-
----
+> That is not one function. It is fifteen agents on three floors with a hard wall between them,
+> and the one that saved us here is the Metrologist.
+>
+> Every other gate said yes. It was in the inventory. It was an instance. No data destroyed.
+> Stopping is reversible. The shape had been rehearsed five times cleanly.
+>
+> And rehearsal could never have caught it, because stopping a busy machine works. It stops. The
+> verifier confirms it stopped. Nobody was wrong except about what idle means.
 
 ## 11 · 3:36–3:50 — close
 
@@ -174,6 +172,12 @@ thing visible.
 - Visibility **Public or Unlisted**, never Private. "No" to made-for-kids.
 - If your accent is strong on the mic, turn on auto-captions and correct
   "Geminga", "Vertex", "ADK", "provisional".
+
+## Worth knowing while you say it
+
+This is not a hypothetical you are dramatising. `tests/test_liveness.py` opens with it: on the
+deployed service the agent stopped ml-train-01 three separate times, and every gate said yes. The
+Metrologist exists because that happened. If a judge asks, that is the answer.
 
 ## One honesty note to keep in
 

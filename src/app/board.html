@@ -105,6 +105,7 @@
     font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--bg);
     background:rgba(12,11,9,.72);padding:5px 0;opacity:0;transition:.2s}
   .pip:hover .piphint{opacity:1}
+  .item .meta .hot{color:var(--red);font-weight:600}
 </style></head>
 <body>
 <div class="gate" id="gate">
@@ -218,6 +219,8 @@ async function loadEstate(animate){
       r.zone || "",
       r.created ? `created ${r.created}${age?` · running ${age.toLocaleString()} days`:""}` : "",
       (r.cpu_7d_avg!==undefined && r.cpu_7d_avg!==null) ? `cpu ${r.cpu_7d_avg}% (7d avg)` : "",
+      // The GPU column is the whole trap: 0.4% CPU reads as idle, 94% GPU says it is training.
+      (r.gpu_7d_avg!==undefined && r.gpu_7d_avg!==null) ? `<b class="hot">gpu ${r.gpu_7d_avg}% — busy</b>` : "",
     ].filter(Boolean).join("  ·  ");
     return `<div class="item ${gone?"gone":""} ${focus?"focus":""}">
       <div class="r"><span class="kind k-${(r.kind||"RES").toLowerCase()}">${r.kind||"RESOURCE"}</span>${r.target}${gone?" · stopped":""}

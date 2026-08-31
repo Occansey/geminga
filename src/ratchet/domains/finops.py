@@ -221,7 +221,7 @@ def sample_estate() -> dict[str, dict[str, Any]]:
         "compute.stop_idle_instance:ml-train-01": {
             "zone": "us-central1-a", "created": "2026-03-11", "kind": "VM",       "detail": "a2-highgpu-1g · 12 vCPU · 85 GB · 1x A100",
             "status": "RUNNING", "machine_type": "a2-highgpu-1g",
-            "cpu_7d_avg": 0.4, "monthly_cost_usd": 2632.00, "exists": True,
+            "cpu_7d_avg": 0.4, "gpu_7d_avg": 94.0, "monthly_cost_usd": 2632.00, "exists": True,
         },
         "compute.stop_idle_instance:staging-web-3": {
             "zone": "us-central1-b", "created": "2025-11-02", "kind": "VM",       "detail": "e2-standard-4 · 4 vCPU · 16 GB",
