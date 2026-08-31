@@ -159,15 +159,15 @@
       <div class="ladder" id="rungs">
         <div class="rung" data-key="shadow" data-on="true">Shadow
           <span class="m">Rehearses only. Predicts what would change and touches nothing.
-          Five correct predictions in a row to move up.</span></div>
+          Five correct predictions in a row to reach Provisional.</span></div>
         <div class="rung" data-key="provisional">Provisional
           <span class="m">Really deletes. Every single run is checked against the live machines.
-          One wrong call and it drops straight back to Shadow.</span></div>
+          Ten more clean runs to reach Live, and one wrong call drops it straight back to Shadow.</span></div>
         <div class="rung" data-key="live">Live
           <span class="m">Really deletes. Checked on a sample, never zero, because a rung
           nobody watches cannot fall.</span></div>
       </div>
-      <div class="streak"><span id="rung-note">5 verified runs to promote</span></div>
+      <div class="streak"><span id="rung-note">5 verified runs to reach Provisional, then 10 to reach Live</span></div>
       <div class="pips" id="pips"></div>
     </div>
   </div>
@@ -235,11 +235,14 @@ function setRung(name){
     if(g && on && !was) g.fromTo(el,{scale:.97},{scale:1,duration:.4,ease:"back.out(2)",transformOrigin:"left center"});
   });
 }
-function setPips(streak, lost){
-  $("pips").innerHTML = Array.from({length:5},(_,i)=>
+function setPips(streak, lost, threshold){
+  // Shadow promotes after 5 verified runs, Provisional after 10. Drawing five pips at both
+  // told the viewer a provisional class was twice as close as it was.
+  const n = threshold || 5;
+  $("pips").innerHTML = Array.from({length:n},(_,i)=>
     `<div class="pip ${lost&&i===0?"lost":i<streak?"on":""}"></div>`).join("");
 }
-setPips(0,false);
+setPips(0,false,5);
 
 function logEntry(d, demoted){
   if($("log").querySelector(".empty")) $("log").innerHTML="";
@@ -276,7 +279,7 @@ async function run(lieFrom){
       if(d.review){ reviewEntry(d.review); continue; }
       const demoted=(d.reason||"").startsWith("demoted");
       $("op-label").textContent=d.op_class+" · "+d.target;
-      setRung(d.authority); setPips(d.streak,demoted); logEntry(d,demoted);
+      setRung(d.authority); setPips(d.streak,demoted,d.threshold); logEntry(d,demoted);
       $("rung-note").textContent=`${d.passes} verified · ${d.failures} failed · ${d.demotions} demotions`;
       await loadEstate(true);
     }
@@ -288,7 +291,7 @@ $("run").onclick=()=>run(null);
 $("sabotage").onclick=()=>run(6);
 $("reset").onclick=async()=>{
   await fetch("/api/reset",{method:"POST"});
-  baseline=null; heroVal=0; setRung("shadow"); setPips(0,false);
+  baseline=null; heroVal=0; setRung("shadow"); setPips(0,false,5);
   $("log").innerHTML='<div class="empty">Nothing has run yet.</div>';
   $("rung-note").textContent="5 verified runs to promote"; $("status").textContent="idle"; $("op-label").textContent="—";
   await loadEstate(true);

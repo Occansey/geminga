@@ -23,7 +23,7 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel
 
-from ratchet.authority import AuthorityLedger, OperationRecord
+from ratchet.authority import PROMOTION_THRESHOLD, AuthorityLedger, OperationRecord
 from ratchet.domains import finops
 from ratchet.effects import Actuator, Effect, EffectLog
 from ratchet.admission import Snapshot
@@ -362,6 +362,9 @@ async def run(req: RunRequest) -> StreamingResponse:
                 "gate": final.get("gate", ""),
                 "route": final.get("route", ""),
                 "streak": record.streak,
+                # The console drew five pips at every rung, which is only right in shadow:
+                # provisional needs ten. Send the real threshold so the meter cannot lie.
+                "threshold": PROMOTION_THRESHOLD.get(record.authority, 0),
                 "passes": record.passes,
                 "failures": record.failures,
                 "demotions": record.demotions,

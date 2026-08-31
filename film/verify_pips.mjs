@@ -1,0 +1,12 @@
+import { chromium } from "playwright";
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1600, height: 1000 } });
+await p.goto("http://127.0.0.1:8077/", { waitUntil: "networkidle" });
+await p.click("#connect"); await p.waitForTimeout(5200);
+console.log("  pips at shadow (expect 5):", await p.$$eval("#pips .pip", n => n.length));
+await p.click("#run");
+await p.waitForFunction(() => document.getElementById("status").textContent === "done", { timeout: 180000 }).catch(()=>{});
+const rung = await p.evaluate(() => [...document.querySelectorAll(".rung")].find(r=>r.dataset.on==="true")?.dataset.key);
+console.log("  rung after run:", rung);
+console.log("  pips now (10 if provisional):", await p.$$eval("#pips .pip", n => n.length));
+await b.close();

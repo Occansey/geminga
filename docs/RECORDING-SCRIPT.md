@@ -19,6 +19,10 @@ while the demo runs, which is intentional. Do not rush to fill it.
 > Monday morning, a billing alert. Something has been running since Friday. The engineer on call
 > already knows what to delete. That was never the hard part.
 
+**Optional, and strong:** point at the green counter under the headline.
+
+> That counter is real. While I have been talking, this estate has burned another few cents.
+
 ---
 
 ## 2 · 0:20–0:40 — still on the gate
@@ -51,18 +55,30 @@ VM"** and on a red **HUMAN** badge.
 
 ---
 
-## 5 · 1:30–1:50 — the authority column
+## 5 · 1:30–2:00 — the three levels (say each one)
 
-**On screen:** scroll right/down to SHADOW · PROVISIONAL · LIVE and let the three descriptions
-be readable.
+**On screen:** scroll to SHADOW · PROVISIONAL · LIVE. Hold long enough for each description to be
+read. Point at the row of pips underneath.
 
 > So Geminga asks a different question. Not how do we make the agent more confident, but how does
-> an agent earn the right to act. Every operation starts in rehearsal. It predicts a change and
-> commits nothing.
+> an agent earn the right to act.
+>
+> There are three levels, and every kind of operation has to climb them.
+>
+> **Shadow.** It rehearses. It predicts what would change and touches nothing. Five correct
+> predictions in a row to move up.
+>
+> **Provisional.** Now it really deletes, and every single run is checked against the live
+> machines. Ten more clean runs to reach the top.
+>
+> **Live.** It still really deletes, but now it is checked on a sample, never zero, because a
+> level nobody watches cannot fall.
+>
+> One disagreement at any level and it drops straight back down.
 
 ---
 
-## 6 · 1:50–2:30 — click RUN THE LADDER
+## 6 · 2:00–2:35 — click RUN THE LADDER
 
 **On screen:** click it and **stop talking**. Let runs 1–5 play in SHADOW. The pips fill. Nothing
 in the estate changes. This silence is the point: the agent is working and touching nothing.
@@ -71,7 +87,7 @@ in the estate changes. This silence is the point: the agent is working and touch
 
 ---
 
-## 7 · 2:30–2:50 — promotion and the first real commit
+## 7 · 2:35–2:55 — promotion and the first real commit
 
 **On screen:** PROVISIONAL lights up. RECLAIMED climbs off zero. A resource changes.
 
@@ -80,7 +96,7 @@ in the estate changes. This silence is the point: the agent is working and touch
 
 ---
 
-## 8 · 2:50–3:20 — click MAKE THE TOOL LIE · RUN 6
+## 8 · 2:55–3:20 — click MAKE THE TOOL LIE · RUN 6
 
 **On screen:** click it. From run six the tool reports success while changing nothing.
 
