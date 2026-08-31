@@ -23,6 +23,10 @@ The `?presenter=1` puts your webcam in a circular bubble over the console, so on
 recording captures both you and the demo. Allow the camera prompt. Drag the bubble somewhere it
 covers nothing — bottom-right is clear. `P` hides it.
 
+**Reload this tab immediately before you hit record.** The green counter starts from zero on page
+load and climbs at about five dollars an hour, so a tab left open for ten minutes already reads
+eighty cents. Reloading keeps the number small and keeps what you say about it honest.
+
 **Tab 3 — the architecture, for shot 3:**
 
     https://agentic-core-468826425509.us-central1.run.app/architecture
@@ -68,7 +72,7 @@ on machines nobody dares delete.”** Cursor still. Then **point at the green co
 > Monday morning, a billing alert. Something has been running since Friday. The engineer on call
 > already knows what to delete. That was never the hard part.
 >
-> That counter is real. While I have been talking, this estate has burned another few cents.
+> And that counter is real. That is this estate billing, live, while we talk.
 
 ## 2 · 0:55–1:12 — why nobody acts
 
