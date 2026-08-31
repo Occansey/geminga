@@ -3,7 +3,7 @@ const dir = path.join(import.meta.dirname, "..", "brand");
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 2 });
 const errs = []; p.on("pageerror", e => errs.push(String(e).slice(0,140)));
-await p.goto("https://agentic-core-468826425509.us-central1.run.app/", { waitUntil: "networkidle" });
+await p.goto("http://127.0.0.1:8077/", { waitUntil: "networkidle" });
 await p.waitForTimeout(1200);
 await p.screenshot({ path: path.join(dir, "ui-0-gate.png") });
 console.log("  1. gate visible:", await p.isVisible("#gate"));

@@ -86,6 +86,11 @@
   .k-bucket{color:var(--good);border-color:var(--good)} .k-ip{color:var(--mut);border-color:var(--mut)}
   .k-snapshot{color:var(--red);border-color:var(--red)}
   .item .meta{display:block;font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:7px;letter-spacing:.01em}
+  .explain{font-family:var(--mono);font-size:12.5px;line-height:1.75;color:var(--mut);
+    margin:0 0 16px;max-width:62ch;letter-spacing:.01em}
+  .explain b{color:var(--ink)}
+  .explain.wide{max-width:none;margin:-6px 0 22px;padding-bottom:18px;border-bottom:1px solid var(--hair)}
+  .rung .m{max-width:42ch;line-height:1.65;margin-top:6px;white-space:normal;text-transform:none;letter-spacing:.01em;font-size:12.5px}
 </style></head>
 <body>
 <div class="gate" id="gate">
@@ -122,17 +127,28 @@
     <span class="live"><span class="d">●</span> <span id="status">idle</span> · US-CENTRAL1</span>
   </div>
 
+  <div class="explain wide" id="ctlhelp"><b>Run the ladder</b> — the agent proposes an operation, rehearses it, and is promoted only once a
+    verifier that re-reads the real machines agrees five times running. &nbsp;·&nbsp; <b>Make the tool lie</b> — from run six the
+    delete tool reports success while changing nothing, so you can watch verification catch it and take the authority back.</div>
   <div class="split">
     <div>
       <div class="col-h"><span>The estate</span><span id="estate-count"></span></div>
+      <div class="explain">What we found in the project, most expensive first. Every one of these is billing you monthly.</div>
       <div id="estate"></div>
     </div>
     <div>
       <div class="col-h"><span>Authority · <span id="op-label">—</span></span></div>
+      <div class="explain">Authority is not a setting. Each kind of operation has to earn it, and can lose it.</div>
       <div class="ladder" id="rungs">
-        <div class="rung" data-key="shadow" data-on="true">Shadow<span class="m">rehearses only · never commits</span></div>
-        <div class="rung" data-key="provisional">Provisional<span class="m">commits · every run verified</span></div>
-        <div class="rung" data-key="live">Live<span class="m">commits · sampled verification</span></div>
+        <div class="rung" data-key="shadow" data-on="true">Shadow
+          <span class="m">Rehearses only. Predicts what would change and touches nothing.
+          Five correct predictions in a row to move up.</span></div>
+        <div class="rung" data-key="provisional">Provisional
+          <span class="m">Really deletes. Every single run is checked against the live machines.
+          One wrong call and it drops straight back to Shadow.</span></div>
+        <div class="rung" data-key="live">Live
+          <span class="m">Really deletes. Checked on a sample, never zero, because a rung
+          nobody watches cannot fall.</span></div>
       </div>
       <div class="streak"><span id="rung-note">5 verified runs to promote</span></div>
       <div class="pips" id="pips"></div>
@@ -140,7 +156,7 @@
   </div>
 
   <div class="logwrap">
-    <div class="col-h"><span>Run log</span><span>verification re-derives state — it never asks the agent how it went</span></div>
+    <div class="col-h"><span>Run log</span><span>each line is one operation: the rung it ran at, whether it acted, and why</span></div>
     <div id="log"><div class="empty">Nothing has run yet.</div></div>
   </div>
 
