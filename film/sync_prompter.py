@@ -26,12 +26,15 @@ for b in blocks:
     a, bb = int(am)*60+int(asec), int(bm)*60+int(bsec)
     rest = rest.split("\n---")[0]
     do = ""
+    act = ""
+    amm = re.search(r"\*\*ACTION:\*\*(.+)", rest)
+    if amm: act = md(" ".join(amm.group(1).split()))
     dm = re.search(r"\*\*On screen:\*\*(.+?)(?=\n\n)", rest, re.S)
     if dm: do = md(" ".join(dm.group(1).split()))
     say = [md(" ".join(p.split())) for p in
            re.findall(r"(?:^|\n)((?:> .*\n?)+)", rest)
            for p in [re.sub(r"(?m)^> ?", "", p).strip()] if p]
-    shots.append({"n": int(n), "a": a, "b": bb, "what": what.strip(), "do": do, "say": say})
+    shots.append({"n": int(n), "a": a, "b": bb, "what": what.strip(), "do": do, "act": act, "say": say})
 
 # pacing
 print(f"  {'shot':<5}{'window':<12}{'words':<7}wpm")
@@ -49,7 +52,7 @@ print(f"\n  ends {end//60}:{end%60:02d}  ({240-end}s headroom before the 4:00 cu
 t = TP.read_text()
 i = t.index("const SHOTS = ["); j = t.index("\n  ];", i)
 TP.write_text(t[:i] + "const SHOTS = " + json.dumps(shots, indent=2, ensure_ascii=False)
-              .replace("\n", "\n  ") + ";" + t[j+4:])
+              .replace("\n", "\n  ") + ";" + t[j+5:])
 print(f"  teleprompter synced: {len(shots)} shots")
 
 def rebalance(total=234):

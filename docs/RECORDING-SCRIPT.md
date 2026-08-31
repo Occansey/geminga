@@ -46,6 +46,8 @@ while the demo runs, which is intentional. Do not rush to fill it.
 
 ## 0 · 0:00–0:36 — hello, and the title card
 
+**ACTION:** Open **tab 1** — `/intro` — full screen, URL bar visible.
+
 **On screen:** open on `/intro`. Your name and the mark are already on screen, so say it warmly
 rather than formally. Do not read the etymology off the page — let them read it while you talk.
 
@@ -65,6 +67,8 @@ rather than formally. Do not read the etymology off the page — let them read i
 ---
 
 ## 1 · 0:36–0:47 — the gate
+
+**ACTION:** Switch to **tab 2** — the console. Do not click anything yet.
 
 **On screen:** switch to **tab 2**, the console. You are on the gate: a headline reading **“Your
 cloud is burning money on machines nobody dares delete.”**, the paragraph beneath it, and a
@@ -89,6 +93,8 @@ disks left behind, buckets with no lifecycle rule, forgotten IPs.
 
 ## 3 · 1:02–1:44 — the architecture, up front
 
+**ACTION:** Switch to **tab 3** — the architecture. **Drag once** to spin it.
+
 **On screen:** switch to **tab 3**, the architecture, already loaded. Drag once so it spins — that proves it
 is live, not a picture. Let the three floors and the red wall be readable.
 
@@ -106,6 +112,8 @@ is live, not a picture. Let the three floors and the red wall be readable.
 
 ## 4 · 1:44–1:53 — connect
 
+**ACTION:** Back to **tab 2**. Click **CONNECT TO GOOGLE CLOUD**.
+
 **On screen:** back to **tab 2**, the console. Click **CONNECT TO GOOGLE CLOUD**. The auth and
 inventory lines print, the gate lifts, and the console appears. **Now** the green counter exists,
 under the big waste figure — point at it once it is on screen.
@@ -117,6 +125,8 @@ under the big waste figure — point at it once it is on screen.
 ---
 
 ## 5 · 1:53–2:21 — the estate, and the trap
+
+**ACTION:** Scroll the estate list down to **ml-train-01**.
 
 **On screen:** stop on **ml-train-01**. Point at `cpu 0.4% (7d avg)` and, in red, `gpu 94% — busy`.
 
@@ -130,6 +140,8 @@ under the big waste figure — point at it once it is on screen.
 ---
 
 ## 6 · 2:21–2:55 — the three levels
+
+**ACTION:** Scroll down to **SHADOW · PROVISIONAL · LIVE**.
 
 **On screen:** scroll to SHADOW · PROVISIONAL · LIVE. Hold on each description. Point at the pips.
 
@@ -149,6 +161,8 @@ under the big waste figure — point at it once it is on screen.
 ---
 
 ## 7 · 2:55–3:12 — click ▶ RUN THE LADDER
+
+**ACTION:** Click **▶ RUN THE LADDER**. ~4s of motion, then narrate over the log.
 
 **On screen:** click **▶ Run the ladder**. All eight runs play in about **four seconds** — pips
 fill, the rung climbs, the estate does not change. Do **not** wait in silence: the animation is
@@ -173,6 +187,8 @@ Point at the rung and at RECLAIMED, which is off zero.
 
 ## 9 · 3:26–3:34 — click MAKE THE TOOL LIE · RUN 6
 
+**ACTION:** Click **MAKE THE TOOL LIE · RUN 6**. ~4s of motion.
+
 **On screen:** click **Make the tool lie · run 6**. The ladder restarts from SHADOW and replays the
 climb — four clean runs, promotion at five — then run six lies. Again, about four seconds.
 
@@ -194,6 +210,8 @@ pip first; point at the reviewer's line **when it appears**, not on a count.
 ---
 
 ## 11 · 3:45–3:54 — close
+
+**ACTION:** Scroll back to the top so the `run.app` URL is the last thing on screen.
 
 **On screen:** back to the top so the `run.app` URL is the last thing visible.
 
