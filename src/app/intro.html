@@ -13,7 +13,7 @@
   .mark{width:96px;height:96px;flex:none;opacity:0;transform:scale(.9)}
   .who{font-family:var(--mono);font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--mut);line-height:2}
   .who b{color:var(--ink);display:block;font-size:15px;letter-spacing:.16em}
-  h1{font-size:clamp(72px,15vw,196px);font-weight:600;line-height:.86;letter-spacing:-.04em;
+  h1{font-size:clamp(76px,16vw,215px);font-weight:600;line-height:.86;letter-spacing:-.04em;
      margin:5vh 0 0;font-variation-settings:"opsz" 144,"SOFT" 95,"WONK" 1}
   .say{font-family:var(--mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--oxide);margin-top:18px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:5vw;margin-top:6vh;max-width:1180px}
@@ -24,11 +24,17 @@
   .col p+p{margin-top:14px}
   .col em{font-style:italic;color:var(--oxide)}
   .col b{color:var(--sig);font-weight:600}
-  .foot{margin-top:7vh;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  .foot{margin-top:9vh;font-family:var(--mono);font-size:12px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--mut);display:flex;gap:26px;flex-wrap:wrap}
   .foot a{color:var(--sig);text-decoration:none;border-bottom:1px solid var(--hair)}
   .foot a:hover{border-color:var(--sig)}
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  .say{font-family:var(--mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--oxide);margin-top:18px}
+  .name{margin-top:30px;max-width:60ch}
+  .name p{font-size:19px;line-height:1.65;font-variation-settings:"SOFT" 60}
+  .name p+p{margin-top:14px}
+  .name em{font-style:italic;color:var(--oxide)}
 </style></head>
 <body>
   <div class="top">
@@ -37,24 +43,14 @@
   </div>
 
   <h1 id="title">Geminga</h1>
+
   <div class="say" id="say">gh’è minga — “it’s not there”</div>
 
-  <div class="grid">
-    <div class="col" id="c1">
-      <h2>The name</h2>
-      <p>Geminga is a gamma ray pulsar that shows up in gamma rays and in almost nothing else.
-         For twenty years nobody could find its counterpart at any other wavelength.</p>
-      <p>Astronomers in Milan named it for the pun in their own dialect: <em>gh’è minga</em>,
-         which means <em>it’s not there</em>.</p>
-    </div>
-    <div class="col" id="c2">
-      <h2>Why I built this</h2>
-      <p>Cloud agents are being handed delete permissions on production, and the industry’s answer
-         to the risk is to never let them act.</p>
-      <p>I wanted the harder answer: an agent that <b>earns the right to act</b>, one operation at
-         a time, and loses it the moment it stops being correct.</p>
-      <p>Everything here follows from the name. <b>A thing reported is not a thing confirmed.</b></p>
-    </div>
+  <div class="name" id="c1">
+    <p>Geminga is a gamma ray pulsar that shows up in gamma rays and in almost nothing else.
+       For twenty years nobody could find its counterpart at any other wavelength.</p>
+    <p>Astronomers in Milan named it for the pun in their own dialect: <em>gh’è minga</em>,
+       which means <em>it’s not there</em>.</p>
   </div>
 
   <div class="foot">
@@ -65,7 +61,7 @@
 
 <script>
   const r = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const seq = [["#mark",0],["#title",120],["#say",380],["#c1",560],["#c2",700],[".foot",860]];
+  const seq = [["#mark",0],["#title",140],["#say",420],["#c1",600],[".foot",820]];
   for (const [sel, delay] of seq) {
     const el = document.querySelector(sel); if (!el) continue;
     if (r) { el.style.opacity = 1; el.style.transform = "none"; continue; }

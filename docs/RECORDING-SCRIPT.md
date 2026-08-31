@@ -8,7 +8,7 @@ visible. That URL on screen *is* the Google Cloud deployment proof, so don't hid
 
 ## Before you hit record — two tabs
 
-**Tab 1 — the demo, with you in shot:**
+**Tab 2 — the demo, with you in shot:**
 
     https://agentic-core-468826425509.us-central1.run.app/?presenter=1
 
@@ -16,7 +16,7 @@ The `?presenter=1` puts your webcam in a circular bubble over the console, so on
 recording captures both you and the demo. Allow the camera prompt. Drag the bubble somewhere it
 covers nothing — bottom-right is clear. `P` hides it.
 
-**Tab 2 — the title card, your opening shot:**
+**Tab 1 — the title card, your opening shot:**
 
     https://agentic-core-468826425509.us-central1.run.app/intro
 
@@ -40,20 +40,36 @@ while the demo runs, which is intentional. Do not rush to fill it.
 
 ---
 
-## 1 · 0:00–0:18 — the gate, before clicking anything
+## 0 · 0:00–0:36 — hello, and the title card
 
-**On screen:** the landing page. Cursor still. Let the headline sit.
+**On screen:** open on `/intro`. Your name and the mark are already on screen, so say it warmly
+rather than formally. Do not read the etymology off the page — let them read it while you talk.
 
-> Monday morning, a billing alert. Something has been running since Friday. The engineer on call
-> already knows what to delete. That was never the hard part.
+> Hello — my name is Maxwell Occansey, and this is Geminga, my entry for Google's All Things
+> Agentic hackathon.
+>
+> It's named after a pulsar the astronomers in Milan called *gh'è minga* — their dialect for
+> "it's not there".
+>
+> I built it because cloud agents are being handed delete permissions on production, and
+> everybody's answer to that risk is the same: never let the agent act. I wanted the harder one.
+>
+> I had a lot of fun building this. Let me show you.
 
-**Point at the green counter under the headline.**
-
-> That counter is real. While I have been talking, this estate has burned another few cents.
+*Pronunciation: "gay-MING-ah"; the pun is roughly "gh-eh MEEN-ga".*
 
 ---
 
-## 2 · 0:18–0:38 — why nobody acts
+## 1 · 0:36–0:50 — the gate
+
+**On screen:** switch to tab 2, the console. Cursor still. Then **point at the green counter**.
+
+> Monday morning, a billing alert. Something has been running since Friday. The engineer on call
+> already knows what to delete. That was never the hard part.
+>
+> That counter is real. While I have been talking, this estate has burned another few cents.
+
+## 2 · 0:50–1:02 — why nobody acts
 
 **On screen:** scroll the two paragraphs so "nobody dares delete" reads.
 
@@ -62,7 +78,7 @@ while the demo runs, which is intentional. Do not rush to fill it.
 
 ---
 
-## 3 · 0:38–1:05 — the architecture, up front
+## 3 · 1:02–1:24 — the architecture, up front
 
 **On screen:** switch to the pre-loaded architecture tab. Drag once so it spins — that proves it
 is live, not a picture. Let the three floors and the red wall be readable.
@@ -79,7 +95,7 @@ is live, not a picture. Let the three floors and the red wall be readable.
 
 ---
 
-## 4 · 1:05–1:22 — connect
+## 4 · 1:24–1:35 — connect
 
 **On screen:** back to tab 1. Click **CONNECT TO GOOGLE CLOUD**. Let the auth and inventory lines
 print. Say nothing over "Connected. 7 resources found."
@@ -88,7 +104,7 @@ print. Say nothing over "Connected. 7 resources found."
 
 ---
 
-## 5 · 1:22–1:52 — the estate, and the trap
+## 5 · 1:35–2:03 — the estate, and the trap
 
 **On screen:** stop on **ml-train-01**. Point at `cpu 0.4% (7d avg)` and, in red, `gpu 94% — busy`.
 
@@ -101,7 +117,7 @@ print. Say nothing over "Connected. 7 resources found."
 
 ---
 
-## 6 · 1:52–2:20 — the three levels
+## 6 · 2:03–2:29 — the three levels
 
 **On screen:** scroll to SHADOW · PROVISIONAL · LIVE. Hold on each description. Point at the pips.
 
@@ -120,15 +136,15 @@ print. Say nothing over "Connected. 7 resources found."
 
 ---
 
-## 7 · 2:20–2:45 — click RUN THE LADDER, then stop talking
+## 7 · 2:29–2:47 — click RUN THE LADDER, then stop talking
 
 **On screen:** runs one to five play in shadow. Pips fill. The estate does not change.
 
-> *(silence — about 20 seconds. The agent is working and touching nothing. That is the point.)*
+> *(silence — about 16 seconds. The agent is working and touching nothing. That is the point.)*
 
 ---
 
-## 8 · 2:45–3:05 — promotion, and the first real commit
+## 8 · 2:47–3:05 — promotion, and the first real commit
 
 **On screen:** PROVISIONAL lights. RECLAIMED climbs off zero. A resource changes. The meter slows.
 
@@ -137,7 +153,7 @@ print. Say nothing over "Connected. 7 resources found."
 
 ---
 
-## 9 · 3:05–3:28 — click MAKE THE TOOL LIE · RUN 6
+## 9 · 3:05–3:23 — click MAKE THE TOOL LIE · RUN 6
 
 **On screen:** from run six the tool reports success while changing nothing.
 
@@ -146,7 +162,7 @@ print. Say nothing over "Connected. 7 resources found."
 
 ---
 
-## 10 · 3:28–3:44 — the catch
+## 10 · 3:23–3:39 — the catch
 
 **On screen:** the reviewer's line in the run log. The ladder falls back to SHADOW. A pip goes red.
 
@@ -155,7 +171,7 @@ print. Say nothing over "Connected. 7 resources found."
 
 ---
 
-## 11 · 3:44–3:52 — close
+## 11 · 3:39–3:52 — close
 
 **On screen:** back to the top so the `run.app` URL is the last thing visible.
 
