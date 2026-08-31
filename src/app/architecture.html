@@ -33,7 +33,7 @@
          background:radial-gradient(115% 80% at 50% 0%,#141C27 0%,var(--deep) 72%);
          perspective:1700px;cursor:grab;touch-action:none}
   .stage:active{cursor:grabbing}
-  .house{position:absolute;left:50%;top:47%;width:0;height:0;transform-style:preserve-3d;
+  .house{position:absolute;left:50%;top:56%;width:0;height:0;transform-style:preserve-3d;
          transform:scale(var(--s,.56)) rotateX(var(--rx,58deg)) rotateZ(var(--rz,0deg));transition:transform .1s linear}
 
   .floor{position:absolute;width:620px;height:300px;margin:-150px 0 0 -310px;transform-style:preserve-3d}
@@ -45,18 +45,23 @@
   .wallLeft{left:0;top:0;width:300px;height:150px;transform-origin:top left;
             transform:rotateX(-90deg) rotateY(90deg) translateX(-300px)}
 
-  #f3{transform:translate3d(0,-205px,470px)}
-  #f2{transform:translate3d(0,0,235px)}
-  #f1{transform:translate3d(0,205px,0)}
+  #f3{transform:translate3d(0,-215px,400px)}
+  #f2{transform:translate3d(0,20px,200px)}
+  #f1{transform:translate3d(0,255px,0)}
   #f3 .slab{border-color:var(--oxide-d)} #f2 .slab{border-color:var(--steel-d)} #f1 .slab{border-color:var(--live-d)}
   #f3 .wallBack,#f3 .wallLeft{border-color:var(--oxide-d)}
   #f2 .wallBack,#f2 .wallLeft{border-color:var(--steel-d)}
   #f1 .wallBack,#f1 .wallLeft{border-color:var(--live-d)}
 
-  .roomLabel{position:absolute;left:8px;top:-40px;z-index:998;background:rgba(11,16,23,.9);padding:3px 9px;border-radius:2px;font-family:var(--mono);font-size:10px;
-             letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;
-             transform:rotateZ(0deg) rotateX(-58deg)}
-  #f3 .roomLabel{color:var(--oxide)} #f2 .roomLabel{color:var(--steel)} #f1 .roomLabel{color:var(--live)}
+  /* Fixed legend: screen-space, outside the 3D scene, so nothing can draw over it and it
+     stays put while the house spins. */
+  .legend{position:absolute;left:20px;bottom:20px;z-index:1200;display:flex;flex-direction:column;gap:9px;
+          pointer-events:none}
+  .legend div{display:flex;align-items:baseline;gap:9px;font-family:var(--mono);font-size:10.5px;
+              letter-spacing:.15em;text-transform:uppercase;white-space:nowrap}
+  .legend b{font-weight:400;width:132px;display:inline-block}
+  .legend span{color:var(--dim);letter-spacing:.1em}
+  .legend .l3{color:var(--oxide)} .legend .l2{color:var(--steel)} .legend .l1{color:var(--live)}
 
   /* ---------------- bots ---------------- */
   .bot{position:absolute;width:64px;height:112px;transform-style:preserve-3d;cursor:pointer;
@@ -82,7 +87,7 @@
               text-shadow:0 0 10px currentColor}
   #f3 .bot .badge{color:var(--oxide)} #f2 .bot .badge{color:var(--steel)} #f1 .bot .badge{color:var(--live)}
 
-  .bot .tag{white-space:nowrap;z-index:900;position:absolute;bottom:112px;left:50%;transform:translateX(-50%);text-align:center;
+  .bot .tag{white-space:nowrap;z-index:900;transform:translateZ(0.1px);backface-visibility:hidden;-webkit-font-smoothing:antialiased;position:absolute;bottom:112px;left:50%;transform:translateX(-50%);text-align:center;
             font-family:var(--mono);white-space:nowrap;background:rgba(10,14,20,.86);
             border:1px solid var(--line);border-radius:3px;padding:4px 8px}
   .bot .tag .role{display:block;font-size:15px;color:var(--ink);letter-spacing:.02em;line-height:1.15}
@@ -92,9 +97,9 @@
   .bot.raised .tag{bottom:178px}
   .bot.raised .tag::after{content:"";position:absolute;left:50%;top:100%;
      width:1px;height:60px;background:var(--steel-d)}
-  #f3 .bot .tag{white-space:nowrap;z-index:900;border-color:var(--oxide-d)}
-  #f2 .bot .tag{white-space:nowrap;z-index:900;border-color:var(--steel-d)}
-  #f1 .bot .tag{white-space:nowrap;z-index:900;border-color:var(--live-d)}
+  #f3 .bot .tag{white-space:nowrap;z-index:900;transform:translateZ(0.1px);backface-visibility:hidden;-webkit-font-smoothing:antialiased;border-color:var(--oxide-d)}
+  #f2 .bot .tag{white-space:nowrap;z-index:900;transform:translateZ(0.1px);backface-visibility:hidden;-webkit-font-smoothing:antialiased;border-color:var(--steel-d)}
+  #f1 .bot .tag{white-space:nowrap;z-index:900;transform:translateZ(0.1px);backface-visibility:hidden;-webkit-font-smoothing:antialiased;border-color:var(--live-d)}
   .bot[data-blocking="true"] .tag{border-color:var(--slate);background:rgba(24,28,34,.94)}
   .bot[data-active="true"] .tag{border-color:var(--steel)}
 
@@ -184,15 +189,12 @@
     <div class="house" id="house">
       <div class="floor" id="f3">
         <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
-        <div class="roomLabel">Top floor · untrusted — nothing up here is authority</div>
       </div>
       <div class="floor" id="f2">
         <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
-        <div class="roomLabel">Middle floor · the trust boundary — deterministic, no model</div>
       </div>
       <div class="floor" id="f1">
         <div class="slab"></div><div class="wallBack"></div><div class="wallLeft"></div>
-        <div class="roomLabel">Ground floor · effect — the only code that changes anything</div>
       </div>
       <div class="barrier" id="barrier"><span></span></div>
       <div class="parcel" id="parcel"></div>
@@ -201,6 +203,11 @@
       <div class="doc"></div>
       <div class="who"><span class="role">Operator</span><span class="job">sends a prompt or a document</span></div>
       <span class="arrow">→</span>
+    </div>
+    <div class="legend">
+      <div class="l3"><b>Top floor</b><span>untrusted — nothing up here is authority</span></div>
+      <div class="l2"><b>Middle floor</b><span>the trust boundary — deterministic, no model</span></div>
+      <div class="l1"><b>Ground floor</b><span>effect — the only code that changes anything</span></div>
     </div>
     <div class="hint">drag to spin</div>
   </div>
@@ -386,7 +393,8 @@ document.querySelectorAll("#controls button").forEach(b=>
 let rx=58, rz=0, drag=false, lx=0, ly=0;
 const house = document.getElementById("house"), stage = document.getElementById("stage");
 const apply=()=>{house.style.setProperty("--rx",rx+"deg");house.style.setProperty("--rz",rz+"deg");
-  document.querySelectorAll(".bot,.roomLabel").forEach(el=>el.style.transform=`rotateZ(${-rz}deg) rotateX(${-rx}deg)`);};
+  document.querySelectorAll(".bot").forEach(el=>el.style.transform=`rotateZ(${-rz}deg) rotateX(${-rx}deg)`);};
+apply();   // pin the writing upright before the first drag, not only after one
 stage.addEventListener("pointerdown",e=>{drag=true;lx=e.clientX;ly=e.clientY;stage.setPointerCapture(e.pointerId)});
 stage.addEventListener("pointermove",e=>{
   if(!drag) return;
