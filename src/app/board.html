@@ -62,8 +62,48 @@
     .split{grid-template-columns:1fr;gap:32px}
     .rung{font-size:34px}
   }
+  /* The landing gate. Nobody should meet a wall of numbers with no idea what they are. */
+  .gate{position:fixed;inset:0;background:var(--bg);z-index:5000;display:flex;flex-direction:column;
+    justify-content:center;padding:0 8vw;transition:opacity .5s}
+  .gate.gone{opacity:0;pointer-events:none}
+  .gate h1{font-size:clamp(44px,6.4vw,104px);font-weight:600;line-height:.98;letter-spacing:-.03em;
+    font-variation-settings:"opsz" 144,"SOFT" 95,"WONK" 1}
+  .gate h1 em{font-style:normal;color:var(--sig)}
+  .gate .lede{font-family:var(--mono);font-size:clamp(14px,1.15vw,19px);color:var(--mut);margin-top:22px;max-width:70ch;line-height:1.75}
+  .gate .lede b{color:var(--ink)}
+  .gate .cta{margin-top:40px;display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+  .connect{font-family:var(--mono);font-size:15px;letter-spacing:.1em;text-transform:uppercase;
+    background:var(--ink);color:var(--bg);border:0;padding:17px 28px;cursor:pointer;transition:.2s}
+  .connect:hover{background:var(--sig)}
+  .connect:disabled{background:var(--hair);color:var(--mut);cursor:default}
+  .gate .note{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+  .gate .log{font-family:var(--mono);font-size:13px;color:var(--mut);margin-top:26px;min-height:104px;line-height:2}
+  .gate .log b{color:var(--good)}
+  .gate .log .on{color:var(--ink)}
+  .kind{font-family:var(--mono);font-size:10px;letter-spacing:.14em;border:1.5px solid var(--ink);
+    padding:2px 6px;margin-right:12px;vertical-align:middle;text-transform:uppercase}
+  .k-vm{background:var(--ink);color:var(--bg)} .k-disk{color:var(--sig);border-color:var(--sig)}
+  .k-bucket{color:var(--good);border-color:var(--good)} .k-ip{color:var(--mut);border-color:var(--mut)}
+  .k-snapshot{color:var(--red);border-color:var(--red)}
+  .item .meta{display:block;font-family:var(--mono);font-size:12px;color:var(--mut);margin-top:7px;letter-spacing:.01em}
 </style></head>
 <body>
+<div class="gate" id="gate">
+  <div class="mono" style="letter-spacing:.3em">Nightshift · Fortified Enterprise Fleet</div>
+  <h1>Your cloud is burning money<br>on machines <em>nobody dares delete.</em></h1>
+  <div class="lede">
+    Nightshift connects to a Google Cloud project and finds the waste: <b>virtual machines sitting idle</b>,
+    <b>disks left behind</b> when a VM was deleted, buckets with no lifecycle rule, IP addresses reserved and
+    forgotten. Finding them is easy. Deleting them is what nobody will risk.<br><br>
+    So this agent has to <b>earn</b> the right. Every operation starts as a rehearsal, and it only commits once a
+    verifier that re-reads the real machines agrees with it. Get one wrong and it loses the right immediately.
+  </div>
+  <div class="cta">
+    <button class="connect" id="connect">Connect to Google Cloud</button>
+    <span class="note">demo project · read-only · nothing is deleted</span>
+  </div>
+  <div class="log" id="gatelog"></div>
+</div>
   <div class="row">
     <div class="mono">Nightshift — <b>Fortified Enterprise Fleet</b></div>
     <div class="mono">Gemini 3.6 · ADK 2 graph runtime</div>
@@ -132,12 +172,23 @@ async function loadEstate(animate){
   if(baseline===null) baseline=data.spend;
   setHero(data.spend, Math.max(0, baseline-data.spend));
   $("estate-count").textContent = data.resources.length+" resources";
+  const days = iso => iso ? Math.round((Date.now()-new Date(iso))/864e5) : null;
   $("estate").innerHTML = data.resources.map(r=>{
     const gone = r.status==="TERMINATED"||r.exists===false||r.status==="RELEASED";
     const focus = r.target==="staging-web-3";
     const op = r.op_class.split(".")[1] + (r.reversible?"":' <span class="lock">human</span>');
+    const age = days(r.created);
+    // the details you would see in the cloud console — what it is, where, since when
+    const meta = [
+      r.detail || r.machine_type || "",
+      r.zone || "",
+      r.created ? `created ${r.created}${age?` · running ${age.toLocaleString()} days`:""}` : "",
+      (r.cpu_7d_avg!==undefined && r.cpu_7d_avg!==null) ? `cpu ${r.cpu_7d_avg}% (7d avg)` : "",
+    ].filter(Boolean).join("  ·  ");
     return `<div class="item ${gone?"gone":""} ${focus?"focus":""}">
-      <div class="r">${r.target}${gone?" · stopped":""}<span class="op">${op}</span></div>
+      <div class="r"><span class="kind k-${(r.kind||"RES").toLowerCase()}">${r.kind||"RESOURCE"}</span>${r.target}${gone?" · stopped":""}
+        <span class="meta">${meta}</span>
+        <span class="op">${op}</span></div>
       <div class="c">${money(r.monthly_cost_usd)}</div></div>`;
   }).join("");
   if(g && animate) g.from("#estate .item",{y:12,opacity:0,duration:.4,stagger:.03,ease:"power2.out"});
@@ -237,5 +288,38 @@ async function intro(){
   });
   g.to(".live .d",{opacity:.25,duration:.7,repeat:-1,yoyo:true});
 }
-if(document.fonts&&document.fonts.ready) document.fonts.ready.then(intro); else intro();
+// The intro once stalled mid-timeline and left the controls at opacity:0 — the buttons were
+// in the DOM, clickable by script, and invisible to every human who opened the page. Guarantee
+// the resting state regardless of what the animation does.
+function revealAll(){
+  document.querySelectorAll('.controls .act, .item, .rung, .hero .of, .hero .lead, .money')
+    .forEach(function(el){ el.style.opacity=''; el.style.transform=''; });
+}
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(intro).catch(revealAll); else intro();
+setTimeout(revealAll, 4000);
+// ---- the connect gate -------------------------------------------------------------------
+// A console full of numbers means nothing to someone meeting it cold. Explain first, connect,
+// then reveal. The connection is simulated against the demo fixture and nothing is mutated.
+(function(){
+  const gate=$("gate"), btn=$("connect"), log=$("gatelog");
+  if(!gate||!btn) return;
+  const STEPS=[
+    ["Authenticating with Google Cloud…", 700],
+    ["Project <span class='on'>nightshift-agentic-2026</span> · region <span class='on'>us-central1</span>", 600],
+    ["Reading Compute Engine — instances, disks, snapshots, addresses…", 900],
+    ["Reading Cloud Storage — buckets and lifecycle rules…", 700],
+    ["Reading Cloud Monitoring — 7-day CPU averages…", 700],
+    ["<b>Connected.</b> 7 resources found · $3,583.20 / month recoverable", 500],
+  ];
+  btn.addEventListener("click", async function(){
+    btn.disabled=true; btn.textContent="Connecting…";
+    for(const [line,ms] of STEPS){
+      log.insertAdjacentHTML("beforeend", "<div>› "+line+"</div>");
+      await new Promise(r=>setTimeout(r,ms));
+    }
+    await new Promise(r=>setTimeout(r,450));
+    gate.classList.add("gone");
+    setTimeout(function(){ gate.style.display="none"; }, 550);
+  });
+})();
 </script></body></html>

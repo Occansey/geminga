@@ -219,27 +219,34 @@ def sample_estate() -> dict[str, dict[str, Any]]:
     """Realistic wreckage. `target` keys match `ratchet.world.scope_of`."""
     return {
         "compute.stop_idle_instance:ml-train-01": {
+            "zone": "us-central1-a", "created": "2026-03-11", "kind": "VM",       "detail": "a2-highgpu-1g · 12 vCPU · 85 GB · 1x A100",
             "status": "RUNNING", "machine_type": "a2-highgpu-1g",
             "cpu_7d_avg": 0.4, "monthly_cost_usd": 2632.00, "exists": True,
         },
         "compute.stop_idle_instance:staging-web-3": {
+            "zone": "us-central1-b", "created": "2025-11-02", "kind": "VM",       "detail": "e2-standard-4 · 4 vCPU · 16 GB",
             "status": "RUNNING", "machine_type": "e2-standard-4",
             "cpu_7d_avg": 0.1, "monthly_cost_usd": 97.80, "exists": True,
         },
         "compute.downsize_instance:api-prod-2": {
+            "zone": "us-central1-a", "created": "2025-08-19", "kind": "VM",       "detail": "e2-standard-8 · 8 vCPU · 32 GB",
             "status": "RUNNING", "machine_type": "e2-standard-8",
             "cpu_7d_avg": 6.2, "monthly_cost_usd": 195.60, "exists": True,
         },
         "compute.release_static_ip:legacy-lb-ip": {
+            "zone": "us-central1",   "created": "2024-06-30", "kind": "IP",       "detail": "reserved static IPv4 · unattached",
             "status": "RESERVED", "attached_to": None, "monthly_cost_usd": 7.30, "exists": True,
         },
         "compute.delete_unattached_disk:pd-ml-scratch": {
+            "zone": "us-central1-a", "created": "2026-03-11", "kind": "DISK",     "detail": "pd-ssd · 2,000 GB · orphaned by a deleted VM",
             "attached_to": None, "size_gb": 2000, "monthly_cost_usd": 340.00, "exists": True,
         },
         "compute.delete_stale_snapshot:snap-2024-03-11": {
+            "zone": "us-central1",   "created": "2024-03-11", "kind": "SNAPSHOT", "detail": "400 GB · source disk no longer exists",
             "age_days": 517, "size_gb": 400, "monthly_cost_usd": 20.00, "exists": True,
         },
         "storage.set_lifecycle_policy:raw-events": {
+            "zone": "us-central1",   "created": "2025-01-14", "kind": "BUCKET",   "detail": "14.2 TB standard · no lifecycle rule",
             "lifecycle_days": None, "size_tb": 14.2, "monthly_cost_usd": 290.50, "exists": True,
         },
     }

@@ -1,0 +1,17 @@
+import { chromium } from "playwright"; import path from "node:path";
+const dir = path.join(import.meta.dirname, "..", "brand");
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1600, height: 1000 }, deviceScaleFactor: 2 });
+await p.goto("https://agentic-core-468826425509.us-central1.run.app/", { waitUntil: "networkidle", timeout: 90000 });
+await p.waitForFunction(() => document.querySelectorAll("#estate .item").length > 0, { timeout: 60000 });
+await p.waitForTimeout(2500);
+await p.evaluate(() => { if (window.gsap) gsap.globalTimeline.getChildren(true,true,false).forEach(t=>t.progress(1)); });
+await p.screenshot({ path: path.join(dir, "ui-1-idle.png") });
+console.log("  shot 1: idle");
+await p.click("#run");
+await p.waitForFunction(() => document.getElementById("status").textContent === "done", { timeout: 150000 }).catch(()=>{});
+await p.waitForTimeout(1200);
+await p.evaluate(() => { if (window.gsap) gsap.globalTimeline.getChildren(true,true,false).forEach(t=>t.progress(1)); });
+await p.screenshot({ path: path.join(dir, "ui-2-after-run.png") });
+console.log("  shot 2: after the ladder ran");
+await b.close();
