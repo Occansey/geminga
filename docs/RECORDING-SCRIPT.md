@@ -64,7 +64,7 @@ rather than formally. Do not read the etymology off the page — let them read i
 
 ---
 
-## 1 · 0:36–0:50 — the gate
+## 1 · 0:36–0:47 — the gate
 
 **On screen:** switch to **tab 2**, the console. You are on the gate: a headline reading **“Your
 cloud is burning money on machines nobody dares delete.”**, the paragraph beneath it, and a
@@ -73,7 +73,9 @@ cloud is burning money on machines nobody dares delete.”**, the paragraph bene
 > Monday morning, a billing alert. Something has been running since Friday. The engineer on call
 > already knows what to delete. That was never the hard part.
 
-## 2 · 0:50–1:07 — why nobody acts
+---
+
+## 2 · 0:47–1:02 — why nobody acts
 
 **On screen:** the phrase you are talking about — **“machines nobody dares delete”** — is the
 headline itself, already on screen from shot 1. Nothing to scroll to. Just gesture at it, then
@@ -85,7 +87,7 @@ disks left behind, buckets with no lifecycle rule, forgotten IPs.
 
 ---
 
-## 3 · 1:07–1:49 — the architecture, up front
+## 3 · 1:02–1:44 — the architecture, up front
 
 **On screen:** switch to **tab 3**, the architecture, already loaded. Drag once so it spins — that proves it
 is live, not a picture. Let the three floors and the red wall be readable.
@@ -102,7 +104,7 @@ is live, not a picture. Let the three floors and the red wall be readable.
 
 ---
 
-## 4 · 1:49–2:01 — connect
+## 4 · 1:44–1:53 — connect
 
 **On screen:** back to **tab 2**, the console. Click **CONNECT TO GOOGLE CLOUD**. The auth and
 inventory lines print, the gate lifts, and the console appears. **Now** the green counter exists,
@@ -114,7 +116,7 @@ under the big waste figure — point at it once it is on screen.
 
 ---
 
-## 5 · 2:01–2:29 — the estate, and the trap
+## 5 · 1:53–2:21 — the estate, and the trap
 
 **On screen:** stop on **ml-train-01**. Point at `cpu 0.4% (7d avg)` and, in red, `gpu 94% — busy`.
 
@@ -127,7 +129,7 @@ under the big waste figure — point at it once it is on screen.
 
 ---
 
-## 6 · 2:29–2:47 — the three levels
+## 6 · 2:21–2:55 — the three levels
 
 **On screen:** scroll to SHADOW · PROVISIONAL · LIVE. Hold on each description. Point at the pips.
 
@@ -146,42 +148,52 @@ under the big waste figure — point at it once it is on screen.
 
 ---
 
-## 7 · 2:47–3:03 — click RUN THE LADDER, then stop talking
+## 7 · 2:55–3:12 — click ▶ RUN THE LADDER
 
-**On screen:** runs one to five play in shadow. Pips fill. The estate does not change.
+**On screen:** click **▶ Run the ladder**. All eight runs play in about **four seconds** — pips
+fill, the rung climbs, the estate does not change. Do **not** wait in silence: the animation is
+over long before this shot is. Let it finish, then narrate over the filled run log, scrolling it
+slowly so the reasons are readable.
 
-> *(silence — about 16 seconds. The agent is working and touching nothing. That is the point.)*
+> Every run starts as a rehearsal. It plans the change, predicts the end state, and then a
+> separate verifier re-reads the environment to see whether the world actually matches. Nothing
+> is touched while it is still earning trust.
 
 ---
 
-## 8 · 3:03–3:19 — promotion, and the first real commit
+## 8 · 3:12–3:26 — promotion, and the first real commit
 
-**On screen:** PROVISIONAL lights. RECLAIMED climbs off zero. A resource changes. The meter slows.
+**On screen:** the ladder already sits on **PROVISIONAL** — it promoted at run five, back in shot 7.
+Point at the rung and at RECLAIMED, which is off zero.
 
 > Five consecutive runs where a verifier that re-derives real state agreed with the prediction.
 > Only then does it commit. That is the first money this agent was ever allowed to touch.
 
 ---
 
-## 9 · 3:19–3:29 — click MAKE THE TOOL LIE · RUN 6
+## 9 · 3:26–3:34 — click MAKE THE TOOL LIE · RUN 6
 
-**On screen:** from run six the tool reports success while changing nothing.
+**On screen:** click **Make the tool lie · run 6**. The ladder restarts from SHADOW and replays the
+climb — four clean runs, promotion at five — then run six lies. Again, about four seconds.
 
 > Now the part every demo skips. From run six the delete tool reports success while changing
 > nothing.
 
 ---
 
-## 10 · 3:29–3:42 — the catch
+## 10 · 3:34–3:45 — the catch
 
-**On screen:** the reviewer's line in the run log. The ladder falls back to SHADOW. A pip goes red.
+**On screen:** the demotion is instant: the rung drops to **SHADOW** and a pip goes red the moment
+run six lands. The **reviewer's line takes longer** — it is a live Gemini call and arrived anywhere
+from **8 to 21 seconds** after the runs finished when I measured it. Point at the rung and the red
+pip first; point at the reviewer's line **when it appears**, not on a count.
 
 > Verification never asks the tool how it went. It re-reads the environment, sees the gap, and
 > takes the authority back. One disagreement, one rung, immediately.
 
 ---
 
-## 11 · 3:42–3:54 — close
+## 11 · 3:45–3:54 — close
 
 **On screen:** back to the top so the `run.app` URL is the last thing visible.
 
