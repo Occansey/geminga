@@ -205,6 +205,8 @@ Description:
     Built by Maxwell Occansey for the All Things Agentic hackathon —
     Fortified Enterprise Fleet track.
 
+Video URL: **https://youtu.be/cYXVAFFYVkA**
+
 Visibility: **Public or Unlisted** (rules require publicly visible). Not made for kids.
 
 **Repo access** — public, or invite `testing@devpost.com` and `cloudhackathons@google.com`.
