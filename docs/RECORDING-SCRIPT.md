@@ -44,7 +44,7 @@ while the demo runs, which is intentional. Do not rush to fill it.
 
 ---
 
-## 0 · 0:00–0:36 — hello, and the title card
+## 0 · 0:00–0:33 — hello, and the title card
 
 **ACTION:** Open **tab 1** — `/intro` — full screen, URL bar visible.
 
@@ -66,7 +66,7 @@ rather than formally. Do not read the etymology off the page — let them read i
 
 ---
 
-## 1 · 0:36–0:47 — the gate
+## 1 · 0:33–0:44 — the gate
 
 **ACTION:** Switch to **tab 2** — the console. Do not click anything yet.
 
@@ -79,7 +79,7 @@ cloud is burning money on machines nobody dares delete.”**, the paragraph bene
 
 ---
 
-## 2 · 0:47–1:02 — why nobody acts
+## 2 · 0:44–0:58 — why nobody acts
 
 **On screen:** the phrase you are talking about — **“machines nobody dares delete”** — is the
 headline itself, already on screen from shot 1. Nothing to scroll to. Just gesture at it, then
@@ -91,7 +91,7 @@ disks left behind, buckets with no lifecycle rule, forgotten IPs.
 
 ---
 
-## 3 · 1:02–1:44 — the architecture, up front
+## 3 · 0:58–1:36 — the architecture, up front
 
 **ACTION:** Switch to **tab 3** — the architecture. **Drag once** to spin it.
 
@@ -110,7 +110,7 @@ is live, not a picture. Let the three floors and the red wall be readable.
 
 ---
 
-## 4 · 1:44–1:53 — connect
+## 4 · 1:36–1:45 — connect
 
 **ACTION:** Back to **tab 2**. Click **CONNECT TO GOOGLE CLOUD**.
 
@@ -124,7 +124,7 @@ under the big waste figure — point at it once it is on screen.
 
 ---
 
-## 5 · 1:53–2:21 — the estate, and the trap
+## 5 · 1:45–2:11 — the estate, and the trap
 
 **ACTION:** Scroll the estate list down to **ml-train-01**.
 
@@ -139,7 +139,7 @@ under the big waste figure — point at it once it is on screen.
 
 ---
 
-## 6 · 2:21–2:55 — the three levels
+## 6 · 2:11–2:43 — the three levels
 
 **ACTION:** Scroll down to **SHADOW · PROVISIONAL · LIVE**.
 
@@ -160,7 +160,7 @@ under the big waste figure — point at it once it is on screen.
 
 ---
 
-## 7 · 2:55–3:12 — click ▶ RUN THE LADDER
+## 7 · 2:43–2:58 — click ▶ RUN THE LADDER
 
 **ACTION:** Click **▶ RUN THE LADDER**. ~4s of motion, then narrate over the log.
 
@@ -175,7 +175,7 @@ slowly so the reasons are readable.
 
 ---
 
-## 8 · 3:12–3:26 — promotion, and the first real commit
+## 8 · 2:58–3:11 — promotion, and the first real commit
 
 **On screen:** the ladder already sits on **PROVISIONAL** — it promoted at run five, back in shot 7.
 Point at the rung and at RECLAIMED, which is off zero.
@@ -185,27 +185,31 @@ Point at the rung and at RECLAIMED, which is off zero.
 
 ---
 
-## 9 · 3:26–3:34 — click MAKE THE TOOL LIE · RUN 6
+## 9 · 3:11–3:32 — MAKE THE TOOL LIE: the hallucination case
 
 **ACTION:** Click **MAKE THE TOOL LIE · RUN 6**. ~4s of motion.
 
-**On screen:** click **Make the tool lie · run 6**. The ladder restarts from SHADOW and replays the
-climb — four clean runs, promotion at five — then run six lies. Again, about four seconds.
+**On screen:** the ladder restarts from SHADOW and replays the climb — four clean runs, promotion
+at five — then run six lies.
 
-> Now the part every demo skips. From run six the delete tool reports success while changing
-> nothing.
+> This is the failure everyone is actually afraid of. From run six, the delete tool reports
+> success — and changes nothing.
+>
+> That is a hallucinated action. The agent believes it did the work. Its own log says so. Anything
+> that trusts what its tools report is now wrong and has no idea.
 
 ---
 
-## 10 · 3:34–3:45 — the catch
+## 10 · 3:32–3:45 — the catch
 
-**On screen:** the demotion is instant: the rung drops to **SHADOW** and a pip goes red the moment
-run six lands. The **reviewer's line takes longer** — it is a live Gemini call and arrived anywhere
-from **8 to 21 seconds** after the runs finished when I measured it. Point at the rung and the red
-pip first; point at the reviewer's line **when it appears**, not on a count.
+**On screen:** the rung drops to **SHADOW** and a **red row appears in the run log** — that row
+stays, so point at it. The red pip flashes for only about a second, so do not plan to point at it.
+The **reviewer's line** is a live Gemini call and landed 8–21s after the runs finished when I
+measured it — point at it *when it appears*, not on a count.
 
-> Verification never asks the tool how it went. It re-reads the environment, sees the gap, and
-> takes the authority back. One disagreement, one rung, immediately.
+> Geminga never asks the tool how it went. A separate verifier re-reads the live environment, sees
+> the machine is still sitting there, and takes the authority back. One disagreement, one rung,
+> immediately.
 
 ---
 
@@ -219,6 +223,15 @@ pip first; point at the reviewer's line **when it appears**, not on a count.
 > being correct.
 
 ---
+
+## Before you hit record
+
+- **Click Reset on the console.** The counters are cumulative and survive reloads — testing has
+  left them reading things like `18 verified · 2 failed · 3 demotions`. Reset makes them start
+  clean, and it puts the gate back so shot 4's Connect click has something to do.
+- Reload all three tabs after resetting, so nothing is mid-animation.
+- If a click ever seems to do nothing, look at the status line: `already running` means wait,
+  `failed — click again` means the stream dropped and clicking again is safe.
 
 ## Checklist before uploading
 

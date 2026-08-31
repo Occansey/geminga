@@ -266,7 +266,9 @@ function reviewEntry(findings){
 }
 
 async function run(lieFrom){
-  if(running) return; running=true;
+  if(running){ $("status").textContent="already running — wait for it to finish"; return; }
+  running=true;
+  try{
   $("run").disabled=$("sabotage").disabled=$("reset").disabled=true;
   $("status").textContent = lieFrom ? "lying from run "+lieFrom : "running";
   const res = await fetch("/api/run",{method:"POST",headers:{"content-type":"application/json"},
@@ -287,8 +289,15 @@ async function run(lieFrom){
       await loadEstate(true);
     }
   }
-  $("status").textContent="done"; running=false;
-  $("run").disabled=$("sabotage").disabled=$("reset").disabled=false;
+  $("status").textContent="done";
+  }catch(err){
+    $("status").textContent="failed — click again";
+    logEntry({op_class:"client",target:"—",authority:"—",passes:0,failures:0,demotions:0,
+              reason:"run interrupted: "+(err&&err.message||err)+" — nothing was committed"}, true);
+  }finally{
+    running=false;
+    $("run").disabled=$("sabotage").disabled=$("reset").disabled=false;
+  }
 }
 $("run").onclick=()=>run(null);
 $("sabotage").onclick=()=>run(6);
