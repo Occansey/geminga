@@ -152,7 +152,9 @@ result with its threat model stated.
 
 ## Upload checklist (the parts that need a signed-in browser)
 
-**Video** — `film/out/geminga.mp4`, 3:54, 1080p, narrated, English subtitles embedded (`mov_text`).
+**Video** — `~/Desktop/geminga-final-v2.mp4`, 3:55, 2104x1972, narrated, **no embedded
+subtitles** (turn on YouTube auto-captions and correct "Geminga", "Vertex", "ADK",
+"provisional", "shadow").
 
 Title:
 
@@ -160,21 +162,36 @@ Title:
 
 Description:
 
-    Geminga cleans up cloud waste, and earns the authority to do it one operation class at a
-    time. Every operation starts in rehearsal. It commits only after a verifier that re-derives
-    real environment state agrees with its prediction, five runs running. One disagreement
-    demotes it a rung, immediately.
+    Cloud agents are being handed delete permissions on production. The usual answer to that
+    risk is to never let them act: draft it, have a human approve, have a human click. That
+    doesn't fix anything — it just leaves a person to be brave before coffee.
 
-    In this recording, taken against the live Cloud Run deployment: rehearsals in shadow,
-    promotion, the first real commit ($174.30 reclaimed), then an injected fault where the tool
-    reports success while changing nothing. Verification catches the lie and the ladder falls
-    back to shadow. Irreversible operations stay behind a human at every rung.
+    Geminga takes the other answer. It finds cloud waste and earns the authority to clean it
+    up, one operation class at a time, on a three-rung ladder: Shadow rehearses and touches
+    nothing; Provisional really acts and is checked every run; Live is checked on a sample,
+    never zero, because a rung nobody watches cannot fall. Five clean runs promote. One
+    disagreement demotes, immediately.
 
-    Gemini 3.x on Vertex AI, ADK 2's graph runtime, Cloud Run.
+    The rule that makes it work: verification never asks the tool how it went. A separate
+    verifier re-reads the environment and re-derives the end state. In this recording the
+    delete tool is made to report success while changing nothing — a hallucinated action,
+    where the agent's own log agrees it did the work. Verification catches it and takes the
+    authority back. The run ends at Live with 81 verified, 1 failed, 3 demotions.
+
+    Also shown: a node at 0.4% CPU that a naive idle-reaper would delete, and that Geminga
+    refuses to touch because it is at 94% GPU. Irreversible operations stay behind a human at
+    every rung.
+
+    Honest scope: the estate in this demo is a fixture, not a live scan of a billing account,
+    and nothing is mutated in a real project. The ladder, the verifier, the demotion logic and
+    the Gemini review are real and running on Cloud Run at the URL below.
+
+    Gemini 3.6 Flash on Vertex AI · ADK 2 graph runtime · Cloud Run · FastAPI + SSE
     Live: https://agentic-core-468826425509.us-central1.run.app
-    Code: (repo URL)
+    Code: https://github.com/Occansey/geminga
 
-    All Things Agentic — Fortified Enterprise Fleet track.
+    Built by Maxwell Occansey for the All Things Agentic hackathon —
+    Fortified Enterprise Fleet track.
 
 Visibility: **Public or Unlisted** (rules require publicly visible). Not made for kids.
 
