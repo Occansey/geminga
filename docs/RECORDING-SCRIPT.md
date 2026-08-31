@@ -8,6 +8,13 @@ visible. That URL on screen *is* the Google Cloud deployment proof, so don't hid
 
 ## Before you hit record — two tabs
 
+**Tab 1 — the title card, your opening shot:**
+
+    https://agentic-core-468826425509.us-central1.run.app/intro
+
+Your name, the mark, what Geminga means and why you built it. Open on this for five seconds
+before anything else.
+
 **Tab 2 — the demo, with you in shot:**
 
     https://agentic-core-468826425509.us-central1.run.app/?presenter=1
@@ -15,13 +22,6 @@ visible. That URL on screen *is* the Google Cloud deployment proof, so don't hid
 The `?presenter=1` puts your webcam in a circular bubble over the console, so one screen
 recording captures both you and the demo. Allow the camera prompt. Drag the bubble somewhere it
 covers nothing — bottom-right is clear. `P` hides it.
-
-**Tab 1 — the title card, your opening shot:**
-
-    https://agentic-core-468826425509.us-central1.run.app/intro
-
-Your name, the mark, what Geminga means and why you built it. Open on this for five seconds
-before anything else.
 
 **Tab 3 — the architecture, for shot 3:**
 
@@ -84,7 +84,7 @@ disks left behind, buckets with no lifecycle rule, forgotten IPs.
 
 ## 3 · 1:12–1:53 — the architecture, up front
 
-**On screen:** switch to the pre-loaded architecture tab. Drag once so it spins — that proves it
+**On screen:** switch to **tab 3**, the architecture, already loaded. Drag once so it spins — that proves it
 is live, not a picture. Let the three floors and the red wall be readable.
 
 > So here is what we built, before I show you it running.
@@ -101,7 +101,7 @@ is live, not a picture. Let the three floors and the red wall be readable.
 
 ## 4 · 1:53–2:03 — connect
 
-**On screen:** back to tab 1. Click **CONNECT TO GOOGLE CLOUD**. Let the auth and inventory lines
+**On screen:** back to **tab 2**, the console. Click **CONNECT TO GOOGLE CLOUD**. Let the auth and inventory lines
 print. Say nothing over "Connected. 7 resources found."
 
 > Now watch it meet a real estate.
