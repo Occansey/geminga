@@ -22,9 +22,16 @@ const ctx = await browser.newContext({
 const page = await ctx.newPage();
 
 await page.goto(TARGET, { waitUntil: "networkidle" });
+// the gate is the first thing a visitor meets now — hold on it, then connect on camera
+await page.waitForSelector("#connect");
+mark("the gate: what this is, and why nobody deletes it");
+await wait(20000);                        // shot 1 — read the pitch
+await page.click("#connect");
+mark("connecting to Google Cloud");
+await wait(6000);                         // the auth + inventory read plays out
 await page.waitForFunction(() => document.querySelectorAll("#estate .item").length > 0);
-mark("cold open — waste counts up");
-await wait(22000);                       // shot 1
+mark("the estate revealed — real waste");
+await wait(16000);                       // shot 2
 
 await page.evaluate(() => document.querySelector(".split").scrollIntoView({ behavior: "smooth", block: "start" }));
 mark("estate + HUMAN locks + fixture disclosure");

@@ -16,21 +16,23 @@ const FULL   = [0, 0, 1920, 1080];
 
 // shot: either a card (png) or a slice of the capture with a crop
 const SHOTS = [
-  { card: "title",   dur: 8 },
-  { card: "problem", dur: 17 },
-  { at: 16,  dur: 20, crop: HERO,   label: "hero: the waste" },
-  { at: 38,  dur: 20, crop: ESTATE, label: "the estate" },
+  { card: "title",   dur: 7 },
+  { at: 6,   dur: 17, crop: FULL,   label: "the gate: what this is" },      // it explains itself now
+  { card: "problem", dur: 15 },
+  { at: 25,  dur: 8,  crop: FULL,   label: "connecting to Google Cloud" },
+  { at: 33,  dur: 16, crop: ESTATE, label: "the estate: VMs, disks, dates" },
+  { at: 50,  dur: 14, crop: ESTATE, label: "the human locks" },
   { card: "ladder",  dur: 11 },
-  { at: 62,  dur: 16, crop: LADDER, label: "shadow" },
-  { at: 96,  dur: 22, crop: FULL,   label: "the run, wide" },
-  { at: 126, dur: 20, crop: HERO,   label: "first real commit" },
-  { at: 126, dur: 14, crop: LADDER, label: "promotion" },
+  { at: 72,  dur: 15, crop: LADDER, label: "shadow, explained" },
+  { at: 100, dur: 20, crop: FULL,   label: "the run, wide" },
+  { at: 130, dur: 18, crop: HERO,   label: "first real commit" },
+  { at: 130, dur: 12, crop: LADDER, label: "promotion" },
   { card: "fault",   dur: 11 },
-  { at: 170, dur: 20, crop: FULL,   label: "the lie, wide" },
-  { at: 196, dur: 20, crop: LADDER, label: "demotion" },
-  { at: 218, dur: 15, crop: ESTATE, label: "the human lock" },
-  { card: "arch",    dur: 12 },
-  { card: "end",     dur: 12 },
+  { at: 180, dur: 18, crop: FULL,   label: "the lie, wide" },
+  { at: 205, dur: 18, crop: LADDER, label: "demotion" },
+  { at: 229, dur: 13, crop: ESTATE, label: "the human lock holds" },
+  { card: "arch",    dur: 11 },
+  { card: "end",     dur: 11 },
 ];
 
 const files = [];
