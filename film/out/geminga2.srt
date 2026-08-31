@@ -1,0 +1,44 @@
+1
+00:00:09,000 --> 00:00:19,390
+Monday morning, a billing alert. Something has been running since Friday. The engineer
+on call already knows what to delete. That was never the hard part.
+
+2
+00:00:26,000 --> 00:00:37,870
+The hard part is blast radius. Delete the wrong disk at 9am and you cost
+more than the bill. So the ticket gets parked, and the same alert fires next month.
+
+3
+00:01:06,000 --> 00:01:16,230
+Every agent aimed at this lands on the same answer: never let it act.
+That doesn't fix anything. It just leaves a person to be brave before coffee.
+
+4
+00:01:17,000 --> 00:01:31,470
+So Geminga asks a different question. Not how do we make the agent confident, but how does
+it earn the right to act. Every operation starts in rehearsal. It predicts a delta and commits nothing.
+
+5
+00:01:55,000 --> 00:02:09,070
+Five consecutive runs where a verifier that re-derives real state agrees with the prediction. Only
+then does it commit. That is the first money this agent was ever allowed to touch.
+
+6
+00:02:29,000 --> 00:02:40,430
+Now the interesting part. From run six the tool reports success
+while changing nothing. This is the failure every agent demo skips.
+
+7
+00:03:00,000 --> 00:03:13,950
+Verification does not ask the actuator how it went. It re-derives state from the
+environment, sees the gap, and takes the authority back. One disagreement, one rung, immediately.
+
+8
+00:03:20,000 --> 00:03:30,590
+Irreversible operations stay behind a human at every rung,
+forever. The ladder governs doubt. It does not govern consequence.
+
+9
+00:03:47,000 --> 00:03:55,430
+An agent earns the right to act, one operation at
+a time. And loses it the moment it stops being correct.

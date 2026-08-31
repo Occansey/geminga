@@ -131,9 +131,9 @@ finops, cloud-cost-optimization, devops, devsecops, ai-safety, prompt-injection
 
 **Fortified Enterprise Fleet.** Scalable agent networks with security, compliance and governance.
 
-Eleven agents across three floors with a hard trust boundary between them: three untrusted
-readers upstairs whose output is a proposal and never a decision, five inspectors in the middle
-that use no model at all, and only the ground floor able to change anything. Governance is the
+Fifteen agents across three floors with a hard trust boundary between them: three untrusted
+readers upstairs whose output is a proposal and never a decision, seven inspectors in the middle
+that use no model at all, and five on the ground floor, the only ones able to change anything. Governance is the
 product, not a wrapper on it: authority is earned per operation class, revoked on a single
 disagreement, and the whole thing is evidenced by 20 refusal tests and a measured injection
 result with its threat model stated.

@@ -1,0 +1,74 @@
+<!doctype html><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Fragment+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#e9e6dd;--ink:#0c0b09;--mut:#8b8578;--hair:#c9c4b6;--sig:#3f2bff;--red:#e8380d;--good:#0b8a3d;
+        --disp:'Fraunces',Georgia,serif;--mono:'Fragment Mono',monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:2400px;height:1180px;background:var(--bg);color:var(--ink);font-family:var(--disp);overflow:hidden}
+  body{padding:56px 90px}
+  .kicker{font-family:var(--mono);font-size:22px;letter-spacing:.3em;text-transform:uppercase;color:var(--mut)}
+  h1{font-size:88px;font-weight:600;letter-spacing:-.03em;margin-top:16px;line-height:1;
+     font-variation-settings:"opsz" 144,"SOFT" 95,"WONK" 1}
+  h1 em{font-style:normal;color:var(--sig)}
+  .sub{font-family:var(--mono);font-size:23px;color:var(--mut);margin-top:18px;line-height:1.6}
+  .sub b{color:var(--ink)}
+  .stairs{position:relative;margin-top:52px}
+  .step{position:relative;border:3px solid var(--ink);background:#f3f1ea;padding:26px 30px 30px}
+  .step + .step{margin-top:26px}
+  .s1{margin-left:0;    width:1560px}
+  .s2{margin-left:320px;width:1780px}
+  .s3{margin-left:640px;width:1570px}
+  .riser{position:absolute;left:-3px;top:-3px;bottom:-3px;width:14px}
+  .s1 .riser{background:var(--red)} .s2 .riser{background:var(--mut)} .s3 .riser{background:var(--good)}
+  .hd{display:flex;align-items:baseline;gap:18px;margin-bottom:20px}
+  .no{font-family:var(--mono);font-size:20px;letter-spacing:.16em;color:var(--mut)}
+  .ttl{font-size:40px;font-weight:600;letter-spacing:-.01em}
+  .rule{font-family:var(--mono);font-size:19px;color:var(--mut);margin-left:auto;text-align:right;line-height:1.5}
+  .s1 .rule b{color:var(--red)} .s3 .rule b{color:var(--good)} .rule b{color:var(--ink)}
+  .bots{display:flex;flex-wrap:wrap;gap:12px}
+  .bot{border:2px solid var(--ink);background:var(--bg);padding:11px 15px;min-width:212px}
+  .bot .n{font-size:26px;font-weight:600;line-height:1.1}
+  .bot .j{font-family:var(--mono);font-size:15px;color:var(--mut);margin-top:5px;letter-spacing:.02em}
+  .wall{display:flex;align-items:center;gap:20px;margin:22px 0 22px 320px;width:1780px}
+  .wall .bar{flex:1;height:5px;background:repeating-linear-gradient(90deg,var(--red) 0 22px,transparent 22px 36px)}
+  .wall .t{font-family:var(--mono);font-size:20px;letter-spacing:.16em;text-transform:uppercase;color:var(--red);white-space:nowrap}
+  .foot{font-family:var(--mono);font-size:20px;color:var(--mut);margin-top:34px;line-height:1.7}
+  .foot b{color:var(--ink)}
+</style>
+<div class="kicker">Geminga · Fortified Enterprise Fleet · ADK 2 graph runtime</div>
+<h1>Fifteen agents. Three floors. <em>One wall.</em></h1>
+<div class="sub">A proposal walks down the stairs. Every step can send it back, and only the bottom step can change anything.</div>
+
+<div class="stairs">
+  <div class="step s1"><span class="riser"></span>
+    <div class="hd"><span class="no">FLOOR 3</span><span class="ttl">Untrusted</span>
+      <span class="rule">everything here is attacker-influenceable<br>output is a <b>proposal</b>, never a decision</span></div>
+    <div class="bots" id="f3"></div>
+  </div>
+
+  <div class="wall"><span class="t">Trust boundary</span><span class="bar"></span><span class="t">nothing above may decide</span></div>
+
+  <div class="step s2"><span class="riser"></span>
+    <div class="hd"><span class="no">FLOOR 2</span><span class="ttl">Inspectors</span>
+      <span class="rule">seven checks in order · <b>no model at all</b><br>any one of them can refuse</span></div>
+    <div class="bots" id="f2"></div>
+  </div>
+
+  <div class="step s3"><span class="riser"></span>
+    <div class="hd"><span class="no">FLOOR 1</span><span class="ttl">Ground</span>
+      <span class="rule">the only floor that can <b>change anything</b><br>verification re-derives real state</span></div>
+    <div class="bots" id="f1"></div>
+  </div>
+</div>
+
+<div class="foot"><b>Gemini 3.6</b> on Vertex AI proposes · <b>ADK 2</b> graph runtime routes · <b>Cloud Run</b> hosts · irreversible operations stay behind a human at every rung</div>
+
+<script>
+const BOTS = {
+ f3:[["Scout","Reads the estate"],["Screener","Wraps what Scout found"],["Proposer","Gemini 3.6 — suggests"]],
+ f2:[["Registrar","01 · Admission"],["Counsel","02 · Legal"],["Steward","03 · Precondition"],["Metrologist","04 · Liveness"],["Undoer","05 · Reversibility"],["Warden","06 · Authority"],["Assessor","07 · Blast radius"]],
+ f1:[["Hand","Actuator"],["Witness","Verifier"],["Keeper","Ratchet"],["Critic","Post-commit review"],["Archivist","Ledgers"]]
+};
+for(const [f,list] of Object.entries(BOTS))
+  document.getElementById(f).innerHTML = list.map(([n,j])=>`<div class="bot"><div class="n">${n}</div><div class="j">${j}</div></div>`).join("");
+</script>

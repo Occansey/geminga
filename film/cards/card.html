@@ -1,0 +1,47 @@
+<!doctype html><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Fragment+Mono&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#e9e6dd;--ink:#0c0b09;--mut:#8b8578;--sig:#3f2bff;--red:#e8380d;
+    --disp:'Fraunces',Georgia,serif;--mono:'Fragment Mono',monospace}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1920px;height:1080px;background:var(--bg);color:var(--ink);font-family:var(--disp);overflow:hidden}
+  body{display:flex;flex-direction:column;justify-content:center;padding:0 150px}
+  .kicker{font-family:var(--mono);font-size:24px;letter-spacing:.32em;text-transform:uppercase;color:var(--mut);margin-bottom:40px}
+  h1{font-size:150px;font-weight:600;line-height:.94;letter-spacing:-.035em;font-variation-settings:"opsz" 144,"SOFT" 95,"WONK" 1}
+  h1 em{font-style:normal;color:var(--sig)}
+  h1.sm{font-size:104px}
+  .sub{font-family:var(--mono);font-size:30px;line-height:1.6;color:var(--mut);margin-top:44px;max-width:1400px}
+  .sub b{color:var(--ink)} .sub .r{color:var(--red)}
+  .stats{display:flex;gap:90px;margin-top:64px}
+  .stat .n{font-size:112px;font-weight:600;color:var(--sig);line-height:1;font-variation-settings:"SOFT" 95,"WONK" 1}
+  .stat .l{font-family:var(--mono);font-size:21px;color:var(--mut);margin-top:14px;max-width:420px;line-height:1.5}
+  .urls{font-family:var(--mono);font-size:26px;color:var(--mut);margin-top:56px;line-height:2}
+  .urls b{color:var(--ink)}
+</style>
+<div id="slot"></div>
+<script>
+  const CARDS = {
+    title: `<div class="kicker">All Things Agentic · Fortified Enterprise Fleet</div>
+      <h1>GEMINGA</h1>
+      <div class="sub">An agent that <b>earns the right to act</b>, one operation at a time,<br>and loses it the moment it stops being correct.</div>`,
+    problem: `<div class="kicker">The problem</div>
+      <h1 class="sm">It isn't finding the waste.<br>It's <em>daring to delete it.</em></h1>
+      <div class="stats">
+        <div class="stat"><div class="n">~30%</div><div class="l">of cloud spend wasted on idle and orphaned resources — Flexera</div></div>
+        <div class="stat"><div class="n">~40%</div><div class="l">of FinOps practitioners name "getting engineers to act" their top challenge</div></div>
+      </div>`,
+    ladder: `<div class="kicker">The mechanism</div>
+      <h1 class="sm">Shadow. <em>Provisional.</em> Live.</h1>
+      <div class="sub">Five consecutive runs where a verifier that <b>re-derives real state</b><br>agrees with the prediction. Only then may it commit.</div>`,
+    fault: `<div class="kicker">The part every demo skips</div>
+      <h1 class="sm">Now we make the tool <span class="r">lie.</span></h1>
+      <div class="sub">From run six it reports success while changing <b>nothing</b>.<br>Verification never asks the actuator how it went.</div>`,
+    arch: `<div class="kicker">How it runs</div>
+      <h1 class="sm">Gemini 3.6 · ADK 2 graph · Cloud Run</h1>
+      <div class="sub"><b>160 tests</b>, no credentials and no model in the loop.<br><b>20</b> of them are refusals — cases where declining is correct.</div>`,
+    end: `<h1 class="sm">An agent earns the right to act.<br><em>And loses it the moment it stops being correct.</em></h1>
+      <div class="urls"><b>agentic-core-468826425509.us-central1.run.app</b><br>github.com/Occansey/geminga</div>`,
+  };
+  const which = new URLSearchParams(location.search).get('c') || 'title';
+  document.getElementById('slot').innerHTML = CARDS[which];
+</script>
