@@ -162,29 +162,41 @@ Title:
 
 Description:
 
-    Cloud agents are being handed delete permissions on production. The usual answer to that
-    risk is to never let them act: draft it, have a human approve, have a human click. That
-    doesn't fix anything — it just leaves a person to be brave before coffee.
+    Companies are starting to let AI agents delete things in their cloud. That should worry
+    you slightly. Most teams handle it by never letting the agent actually do anything — it
+    suggests, a human clicks. Which fixes nothing. It just means a person has to be the brave
+    one at nine in the morning.
 
-    Geminga takes the other answer. It finds cloud waste and earns the authority to clean it
-    up, one operation class at a time, on a three-rung ladder: Shadow rehearses and touches
-    nothing; Provisional really acts and is checked every run; Live is checked on a sample,
-    never zero, because a rung nobody watches cannot fall. Five clean runs promote. One
-    disagreement demotes, immediately.
+    Geminga does it the other way. It hunts down the stuff quietly burning money — machines
+    nobody switched off, disks nobody deleted — and it has to earn the right to touch any of
+    it.
 
-    The rule that makes it work: verification never asks the tool how it went. A separate
-    verifier re-reads the environment and re-derives the end state. In this recording the
-    delete tool is made to report success while changing nothing — a hallucinated action,
-    where the agent's own log agrees it did the work. Verification catches it and takes the
-    authority back. The run ends at Live with 81 verified, 1 failed, 3 demotions.
+    There are three levels:
 
-    Also shown: a node at 0.4% CPU that a naive idle-reaper would delete, and that Geminga
-    refuses to touch because it is at 94% GPU. Irreversible operations stay behind a human at
-    every rung.
+    Shadow — it only pretends. Says what it would do, changes nothing.
+    Provisional — it actually does it, and gets checked every single time.
+    Live — it does it, checked on random spot-checks. Never zero, because a level nobody
+    checks is a level that can never catch anything.
 
-    Honest scope: the estate in this demo is a fixture, not a live scan of a billing account,
-    and nothing is mutated in a real project. The ladder, the verifier, the demotion logic and
-    the Gemini review are real and running on Cloud Run at the URL below.
+    Five correct runs in a row moves it up. One wrong answer drops it straight back down.
+
+    Here's the part that matters. When the agent says "done", nothing believes it. Something
+    else goes and looks.
+
+    So in this video I break it on purpose. I make the delete tool lie — it reports "success"
+    and does absolutely nothing. That's a hallucination: the agent thinks it worked, its own
+    log says it worked, and anything trusting that log is now wrong without knowing it. The
+    checker goes and looks anyway, finds the machine still sitting there, and takes the
+    agent's permissions away on the spot. It ends at Live with 81 verified, 1 failed, 3
+    demotions.
+
+    There's also a machine sitting at 0.4% CPU. Every "find the idle servers" tool would kill
+    it. Geminga won't touch it, because the GPU is at 94% — someone is training a model on
+    that box. Deleting it would have ruined their week.
+
+    Being straight with you: the cloud account in the demo is fake data, and nothing is really
+    deleted. The agent, the three levels, the checker and the Gemini reviews are all real and
+    running live at the link below — go click it.
 
     Gemini 3.6 Flash on Vertex AI · ADK 2 graph runtime · Cloud Run · FastAPI + SSE
     Live: https://agentic-core-468826425509.us-central1.run.app
